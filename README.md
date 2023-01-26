@@ -1,2 +1,0 @@
-# edufox-backend
-edufox backend
