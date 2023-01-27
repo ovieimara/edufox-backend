@@ -6,3 +6,4 @@ requests
 django-cors-headers
 python-decouple
 djoser
+psycopg2
