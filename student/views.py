@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 # from rest_framework.authentication import a
 from django.contrib.auth.models import User
-from .serializers import StudentSerializer, TempStudentSerializer
+from .serializers import StudentSerializer, TempStudentSerializer, UserSerializer
 from .models import Student, TempStudent
 import requests
 from datetime import datetime
@@ -142,6 +142,16 @@ def updateActivatedUser(temp_user):
     # data = {'uid': uid}
 
     # return requests.post(getUrl('student-activate'), headers=header)
+
+
+class CreateAPIUser(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [AllowAny]
+
+    def perform_create(self, serializer):
+        serializer.save(is_active=False)
+
 
 # class ActivateStudentAPIView(generics.ListCreateAPIView):
 #     queryset = User.objects.all()
