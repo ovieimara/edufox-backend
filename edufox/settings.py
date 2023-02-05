@@ -96,10 +96,10 @@ WSGI_APPLICATION = 'edufox.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': config('DB_ENGINE'),
-        'NAME': config('DB_NAME'),
+        'NAME': config('DB_NAME_TEST'),
         'USER': config('DB_USER'),
         'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
+        'HOST': config('DB_HOST_TEST'),
         'PORT': config('DB_PORT'),
     }
 }
