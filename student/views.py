@@ -1,12 +1,14 @@
 from django.shortcuts import render
 from django.urls import reverse
+from django.shortcuts import HttpResponsePermanentRedirect
 from djoser.views import UserViewSet
 from djoser import email
 from django.http import HttpRequest
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-# from rest_framework.authentication import a
+from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.decorators import api_view, permission_classes
+from .permissions import IsStaffEditorPermission
 from django.contrib.auth.models import User
 from .serializers import StudentSerializer, TempStudentSerializer, UserSerializer
 from .models import Student, TempStudent
@@ -151,6 +153,14 @@ class CreateAPIUser(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(is_active=False)
+
+@api_view(['GET'])
+@permission_classes([IsStaffEditorPermission, IsAdminUser])
+def apiViewManager(request, *args, **kwargs):
+    if request.method == "GET":
+        return HttpResponsePermanentRedirect('/')
+
+
 
 
 # class ActivateStudentAPIView(generics.ListCreateAPIView):
