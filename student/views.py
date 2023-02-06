@@ -193,4 +193,4 @@ def apiViewManager(request, *args, **kwargs):
 
 
 def getUrl(name):
-    return f"http://{HOST}{reverse(name)}"
+    return f"https://api-service-5wasy3cpxq-uc.a.run.app{reverse(name)}"
