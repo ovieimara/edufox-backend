@@ -159,7 +159,7 @@ REST_FRAMEWORK =  {
 }
 
 PROTOCOL = "https"
-DOMAIN = "https://api-service-5wasy3cpxq-uc.a.run.app/"
+DOMAIN = "api-service-5wasy3cpxq-uc.a.run.app"
 
 DJOSER = {
     'SET_PASSWORD_RETRIES': 5,
