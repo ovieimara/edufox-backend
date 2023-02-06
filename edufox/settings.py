@@ -27,6 +27,8 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 CORS_ALLOW_ALL_ORIGINS = True
+CSRF_TRUSTED_ORIGINS = ['https://api-service-5wasy3cpxq-uc.a.run.app', 
+'api-service-5wasy3cpxq-uc.a.run.app', '127.0.0.1']
 ALLOWED_HOSTS = ['https://api-service-5wasy3cpxq-uc.a.run.app', 
 'api-service-5wasy3cpxq-uc.a.run.app', '127.0.0.1']
 CORS_ALLOWED_ORIGINS = [
