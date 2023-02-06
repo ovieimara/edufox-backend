@@ -18,7 +18,7 @@ from decouple import config
 from djoser import signals, utils
 from djoser.compat import get_user_email
 from djoser.conf import settings
-# import socket
+import socket
 
 HOST = config('HOST')
 
@@ -195,7 +195,7 @@ def apiViewManager(request, *args, **kwargs):
 
 
 def getUrl(name, request):
-    # host, *_ = socket.gethostbyaddr(socket.gethostname())
-    print('HOST: ', request.scheme)
+    host, *_ = socket.gethostbyaddr(socket.gethostname())
+    # print('HOST: ', request.sc)
     protocol = 'https://' if request.is_secure() else 'http://'
-    return f"{protocol}{request.get_host()}{reverse(name)}"
+    return f"{protocol}{host}:8000{reverse(name)}"
