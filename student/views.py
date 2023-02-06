@@ -157,8 +157,9 @@ class CreateAPIUser(generics.CreateAPIView):
 @api_view(['GET'])
 @permission_classes([IsStaffEditorPermission, IsAdminUser])
 def apiViewManager(request, *args, **kwargs):
-    if request.method == "GET":
-        return HttpResponsePermanentRedirect('/')
+    if not request.user:
+        return HttpResponsePermanentRedirect('/token/login')
+    return HttpResponsePermanentRedirect('/')
 
 
 
