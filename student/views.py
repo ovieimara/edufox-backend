@@ -18,7 +18,7 @@ from decouple import config
 from djoser import signals, utils
 from djoser.compat import get_user_email
 from djoser.conf import settings
-import socket
+# import socket
 
 HOST = config('HOST')
 
@@ -37,7 +37,7 @@ class StudentListCreateAPIView(generics.ListCreateAPIView):
             "password" : password,
         }
 
-        response = requests.post(getUrl('user-list'), data=data)
+        response = requests.post(getUrl('user-list', self.request), data=data)
         print('RESPONSE: ', response)
         if response.status_code == status.HTTP_201_CREATED:
             super().perform_create(serializer)
@@ -194,7 +194,8 @@ def apiViewManager(request, *args, **kwargs):
 #             temp_student.delete()
 
 
-def getUrl(name):
-    host, *_ = socket.gethostbyaddr(socket.gethostname())
-    print('HOST: ', f"http://{host}:8000{reverse(name)}")
-    return f"http://{host}:8000{reverse(name)}"
+def getUrl(name, request):
+    # host, *_ = socket.gethostbyaddr(socket.gethostname())
+    print('HOST: ', request.scheme)
+    protocol = 'https://' if request.is_secure() else 'http://'
+    return f"{protocol}{request.get_host()}{reverse(name)}"
