@@ -23,7 +23,7 @@
         <!-- <p><a href="{{ protocol }}://{{ domain }}/{{ url|safe }}">{{ protocol }}://{{ domain }}/{{ url|safe }}</a></p> -->
         <!-- <a class="btn btn-primary" href="{{ protocol }}://{{ domain }}/{{ url|safe }}" role="button">Verify</a> -->
         
-        <form action=https://api-service-5wasy3cpxq-uc.a.run.app//{{ url|safe }} method="post">
+        <form action={{ protocol }}://{{ domain }}/{{ url|safe }} method="post">
             {% csrf_token %}
             <button type="submit" class="btn btn-outline-primary">Verify Email</button>
          </form>
