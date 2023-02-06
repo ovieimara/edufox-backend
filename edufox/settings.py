@@ -29,18 +29,22 @@ DEBUG = True
 CORS_ALLOW_ALL_ORIGINS = True
 CSRF_TRUSTED_ORIGINS = [
     'https://api-service-5wasy3cpxq-uc.a.run.app',
-    'http://127.0.0.1'
+    'http://127.0.0.1', 'https://localhost:8000',
+    'http://localhost:8000', 'https://127.0.0.1'
  ]
 ALLOWED_HOSTS = [
     'https://api-service-5wasy3cpxq-uc.a.run.app', 
-    'api-service-5wasy3cpxq-uc.a.run.app', '127.0.0.1'
+    'api-service-5wasy3cpxq-uc.a.run.app', '127.0.0.1',
+    'localhost:8000'
 ]
 
 CORS_ALLOWED_ORIGINS = [
     'https://api-service-5wasy3cpxq-uc.a.run.app'
 ]
 CORS_ORIGIN_WHITELIST = [
-    'https://api-service-5wasy3cpxq-uc.a.run.app'
+    'https://api-service-5wasy3cpxq-uc.a.run.app',
+    'https://localhost:8000', 'https://127.0.0.1',
+    'http://localhost:8000', 'http://127.0.0.1'
 ]
 
 
