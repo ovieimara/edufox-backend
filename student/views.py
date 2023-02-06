@@ -36,6 +36,7 @@ class StudentListCreateAPIView(generics.ListCreateAPIView):
             "password" : password,
         }
         response = requests.post(getUrl('user-list'), data=data)
+        print('RESPONSE: ', response)
         if response.status_code == status.HTTP_201_CREATED:
             super().perform_create(serializer)
 
