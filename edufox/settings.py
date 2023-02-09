@@ -59,7 +59,7 @@ env_file = os.path.join(BASE_DIR, ".env")
 
 # SECURITY WARNING: keep the secret key used in production secret!
 DEBUG = False
-# SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = env("SECRET_KEY")
 
 env = environ.Env(
     SECRET_KEY=(str, os.getenv("SECRET_KEY")),
