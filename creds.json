@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "edufox-services",
+  "private_key_id": "898b64103ea1101974fb37e114c53ef086fc25f0",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCdpsu1nZa85vV9\nq6B94ygCG9U9oyhvnD7lB4a/xOPIckewKWkUsoL4t7QlWj4NEMefov0BWksGJoGK\nCniCjpAGpeg+8kgHh8n44tXVyT9eMZoSNfOgxjPh3AyNApYI3BrQWxeHzgjuckPh\n51l5oPXbs7GxeQ/L41FDp912PUryUbRepyfzW1Sl+jb0Cnhl55pMMzmmEhDGgJ16\nSIXF1RdCV9mAiB2spcELQDf7uHuzKDkxDoKJFttrx3X7PRAjfZ98YdosTXyPphM7\n2Di27Ebr3ee7xfJpyR5kdT6s3xevIWN42urdNzwe55/LRGH1C+nIULoI00ngMk2k\nmQMZQscbAgMBAAECggEAMIn0WnyktpCdsQ2wolHYNZ4AL7QWdRa0Pqvsjwq93y9g\nZxq44ch8jrtw2bdJN5ic/cefAlWcl84vQCMtK3VdXs6iDQ9nofnq85hTojkOK6A2\nAblew3eC7d1kd93998hc8R26xvNmyJOh1uH2KH6oc/aFlVDizjG1CZGbnBYPB0Ao\nbD5XmZMuan9rni4n0fo3tUi+6CyGG6DLUjzPCn0zOOkkYWE26b3wmjP6hWqCkr2T\nz0Cl17LFedNKqcsiIP9eFa7UCmmJd2ZOplozAIOLswhVuAT0V91a6pSOqVLUhMux\nk3g22DSfgZVJ2LLpP30DA+kopE23Zgbl6FoVc3NbEQKBgQDdpmyj1+phLJBxoFvO\nG6vNx7LLq161AZQp5NTsrz8N0nn3cKZw+1591oo/zis1tuA7IVyA4dKInt80aq6i\nr1dwNIRfhCGmgcs1wF5uYSn3vXs/EVJzuxipkD9GI9a5CuCAMMTdVRPBFzETcItb\nKZLWknHS/5F7vfSMmEaC8slJjQKBgQC2FVeSStsKZCbVEF4Tqs6kqTzbE5mTIj0H\nHxrSq8766+qawQYVMlIRSwhgJMJhtB171J5T3H5909Mc/JomwnXSCu4gyo7//FmB\nzA2nYr5fpEX5/Ey38QVsr0XQXpaRjAS4j+XQBPx78ORBHsEFI/MK00O1AU911bv9\nzaxt3IYlRwKBgGebJWkowiwOEq6qUH91O8eCsza0sh5V0JYMmuLPv9+MJOrew05I\nkZCsug69JkGDbCj3nS+5XxnxeVAdFeiBoZOXWND1CG22efB0LS/XRzDAZ13BkRL7\nv7ly7cCxe+sfBHWnVj5HSGaXmp8Fmn5QXoziA0ano699yVP20e7f4er5AoGAHPHT\nk+vWWhaFncUWT2YNp1tH00OQXDVLIkCtkOPC6VxrVOJuRxxSs3EMCcyOId3x+edY\nq9gXO4Vav/bfwl2TQSp/pDLO/J5u1BVN7lfiD24buZuDzpG/3QEXxgHjSYvKjFRD\nogfI4yLuBfQPlvOaBRSEZNeqe/7X/YaebHBr2q0CgYEAx88RjkB6ppzt4I/u/23J\nYpcdJbJBG6lYLHzzIndJoPAsDhwwTO7aVmoppQDYX+efHs6egDwb8+BNTaUOqEC0\ndBtxngJGd9NBAlYI7PvUrbW/Gq9oQewTJ5RYcOWozWT/r8EXb0BMVIhntaMDupIw\nkmkUtZdwYWdhlcDWGD59ZHs=\n-----END PRIVATE KEY-----\n",
+  "client_email": "sa-edufox@edufox-services.iam.gserviceaccount.com",
+  "client_id": "101031208194211635176",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/sa-edufox%40edufox-services.iam.gserviceaccount.com"
+}

@@ -14,15 +14,18 @@ from .serializers import StudentSerializer, TempStudentSerializer, UserSerialize
 from .models import Student, TempStudent
 import requests
 from datetime import datetime
-from decouple import config
+# from decouple import config
 from djoser import signals, utils
 from djoser.compat import get_user_email
 from djoser.conf import settings
 import socket
 
-HOST = config('HOST')
+# HOST = config('HOST')
 
 class StudentListCreateAPIView(generics.ListCreateAPIView):
+    """
+    Signup a new student, with a POST request. user receives a verification link, after verification they are activated.
+    """
     queryset = TempStudent.objects.all()
     serializer_class = TempStudentSerializer
     permission_classes = [AllowAny]
@@ -37,7 +40,7 @@ class StudentListCreateAPIView(generics.ListCreateAPIView):
             "password" : password,
         }
 
-        response = requests.post(getUrl('user-list', self.request), data=data)
+        response = requests.post(getUrl('user-list', self.request, "student"), data=data)
         print('RESPONSE: ', response)
         if response.status_code == status.HTTP_201_CREATED:
             super().perform_create(serializer)
@@ -194,8 +197,10 @@ def apiViewManager(request, *args, **kwargs):
 #             temp_student.delete()
 
 
-def getUrl(name, request):
+def getUrl(url, request, app):
     host, *_ = socket.gethostbyaddr(socket.gethostname())
     # print('HOST: ', request.sc)
     protocol = 'https://' if request.is_secure() else 'http://'
+    name = f"{app}:{url}"
+    print(f"{protocol}{host}:8000{reverse(name)}")
     return f"{protocol}{host}:8000{reverse(name)}"

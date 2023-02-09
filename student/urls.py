@@ -2,6 +2,8 @@ from django.urls import path, include
 from .views import ActivateUser, StudentListCreateAPIView
 from djoser.views import UserViewSet
 
+app_name = 'student'
+
 urlpatterns = [
     path('', include('djoser.urls')),
     path('', include('djoser.urls.authtoken')),
