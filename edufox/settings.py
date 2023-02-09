@@ -59,13 +59,15 @@ env_file = os.path.join(BASE_DIR, ".env")
 
 # SECURITY WARNING: keep the secret key used in production secret!
 DEBUG = False
-SECRET_KEY = env("SECRET_KEY")
+
 
 env = environ.Env(
     SECRET_KEY=(str, os.getenv("SECRET_KEY")),
     DATABASE_URL=(str, os.getenv("DATABASE_URL")),
     GS_BUCKET_NAME=(str, os.getenv("GS_BUCKET_NAME")),
 )
+
+SECRET_KEY = env('SECRET_KEY')
 
 # Attempt to load the Project ID into the environment, safely failing on error.
 try:
