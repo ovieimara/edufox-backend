@@ -18,7 +18,8 @@ from datetime import datetime
 from djoser import signals, utils
 from djoser.compat import get_user_email
 from djoser.conf import settings
-import socket
+from django.conf import settings as django_settings
+# import socket
 
 # HOST = config('HOST')
 
@@ -198,9 +199,17 @@ def apiViewManager(request, *args, **kwargs):
 
 
 def getUrl(url, request, app):
-    host, *_ = socket.gethostbyaddr(socket.gethostname())
-    # print('HOST: ', request.sc)
-    protocol = 'https://' if request.is_secure() else 'http://'
+    # print(settings.__dict__)
+    host = django_settings.DOMAIN
+    protocol = django_settings.PROTOCOL
+    # try:
+    #     host, *_ = socket.gethostbyaddr(socket.gethostname())
+    # except socket.herror:
+    #    pass
+
+    # protocol = 'https://' if request.is_secure() else 'http://'
     name = f"{app}:{url}"
-    print(f"{protocol}{host}:8000{reverse(name)}")
-    return f"{protocol}{host}:8000{reverse(name)}"
+    # print('USER LIST', f"{protocol}{host}{reverse(name)}")
+
+    # return f"DOMAIN{reverse(name)}"
+    return f"{protocol}://{host}{reverse(name)}"

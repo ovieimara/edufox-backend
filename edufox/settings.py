@@ -21,7 +21,7 @@ from urllib.parse import urlparse
 from google.oauth2 import service_account
 
 
-env = environ.Env(DEBUG=(bool, False))
+env = environ.Env(DEBUG=(bool, True))
 # environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -32,119 +32,76 @@ env_file = os.path.join(BASE_DIR, ".env")
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
-# os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./edufox-services-898b64103ea1.json"
-
-# if os.path.isfile(env_file):
-#     # Use a local secret file, if provided
-#     env.read_env(env_file)
-# # ...
-# elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
-#     # Pull secrets from Secret Manager
-#     project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
-#     client = secretmanager.SecretManagerServiceClient()
-
-#     # service_account_name = f"projects/{project_id}/secrets/SERVICE_ACCOUNT/versions/latest"
-#     # service_account_payload = client.access_secret_version(name=service_account_name).payload.data.decode("UTF-8")
-#     # # print('SERVICE', service_account_payload)
-#     # os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./edufox-services-898b64103ea1.json"
-
-#     settings_name = os.environ.get("SETTINGS_NAME", "django_settings")
-#     name = f"projects/{project_id}/secrets/{settings_name}/versions/latest"
-#     payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
-
-#     env.read_env(io.StringIO(payload))
-# else:
-#     raise Exception("No local .env or GOOGLE_CLOUD_PROJECT detected. No secrets found.")
-
-
-# SECURITY WARNING: keep the secret key used in production secret!
-DEBUG = False
-
-
-env = environ.Env(
-    SECRET_KEY=(str, os.getenv("SECRET_KEY")),
-    DATABASE_URL=(str, os.getenv("DATABASE_URL")),
-    GS_BUCKET_NAME=(str, os.getenv("GS_BUCKET_NAME")),
-)
-
-SECRET_KEY = env('SECRET_KEY')
-
 # Attempt to load the Project ID into the environment, safely failing on error.
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./creds.json"
+# os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
+
 try:
     _, os.environ["GOOGLE_CLOUD_PROJECT"] = google.auth.default()
 except google.auth.exceptions.DefaultCredentialsError:
     pass
 
-# Use local .env file in dev mode
-if os.getenv("PYTHON_ENV") == "dev":
-    DEBUG = True
-    ALLOWED_HOSTS = ["*"]
-    PROTOCOL = "http"
-    DOMAIN = "127.0.0.1:8000"
-
-# Use GCP secret manager in prod mode
-elif os.getenv("GOOGLE_CLOUD_PROJECT", None):
-    ALLOWED_HOSTS = [ 
-        'https://edufox-api-service-5wasy3cpxq-uc.a.run.app', 
-        'edufox-api-service-5wasy3cpxq-uc.a.run.app'
-    ]
-    CSRF_TRUSTED_ORIGINS = [ 
-        'https://edufox-api-service-5wasy3cpxq-uc.a.run.app'
-    ]
-    CORS_ALLOWED_ORIGINS = [
-        'https://api-service-5wasy3cpxq-uc.a.run.app',
-        'http://localhost:8000',
-        'https://edufox-api-service-5wasy3cpxq-uc.a.run.app',
-    ]
-    CORS_ORIGIN_WHITELIST = [
-        'https://api-service-5wasy3cpxq-uc.a.run.app',
-        'https://localhost:8000', 'https://127.0.0.1',
-        'http://localhost:8000', 'http://127.0.0.1',
-        'https://edufox-api-service-5wasy3cpxq-uc.a.run.app',
-        'edufox-api-service-5wasy3cpxq-uc.a.run.app',
-    ]
-    SECURE_SSL_REDIRECT = True
-    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-    PROTOCOL = "https"
-    DOMAIN = "api-service-5wasy3cpxq-uc.a.run.app"
-
-    project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
+if os.path.isfile(env_file):
+    # Use a local secret file, if provided
+    # print('ovie')
+    env.read_env(env_file)
+# ...
+elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
+    # Pull secrets from Secret Manager
+    
+    project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
     client = secretmanager.SecretManagerServiceClient()
-    settings_name = os.getenv("SETTINGS_NAME", "django_app_settings")
-    name = f"projects/{project_id}/secrets/{settings_name}/versions/latest"
-    payload = client.access_secret_version(name=name).payload.data.decode(
-        "UTF-8"
-    )
 
+    # service_account_name = f"projects/{project_id}/secrets/SERVICE_ACCOUNT/versions/latest"
+    # service_account_payload = client.access_secret_version(name=service_account_name).payload.data.decode("UTF-8")
+    # # print('SERVICE', service_account_payload)
+    # os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./edufox-services-898b64103ea1.json"
+
+    settings_name = os.environ.get("SETTINGS_NAME", "django_settings")
+    
+    name = f"projects/{project_id}/secrets/{settings_name}/versions/latest"
+    
+    payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
+    # print('GOOGLE_CLOUD_PROJECT', payload)
     env.read_env(io.StringIO(payload))
 else:
-    raise Exception(
-        "No local .env or GOOGLE_CLOUD_PROJECT detected. No secrets found."
-    )
+    raise Exception("No local .env or GOOGLE_CLOUD_PROJECT detected. No secrets found.")
+
+
+# SECURITY WARNING: keep the secret key used in production secret!
+DEBUG = env('DEBUG')
+SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 
 # SECURITY WARNING: It's recommended that you use this when
 # running in production. The URL will be known once you first deploy
 # to Cloud Run. This code takes the URL and converts it to both these settings formats.
-# CLOUDRUN_SERVICE_URL = env("CLOUDRUN_SERVICE_URL", default=None)
-# print('CLOUDRUN_SERVICE_URL', CLOUDRUN_SERVICE_URL)
-# if CLOUDRUN_SERVICE_URL:
-    # ALLOWED_HOSTS = [urlparse(CLOUDRUN_SERVICE_URL).netloc, 
-    # 'https://edufox-api-service-5wasy3cpxq-uc.a.run.app', 
-    # 'edufox-api-service-5wasy3cpxq-uc.a.run.app'
-    # ]
-    # CSRF_TRUSTED_ORIGINS = [CLOUDRUN_SERVICE_URL, 
-    # 'https://edufox-api-service-5wasy3cpxq-uc.a.run.app']
+CLOUDRUN_SERVICE_URL = env("CLOUDRUN_SERVICE_URL", default=None)
+ALLOWED_HOSTS = []
+CSRF_TRUSTED_ORIGINS = []
+PROTOCOL = ""
+DOMAIN = ""
+# print('CLOUDRUN_SERVICE_URL: ', CLOUDRUN_SERVICE_URL)
+if CLOUDRUN_SERVICE_URL:
+    service_url = urlparse(CLOUDRUN_SERVICE_URL).netloc
+    ALLOWED_HOSTS = [service_url]
+    CSRF_TRUSTED_ORIGINS = [CLOUDRUN_SERVICE_URL]
     # SECURE_SSL_REDIRECT = True
     # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-    # PROTOCOL = "https"
-    # DOMAIN = "api-service-5wasy3cpxq-uc.a.run.app"
-# else:
-#     ALLOWED_HOSTS = ["*"]
-#     PROTOCOL = "http"
-#     DOMAIN = "127.0.0.1:8000"
+    PROTOCOL = "https"
+    DOMAIN = service_url
+else:
+    ALLOWED_HOSTS = ["*"]
+    PROTOCOL = "http"
+    DOMAIN = "127.0.0.1:8000"
 
-# CORS_ALLOW_ALL_ORIGINS = True
+# ALLOWED_HOSTS = ["*"]
+# PROTOCOL = "http"
+# DOMAIN = "127.0.0.1:8000"
+
+# print(ALLOWED_HOSTS)
+
+CORS_ALLOW_ALL_ORIGINS = True
 # CSRF_TRUSTED_ORIGINS = [
 #     'https://edufox-api-service-5wasy3cpxq-uc.a.run.app',
 #     'https://api-service-5wasy3cpxq-uc.a.run.app',
@@ -172,8 +129,7 @@ else:
 #     'edufox-api-service-5wasy3cpxq-uc.a.run.app',
 # ]
 
-# PROTOCOL = "https"
-# DOMAIN = "edufox-api-service-5wasy3cpxq-uc.a.run.app:8000"
+
 
 # Application definition
 
@@ -191,8 +147,6 @@ INSTALLED_APPS = [
     # 'coreapi',
     # 'drf_yasg',
     'rest_framework_swagger',
-    "storages"
-
     
 ]
 
@@ -254,7 +208,7 @@ WSGI_APPLICATION = 'edufox.wsgi.application'
 # Use django-environ to parse the connection string
 DATABASES = {"default": env.db()}
 
-# If the flag has been set, configure to use proxy
+# If the flag as been set, configure to use proxy
 if os.getenv("USE_CLOUD_SQL_AUTH_PROXY", None):
     DATABASES["default"]["HOST"] = "cloudsql-proxy"
     DATABASES["default"]["PORT"] = 5432
@@ -263,7 +217,6 @@ if os.getenv("USE_CLOUD_SQL_AUTH_PROXY", None):
 # Define static storage via django-storages[google]
 GS_BUCKET_NAME = env("GS_BUCKET_NAME")
 STATIC_URL = "/static/"
-STATICFILES_DIRS = []
 DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
 STATICFILES_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
 # GS_DEFAULT_ACL = "publicRead"
@@ -354,6 +307,8 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
+
+# STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
