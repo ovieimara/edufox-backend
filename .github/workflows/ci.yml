@@ -23,8 +23,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Build containers
       run: docker-compose -f "docker-compose.yml" up -d --build
-    - name: Start containers
-      run: docker-compose up
+  
     - name: Run Tests
       run: |
-        python manage.py test
+        docker-compose run --rm app python manage.py test
