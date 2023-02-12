@@ -65,7 +65,7 @@ steps:
       - update
       - $_SERVICE_NAME
       - '--platform=managed'
-      - '--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA'
+      - '--image=gcr.io/${PROJECT_ID}/${_SERVICE_NAME}'
       - >-
         --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID,gcb-trigger-id=$_TRIGGER_ID,$_LABELS
       - '--region=$_REGION'
@@ -78,13 +78,13 @@ substitutions:
   _REGION: us-central1
   _SERVICE_NAME: edufox-api-service
   _SECRET_SETTINGS_NAME: django_settings
-  _GCR_HOSTNAME: us.gcr.io
+  # _GCR_HOSTNAME: us.gcr.io
   _TRIGGER_ID: 58ca4582-ff06-46b7-a718-1e0612d5c505
   _LABELS: gcb-trigger-id=58ca4582-ff06-46b7-a718-1e0612d5c505
 
 # Store images in Google Artifact Registry
 images:
-  - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA'
+  - "gcr.io/${PROJECT_ID}/${_SERVICE_NAME}"
 
 tags:
   - gcp-cloud-build-deploy-cloud-run
