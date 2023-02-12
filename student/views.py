@@ -202,6 +202,7 @@ def getUrl(url, request, app):
     # print(settings.__dict__)
     host = django_settings.DOMAIN
     protocol = django_settings.PROTOCOL
+    # host = "0.0.0.0:8000"
     # try:
     #     host, *_ = socket.gethostbyaddr(socket.gethostname())
     # except socket.herror:
@@ -209,7 +210,7 @@ def getUrl(url, request, app):
 
     # protocol = 'https://' if request.is_secure() else 'http://'
     name = f"{app}:{url}"
-    # print('USER LIST', f"{protocol}{host}{reverse(name)}")
+    print('USER LIST', f"{protocol}://{host}{reverse(name)}")
 
     # return f"DOMAIN{reverse(name)}"
     return f"{protocol}://{host}{reverse(name)}"
