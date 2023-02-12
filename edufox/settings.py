@@ -41,31 +41,31 @@ try:
 except google.auth.exceptions.DefaultCredentialsError:
     pass
 
-if os.path.isfile(env_file):
-    # Use a local secret file, if provided
-    # print('ovie')
-    env.read_env(env_file)
-# ...
-elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
-    # Pull secrets from Secret Manager
+# if os.path.isfile(env_file):
+#     # Use a local secret file, if provided
+#     # print('ovie')
+#     env.read_env(env_file)
+# # ...
+# elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
+#     # Pull secrets from Secret Manager
     
-    project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
-    client = secretmanager.SecretManagerServiceClient()
+#     project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
+#     client = secretmanager.SecretManagerServiceClient()
 
-    # service_account_name = f"projects/{project_id}/secrets/SERVICE_ACCOUNT/versions/latest"
-    # service_account_payload = client.access_secret_version(name=service_account_name).payload.data.decode("UTF-8")
-    # # print('SERVICE', service_account_payload)
-    # os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./edufox-services-898b64103ea1.json"
+#     # service_account_name = f"projects/{project_id}/secrets/SERVICE_ACCOUNT/versions/latest"
+#     # service_account_payload = client.access_secret_version(name=service_account_name).payload.data.decode("UTF-8")
+#     # # print('SERVICE', service_account_payload)
+#     # os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./edufox-services-898b64103ea1.json"
 
-    settings_name = os.environ.get("SETTINGS_NAME", "django_settings")
+#     settings_name = os.environ.get("SETTINGS_NAME", "django_settings")
     
-    name = f"projects/{project_id}/secrets/{settings_name}/versions/latest"
+#     name = f"projects/{project_id}/secrets/{settings_name}/versions/latest"
     
-    payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
-    # print('GOOGLE_CLOUD_PROJECT', payload)
-    env.read_env(io.StringIO(payload))
-else:
-    raise Exception("No local .env or GOOGLE_CLOUD_PROJECT detected. No secrets found.")
+#     payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
+#     # print('GOOGLE_CLOUD_PROJECT', payload)
+#     env.read_env(io.StringIO(payload))
+# else:
+#     raise Exception("No local .env or GOOGLE_CLOUD_PROJECT detected. No secrets found.")
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
