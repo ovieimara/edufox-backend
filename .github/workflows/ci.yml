@@ -24,4 +24,4 @@ jobs:
   
     - name: Run Tests
       run: |
-        docker-compose run --rm app python manage.py test
+        docker-compose run --rm -e REUSE_DB=1 -e TESTING=True app python manage.py test --keepdb
