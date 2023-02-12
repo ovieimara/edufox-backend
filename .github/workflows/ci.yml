@@ -31,6 +31,8 @@ jobs:
       env:
         USE_CLOUD_SQL_AUTH_PROXY: ${{ env.USE_CLOUD_SQL_AUTH_PROXY }}
         SECRET_KEY: ${{ env.SECRET_KEY }}
+        DATABASE_URL : postgres://admin:_edufox@123A@//cloudsql/edufox-services:us-central1:edufox-db-instance/edufox_db
+
       run: docker-compose up -d --build
   
     - name: Run Tests
