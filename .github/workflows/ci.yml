@@ -25,8 +25,11 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Build containers
+      env:
+        USE_CLOUD_SQL_AUTH_PROXY: ${{ env.USE_CLOUD_SQL_AUTH_PROXY }}
       run: docker-compose up -d --build
   
     - name: Run Tests
-      run: |
-        docker-compose run --rm -e REUSE_DB=1 -e TESTING=True app python manage.py test --keepdb
+      env:
+        USE_CLOUD_SQL_AUTH_PROXY: ${{ env.USE_CLOUD_SQL_AUTH_PROXY }}
+      run: docker-compose run --rm -e REUSE_DB=1 -e TESTING=True app python manage.py test --keepdb
