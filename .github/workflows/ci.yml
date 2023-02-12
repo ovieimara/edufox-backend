@@ -25,6 +25,8 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Build containers
+      env:
+        USE_CLOUD_SQL_AUTH_PROXY: ${{ env.USE_CLOUD_SQL_AUTH_PROXY }}
       run: docker-compose up -d --build
   
     - name: Run Tests
