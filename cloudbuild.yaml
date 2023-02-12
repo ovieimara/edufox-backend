@@ -73,11 +73,12 @@ steps:
     id: Deploy
     entrypoint: gcloud
 
-# substitutions:
-#   _INSTANCE_NAME: edufox-db-instance
-#   _REGION: us-central1
-#   _SERVICE_NAME: edufox-api-service
-#   _SECRET_SETTINGS_NAME: django_settings
+substitutions:
+  _INSTANCE_NAME: edufox-db-instance
+  _REGION: us-central1
+  _SERVICE_NAME: edufox-api-service
+  _SECRET_SETTINGS_NAME: django_settings
+  _GCR_HOSTNAME: us.gcr.io
 
 images:
   - "gcr.io/${PROJECT_ID}/${_SERVICE_NAME}"

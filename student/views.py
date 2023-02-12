@@ -19,10 +19,12 @@ from djoser import signals, utils
 from djoser.compat import get_user_email
 from djoser.conf import settings
 from django.conf import settings as django_settings
+from rest_framework.test import APIClient
+
 # import socket
 
 # HOST = config('HOST')
-
+client = APIClient()
 class StudentListCreateAPIView(generics.ListCreateAPIView):
     """
     Signup a new student, with a POST request. user receives a verification link, after verification they are activated.
@@ -40,9 +42,11 @@ class StudentListCreateAPIView(generics.ListCreateAPIView):
             "email" : email,
             "password" : password,
         }
-
-        response = requests.post(getUrl('user-list', self.request, "student"), data=data)
-        print('RESPONSE: ', response)
+        if django_settings.DOMAIN == "127.0.0.1:8000":
+            response = client.post(reverse('student:user-list'), data=data)
+        else:
+            response = requests.post(getUrl('user-list', "student"), data=data)
+        # print('RESPONSE: ', response)
         if response.status_code == status.HTTP_201_CREATED:
             super().perform_create(serializer)
 
@@ -198,7 +202,7 @@ def apiViewManager(request, *args, **kwargs):
 #             temp_student.delete()
 
 
-def getUrl(url, request, app):
+def getUrl(url, app):
     # print(settings.__dict__)
     host = django_settings.DOMAIN
     protocol = django_settings.PROTOCOL
