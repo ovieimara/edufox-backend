@@ -21,8 +21,6 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Build containers
-      run: docker-compose -f "docker-compose.yml" up -d --build
   
     - name: Run Tests
       run: |
