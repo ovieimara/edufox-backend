@@ -209,7 +209,8 @@ WSGI_APPLICATION = 'edufox.wsgi.application'
 DATABASES = {"default": env.db()}
 
 # If the flag as been set, configure to use proxy
-if os.getenv("USE_CLOUD_SQL_AUTH_PROXY", None):
+if os.environ("USE_CLOUD_SQL_AUTH_PROXY", None):
+    print('USE_CLOUD_SQL_AUTH_PROXY', os.environ("USE_CLOUD_SQL_AUTH_PROXY"))
     DATABASES["default"]["HOST"] = "cloudsql-proxy"
     DATABASES["default"]["PORT"] = 5432
 
