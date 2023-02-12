@@ -13,14 +13,14 @@ jobs:
     runs-on: ubuntu-latest
     env:
       USE_CLOUD_SQL_AUTH_PROXY: True
-      SECRET_KEY : django-insecure-5xh$hw9%n$huk$mql=%r7p@dxefh9+hleb7yb$eo_6p)r*$dn^
-      DATABASE_URL : postgres://admin:_edufox@123A@//cloudsql/edufox-services:us-central1:edufox-db-instance/edufox_db
-      GS_BUCKET_NAME : edufox-bucket
+      SECRET_KEY: django-insecure-5xh$hw9%n$huk$mql=%r7p@dxefh9+hleb7yb$eo_6p)r*$dn^
+      DATABASE_URL: postgres://admin:_edufox@123A@//cloudsql/edufox-services:us-central1:edufox-db-instance/edufox_db
+      GS_BUCKET_NAME: edufox-bucket
       EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
-      EMAIL_HOST : smtp.gmail.com
-      EMAIL_PORT : 587
-      EMAIL_HOST_USER : app.edufox@gmail.com
-      EMAIL_HOST_PASSWORD : sofeipbagutmjhkc
+      EMAIL_HOST: smtp.gmail.com
+      EMAIL_PORT: 587
+      EMAIL_HOST_USER: app.edufox@gmail.com
+      EMAIL_HOST_PASSWORD: sofeipbagutmjhkc
 
     strategy:
       max-parallel: 4
