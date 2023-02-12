@@ -79,10 +79,20 @@ substitutions:
   _SERVICE_NAME: edufox-api-service
   _SECRET_SETTINGS_NAME: django_settings
   _GCR_HOSTNAME: us.gcr.io
+  _TRIGGER_ID: 58ca4582-ff06-46b7-a718-1e0612d5c505
+  _LABELS: gcb-trigger-id=58ca4582-ff06-46b7-a718-1e0612d5c505
 
+# Store images in Google Artifact Registry
 images:
-  - "gcr.io/${PROJECT_ID}/${_SERVICE_NAME}"
-timeout: 3600s
+  - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA'
+
+tags:
+  - gcp-cloud-build-deploy-cloud-run
+  - gcp-cloud-build-deploy-cloud-run-managed
+
+# images:
+#   - "gcr.io/${PROJECT_ID}/${_SERVICE_NAME}"
+# timeout: 3600s
 # [END cloudrun_django_cloudmigrate]
 
 # steps:
