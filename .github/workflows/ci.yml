@@ -38,14 +38,14 @@ jobs:
       env:
         USE_CLOUD_SQL_AUTH_PROXY: ${{ env.USE_CLOUD_SQL_AUTH_PROXY }}
         SECRET_KEY: ${{ env.SECRET_KEY }}
-        DATABASE_URL : ${{ env.DATABASE_URL }}
+        DATABASE_URL: ${{ env.DATABASE_URL }}
 
       run: docker-compose up -d --build
   
     - name: Run Tests
       env:
         USE_CLOUD_SQL_AUTH_PROXY: ${{ env.USE_CLOUD_SQL_AUTH_PROXY }}
-        SECRET_KEY: $SECRET_KEY
+        SECRET_KEY: ${{ env.SECRET_KEY }}
         DATABASE_URL : ${{ env.DATABASE_URL }}
         GS_BUCKET_NAME : ${{ env.GS_BUCKET_NAME }}
         EMAIL_BACKEND: ${{ env.EMAIL_BACKEND }}
