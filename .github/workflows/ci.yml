@@ -34,5 +34,5 @@ jobs:
     - name: Run Tests
       env:
         USE_CLOUD_SQL_AUTH_PROXY: ${{ env.USE_CLOUD_SQL_AUTH_PROXY }}
-        SECRET_KEY: ${{ env.SECRET_KEY }}
+        SECRET_KEY: django-insecure-5xh$hw9%n$huk$mql=%r7p@dxefh9+hleb7yb$eo_6p)r*$dn^
       run: docker-compose run --rm -e REUSE_DB=1 -e TESTING=True app python manage.py test --keepdb
