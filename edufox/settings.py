@@ -35,6 +35,7 @@ env_file = os.path.join(BASE_DIR, ".env")
 # Attempt to load the Project ID into the environment, safely failing on error.
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./creds.json"
 # os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
+os.environ['DATABASE_URL'] = "postgres://admin:_edufox@123A@//cloudsql/edufox-services:us-central1:edufox-db-instance/edufox_db"
 
 try:
     _, os.environ["GOOGLE_CLOUD_PROJECT"] = google.auth.default()
@@ -207,8 +208,8 @@ WSGI_APPLICATION = 'edufox.wsgi.application'
 # }
 
 # Use django-environ to parse the connection string
-# DATABASES = {"default":  env.db()}
-DATABASES = {"default":  os.environ.get('DATABASE_URL')}
+DATABASES = {"default":  env.db()}
+# DATABASES = {"default":  os.environ.get('DATABASE_URL')}
 
 # If the flag as been set, configure to use proxy
 if os.environ.get("USE_CLOUD_SQL_AUTH_PROXY", None):
