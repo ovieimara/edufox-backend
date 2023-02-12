@@ -207,7 +207,8 @@ WSGI_APPLICATION = 'edufox.wsgi.application'
 # }
 
 # Use django-environ to parse the connection string
-DATABASES = {"default": env.db()}
+# DATABASES = {"default":  env.db()}
+DATABASES = {"default":  os.environ.get('DATABASE_URL')}
 
 # If the flag as been set, configure to use proxy
 if os.environ.get("USE_CLOUD_SQL_AUTH_PROXY", None):
