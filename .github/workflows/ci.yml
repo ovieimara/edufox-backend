@@ -45,7 +45,7 @@ jobs:
     - name: Run Tests
       env:
         USE_CLOUD_SQL_AUTH_PROXY: ${{ env.USE_CLOUD_SQL_AUTH_PROXY }}
-        SECRET_KEY: ${{ env.SECRET_KEY }}
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
         DATABASE_URL : ${{ env.DATABASE_URL }}
         GS_BUCKET_NAME : ${{ env.GS_BUCKET_NAME }}
         EMAIL_BACKEND: ${{ env.EMAIL_BACKEND }}
