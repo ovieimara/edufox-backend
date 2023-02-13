@@ -55,8 +55,8 @@ jobs:
         credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
         # export_default_credentials: true
 
-      env:
-        GOOGLE_APPLICATION_CREDENTIALS : ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+      # env:
+      #   GOOGLE_APPLICATION_CREDENTIALS : ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
 
     - name: Build containers
       # env:
@@ -70,7 +70,7 @@ jobs:
   
     - name: Run Tests
       env:
-        GOOGLE_APPLICATION_CREDENTIALS: ${{ env.GOOGLE_GHA_CREDS_PATH }}
+        # GOOGLE_APPLICATION_CREDENTIALS: ${{ env.GOOGLE_GHA_CREDS_PATH }}
         
         SECRET_KEY: ${{ env.SECRET_KEY }}
         # USE_CLOUD_SQL_AUTH_PROXY: ovie

@@ -29,11 +29,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 # SECRET_KEY = os.environ.get('SECRET_KEY')
 arr = os.listdir('.')
-print(arr)
-
 file = ''
 for i in range(len(arr)):
-    if 'gha-creds' in arr[i]:
+    if 'gha-creds' in arr[i] or arr[i] == "creds.json":
         file = arr[i]
 
 
@@ -94,7 +92,6 @@ os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 
 project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
 # print('project_id', project_id)
-project_id = "edufox-services"
 client = secretmanager.SecretManagerServiceClient()
 
 # service_account_name = f"projects/{project_id}/secrets/SERVICE_ACCOUNT/versions/latest"
