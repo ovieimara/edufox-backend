@@ -18,6 +18,7 @@ env:
   EMAIL_PORT : ${{ secrets.EMAIL_PORT }}
   EMAIL_HOST_USER : ${{ secrets.EMAIL_HOST_USER }}
   EMAIL_HOST_PASSWORD : ${{ secrets.EMAIL_HOST_PASSWORD }}
+  DB_ENGINE : ${{ secrets.DB_ENGINE }}
 
 
   # USE_CLOUD_SQL_AUTH_PROXY: ${{ secrets.USE_CLOUD_SQL_AUTH_PROXY }}
@@ -74,5 +75,7 @@ jobs:
         EMAIL_PORT : ${{ env.EMAIL_PORT }}
         EMAIL_HOST_USER : ${{ env.EMAIL_HOST_USER }}
         EMAIL_HOST_PASSWORD : ${{ env.EMAIL_HOST_PASSWORD }}
+        DB_ENGINE : ${{ secrets.DB_ENGINE }}
+
 
       run: docker-compose run --rm -e REUSE_DB=1 -e TESTING=True app python manage.py test --keepdb

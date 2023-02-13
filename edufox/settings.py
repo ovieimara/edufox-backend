@@ -42,6 +42,7 @@ os.environ['EMAIL_HOST'] = ''
 os.environ['EMAIL_PORT'] = ''
 os.environ['EMAIL_HOST_USER'] = ''
 os.environ['EMAIL_HOST_PASSWORD'] = ''
+os.environ['DB_ENGINE'] = ''
 
 try:
     _, os.environ["GOOGLE_CLOUD_PROJECT"] = google.auth.default()
