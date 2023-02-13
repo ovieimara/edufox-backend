@@ -93,7 +93,7 @@ os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 
 project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
 # print('project_id', project_id)
-project_id = "edufox-services"
+# project_id = "edufox-services"
 client = secretmanager.SecretManagerServiceClient()
 
 # service_account_name = f"projects/{project_id}/secrets/SERVICE_ACCOUNT/versions/latest"
