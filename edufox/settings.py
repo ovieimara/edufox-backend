@@ -27,6 +27,8 @@ env = environ.Env(DEBUG=(bool, True))
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 # environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+SECRET_KEY = os.environ.get('SECRET_KEY')
+
 env_file = os.path.join(BASE_DIR, ".env")
 
 # Quick-start development settings - unsuitable for production
@@ -79,7 +81,7 @@ elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
 # SECURITY WARNING: keep the secret key used in production secret!
 DEBUG = env('DEBUG')
 # SECRET_KEY = env('SECRET_KEY')
-SECRET_KEY = os.environ.get('SECRET_KEY')
+
 print('SECRET_KEY', SECRET_KEY)
 print('USE_CLOUD_SQL_AUTH_PROXY', os.environ.get("USE_CLOUD_SQL_AUTH_PROXY"))
 
