@@ -50,6 +50,7 @@ for i in range(len(arr)):
 # env.read_env(io.StringIO(placeholder))
 
 env_file = os.path.join(BASE_DIR, file)
+print(env_file)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
@@ -92,7 +93,7 @@ os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 
 project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
 # print('project_id', project_id)
-# project_id = "edufox-services"
+project_id = "edufox-services"
 client = secretmanager.SecretManagerServiceClient()
 
 # service_account_name = f"projects/{project_id}/secrets/SERVICE_ACCOUNT/versions/latest"
