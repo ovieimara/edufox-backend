@@ -34,7 +34,7 @@ env_file = os.path.join(BASE_DIR, ".env")
 
 # Attempt to load the Project ID into the environment, safely failing on error.
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./creds.json"
-os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
+# os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 
 try:
     _, os.environ["GOOGLE_CLOUD_PROJECT"] = google.auth.default()
@@ -210,7 +210,7 @@ WSGI_APPLICATION = 'edufox.wsgi.application'
 DATABASES = {"default": env.db()}
 
 # If the flag as been set, configure to use proxy
-if os.getenv("USE_CLOUD_SQL_AUTH_PROXY", None):
+if os.environ.get("USE_CLOUD_SQL_AUTH_PROXY", None):
     DATABASES["default"]["HOST"] = "cloudsql-proxy"
     DATABASES["default"]["PORT"] = 5432
 
