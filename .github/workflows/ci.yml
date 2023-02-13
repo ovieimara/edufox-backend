@@ -53,6 +53,7 @@ jobs:
       uses: 'google-github-actions/auth@v1'
       with:
         credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
+        export_default_credentials: true
 
       env:
         GOOGLE_APPLICATION_CREDENTIALS : ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
@@ -69,9 +70,8 @@ jobs:
   
     - name: Run Tests
       env:
-        GOOGLE_APPLICATION_CREDENTIALS: ${{ env.SECRET_KEY }}
-
-
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ env.GOOGLE_GHA_CREDS_PATH }}
+        
         SECRET_KEY: ${{ env.SECRET_KEY }}
         # USE_CLOUD_SQL_AUTH_PROXY: ovie
         # GOOGLE_CLOUD_PROJECT: ${{ env.GOOGLE_CLOUD_PROJECT }}
@@ -83,7 +83,6 @@ jobs:
         # EMAIL_HOST_USER : ${{ env.EMAIL_HOST_USER }}
         # EMAIL_HOST_PASSWORD : ${{ env.EMAIL_HOST_PASSWORD }}
         # DB_ENGINE : ${{ env.DB_ENGINE }}
-
 
       run: docker-compose run --rm -e REUSE_DB=1 -e TESTING=True app python manage.py test --keepdb
       # run: echo "KEY, $GOOGLE_APPLICATION_CREDENTIALS."
