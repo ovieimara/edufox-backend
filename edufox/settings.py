@@ -34,7 +34,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 #     DATABASE_URL=(os.environ.get("DATABASE_URL")),
 #     GS_BUCKET_NAME=(str, os.environ.get("GS_BUCKET_NAME")),
 # )
-
+print('DATABASE_URL', os.getenv('DATABASE_URL'))
 placeholder = (
         f"SECRET_KEY=django-insecure-5xh$hw9%n$huk$mql=%r7p@dxefh9+hleb7yb$eo_6p)r*$dn^\n"
         "GS_BUCKET_NAME=edufox-bucket\n"
