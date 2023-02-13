@@ -106,7 +106,7 @@ env.read_env(io.StringIO(payload))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 DEBUG = True
-print('ENV_STATUS:', env)
+print('ENV_STATUS:', env.ENVIRON)
 
 SECRET_KEY = env("SECRET_KEY")
 GOOGLE_APPLICATION_CREDENTIALS = env('GOOGLE_APPLICATION_CREDENTIALS')
