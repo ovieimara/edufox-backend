@@ -270,7 +270,7 @@ WSGI_APPLICATION = 'edufox.wsgi.application'
 
 # Use django-environ to parse the connection string
 DATABASES = {"default": env.db()}
-USE_CLOUD_SQL_AUTH_PROXY = os.environ.get('USE_CLOUD_SQL_AUTH_PROXY')
+USE_CLOUD_SQL_AUTH_PROXY = env('USE_CLOUD_SQL_AUTH_PROXY')
 # print(os.environ.get('USE_CLOUD_SQL_AUTH_PROXY', USE_CLOUD_SQL_AUTH_PROXY))
 
 # If the flag as been set, configure to use proxy
