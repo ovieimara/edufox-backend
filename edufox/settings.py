@@ -88,7 +88,7 @@ elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-DEBUG = env('DEBUG')
+DEBUG = True
 # SECRET_KEY = env('SECRET_KEY')
 
 # print('SECRET_KEY', SECRET_KEY)
