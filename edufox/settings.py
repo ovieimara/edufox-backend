@@ -64,7 +64,7 @@ if os.path.isfile(env_file):
     env.read_env(env_file)
 # ...
 # [START_EXCLUDE]
-elif os.getenv("TRAMPOLINE_CI", None):
+elif os.environ.get("GITHUB_ACTIONS", None):
     # Create local settings if running with CI, for unit testing
 
     placeholder = (
