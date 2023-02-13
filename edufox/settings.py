@@ -238,11 +238,11 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'edufox.wsgi.application'
-DB_NAME=env("DB_NAME")
-DB_PASSWORD=env("DB_PASSWORD")
-DB_HOST=env("DB_HOST")
-DB_PORT=env("DB_PORT")
-DB_ENGINE=env('DB_ENGINE')
+# DB_NAME=env("DB_NAME")
+# DB_PASSWORD=env("DB_PASSWORD")
+# DB_HOST=env("DB_HOST")
+# DB_PORT=env("DB_PORT")
+# DB_ENGINE=env('DB_ENGINE')
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
