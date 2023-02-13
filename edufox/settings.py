@@ -59,10 +59,10 @@ os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 # # os.environ['EMAIL_HOST_PASSWORD'] = ''
 # # os.environ['DB_ENGINE'] = ''
 
-try:
-    _, os.environ["GOOGLE_CLOUD_PROJECT"] = google.auth.default()
-except google.auth.exceptions.DefaultCredentialsError:
-    pass
+# try:
+#     _, os.environ["GOOGLE_CLOUD_PROJECT"] = google.auth.default()
+# except google.auth.exceptions.DefaultCredentialsError:
+#     pass
 
 # if os.path.isfile(env_file):
 #     # Use a local secret file, if provided
