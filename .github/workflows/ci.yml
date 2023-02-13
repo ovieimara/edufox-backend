@@ -9,6 +9,8 @@ on:
 env:
 #   USE_CLOUD_SQL_AUTH_PROXY: True
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
+  USE_CLOUD_SQL_AUTH_PROXY: ${{ secrets.USE_CLOUD_SQL_AUTH_PROXY }}
+
 #   DATABASE_URL: postgres://admin:_edufox@123A@//cloudsql/edufox-services:us-central1:edufox-db-instance/edufox_db
 #   GS_BUCKET_NAME: edufox-bucket
 #   EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
@@ -44,7 +46,7 @@ jobs:
   
     - name: Run Tests
       env:
-      #   USE_CLOUD_SQL_AUTH_PROXY: ${{ secrets.USE_CLOUD_SQL_AUTH_PROXY }}
+        USE_CLOUD_SQL_AUTH_PROXY: ${{ secrets.USE_CLOUD_SQL_AUTH_PROXY }}
         SECRET_KEY: ${{ secrets.SECRET_KEY }}
       #   DATABASE_URL : ${{ env.DATABASE_URL }}
       #   GS_BUCKET_NAME : ${{ env.GS_BUCKET_NAME }}
