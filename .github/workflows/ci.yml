@@ -8,7 +8,7 @@ on:
     
 env:
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
-  USE_CLOUD_SQL_AUTH_PROXY: 'ovie'
+  # USE_CLOUD_SQL_AUTH_PROXY: 'ovie'
   # GOOGLE_APPLICATION_CREDENTIALS : ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
   # GOOGLE_CLOUD_PROJECT: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
   DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -19,9 +19,7 @@ env:
   # EMAIL_HOST_USER : ${{ secrets.EMAIL_HOST_USER }}
   # EMAIL_HOST_PASSWORD : ${{ secrets.EMAIL_HOST_PASSWORD }}
   # DB_ENGINE : ${{ secrets.DB_ENGINE }}
-
-
-  # USE_CLOUD_SQL_AUTH_PROXY: ${{ secrets.USE_CLOUD_SQL_AUTH_PROXY }}
+  USE_CLOUD_SQL_AUTH_PROXY: ${{ secrets.USE_CLOUD_SQL_AUTH_PROXY }}
 
 #   DATABASE_URL: postgres://admin:_edufox@123A@//cloudsql/edufox-services:us-central1:edufox-db-instance/edufox_db
 #   GS_BUCKET_NAME: edufox-bucket
@@ -73,7 +71,7 @@ jobs:
         # GOOGLE_APPLICATION_CREDENTIALS: ${{ env.GOOGLE_GHA_CREDS_PATH }}
         
         SECRET_KEY: ${{ env.SECRET_KEY }}
-        USE_CLOUD_SQL_AUTH_PROXY: 'ovie'
+        USE_CLOUD_SQL_AUTH_PROXY: ${{ env.USE_CLOUD_SQL_AUTH_PROXY }}
         # GOOGLE_CLOUD_PROJECT: ${{ env.GOOGLE_CLOUD_PROJECT }}
         DATABASE_URL: ${{ env.DATABASE_URL }}
         # GS_BUCKET_NAME: ${{ env.GS_BUCKET_NAME }}
