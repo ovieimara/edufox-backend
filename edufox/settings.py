@@ -57,7 +57,6 @@ env_file = os.path.join(BASE_DIR, file)
 
 # Attempt to load the Project ID into the environment, safely failing on error.
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = env_file
-os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 # os.environ['DATABASE_URL'] = ''
 # # os.environ['GS_BUCKET_NAME'] = ''
 # # os.environ['EMAIL_BACKEND'] = ''
@@ -143,12 +142,14 @@ if CLOUDRUN_SERVICE_URL:
     # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     PROTOCOL = "https"
     DOMAIN = service_url
-    os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = None
+    # os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = None
 
 else:
     ALLOWED_HOSTS = ["*"]
     PROTOCOL = "http"
     DOMAIN = "127.0.0.1:8000"
+    os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
+
 
 # ALLOWED_HOSTS = ["*"]
 # PROTOCOL = "http"
@@ -237,12 +238,11 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'edufox.wsgi.application'
-# DB_NAME=os.environ.get("DB_NAME")
-# DB_PASSWORD=os.environ.get("DB_PASSWORD")
-# DB_HOST=os.environ.get("DB_HOST")
-# DB_PORT=os.environ.get("DB_PORT")
-# DB_ENGINE = os.environ.get('DB_ENGINE')
-# DATABASE_URL = os.environ.get('DATABASE_URL')
+DB_NAME=env("DB_NAME")
+DB_PASSWORD=env("DB_PASSWORD")
+DB_HOST=env("DB_HOST")
+DB_PORT=env("DB_PORT")
+DB_ENGINE=env('DB_ENGINE')
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
