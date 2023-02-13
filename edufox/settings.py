@@ -29,12 +29,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 # SECRET_KEY = os.environ.get('SECRET_KEY')
 
-env = environ.Env(
-    GOOGLE_APPLICATION_CREDENTIALS=(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")),
-    # DATABASE_URL=(os.environ.get("DATABASE_URL")),
-    # GS_BUCKET_NAME=(str, os.environ.get("GS_BUCKET_NAME")),
-)
-print('GOOGLE_APPLICATION_CREDENTIALS', env('GOOGLE_APPLICATION_CREDENTIALS'))
+# env = environ.Env(
+#     GOOGLE_APPLICATION_CREDENTIALS=(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")),
+#     # DATABASE_URL=(os.environ.get("DATABASE_URL")),
+#     # GS_BUCKET_NAME=(str, os.environ.get("GS_BUCKET_NAME")),
+# )
+# print('GOOGLE_APPLICATION_CREDENTIALS', env('GOOGLE_APPLICATION_CREDENTIALS'))
 # placeholder = (
 #         f"SECRET_KEY=django-insecure-5xh$hw9%n$huk$mql=%r7p@dxefh9+hleb7yb$eo_6p)r*$dn^\n"
 #         "GS_BUCKET_NAME=edufox-bucket\n"
