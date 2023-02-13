@@ -50,7 +50,7 @@ for i in range(len(arr)):
 # env.read_env(io.StringIO(placeholder))
 
 env_file = os.path.join(BASE_DIR, file)
-print(env_file)
+# print(env_file)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
