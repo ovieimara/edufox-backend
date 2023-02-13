@@ -84,6 +84,7 @@ os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
     # Pull secrets from Secret Manager
     
 project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
+print('project_id', project_id)
 client = secretmanager.SecretManagerServiceClient()
 
 # service_account_name = f"projects/{project_id}/secrets/SERVICE_ACCOUNT/versions/latest"

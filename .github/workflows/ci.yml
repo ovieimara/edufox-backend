@@ -3,8 +3,8 @@ name: Django CI
 on:
   push:
     branches: [ "master" ]
-  # pull_request:
-  #   branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
     
 env:
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
@@ -60,16 +60,11 @@ jobs:
       #   SECRET_KEY: ${{ env.SECRET_KEY }}
       #   DATABASE_URL: ${{ env.DATABASE_URL }}
 
-      run: env
+      run: docker-compose up -d --build
   
     - name: Run Tests
-    - id: 'auth'
-      name: 'Authenticate to Google Cloud'
-      uses: 'google-github-actions/auth@v1'
-      with:
-        credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
-      # env:
-      #   GOOGLE_APPLICATION_CREDENTIALS: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
 
         SECRET_KEY: ${{ env.SECRET_KEY }}
         # USE_CLOUD_SQL_AUTH_PROXY: ovie
