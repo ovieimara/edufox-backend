@@ -210,9 +210,10 @@ WSGI_APPLICATION = 'edufox.wsgi.application'
 DATABASES = {"default": env.db()}
 
 # If the flag as been set, configure to use proxy
-if os.environ.get("USE_CLOUD_SQL_AUTH_PROXY", None):
-    DATABASES["default"]["HOST"] = "cloudsql-proxy"
-    DATABASES["default"]["PORT"] = 5432
+# if os.environ.get("USE_CLOUD_SQL_AUTH_PROXY", None):
+print(os.environ.get("USE_CLOUD_SQL_AUTH_PROXY"))
+DATABASES["default"]["HOST"] = "cloudsql-proxy"
+DATABASES["default"]["PORT"] = 5432
 
 
 # Define static storage via django-storages[google]
