@@ -71,6 +71,7 @@ else:
 # SECURITY WARNING: keep the secret key used in production secret!
 DEBUG = env('DEBUG')
 # SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 
 # SECURITY WARNING: It's recommended that you use this when
