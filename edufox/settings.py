@@ -79,10 +79,10 @@ elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
 # SECURITY WARNING: keep the secret key used in production secret!
 DEBUG = env('DEBUG')
 # SECRET_KEY = env('SECRET_KEY')
-print('USE_CLOUD_SQL_AUTH_PROXY', os.environ.get("USE_CLOUD_SQL_AUTH_PROXY"))
-
 SECRET_KEY = os.environ.get('SECRET_KEY')
 print('SECRET_KEY', SECRET_KEY)
+print('USE_CLOUD_SQL_AUTH_PROXY', os.environ.get("USE_CLOUD_SQL_AUTH_PROXY"))
+
 # SECURITY WARNING: don't run with debug turned on in production!
 
 # SECURITY WARNING: It's recommended that you use this when
