@@ -36,6 +36,7 @@ env_file = os.path.join(BASE_DIR, ".env")
 # os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./creds.json"
 os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 os.environ['DATABASE_URL'] = ''
+os.environ['GS_BUCKET_NAME'] = ''
 
 try:
     _, os.environ["GOOGLE_CLOUD_PROJECT"] = google.auth.default()
