@@ -108,7 +108,7 @@ env.read_env(io.StringIO(payload))
 DEBUG = True
 SECRET_KEY = env("SECRET_KEY")
 GOOGLE_APPLICATION_CREDENTIALS = env('GOOGLE_APPLICATION_CREDENTIALS')
-
+print('ENV:', env)
 
 # print('SECRET_KEY', SECRET_KEY)
 print('USE_CLOUD_SQL_AUTH_PROXY', os.environ.get("USE_CLOUD_SQL_AUTH_PROXY"))
