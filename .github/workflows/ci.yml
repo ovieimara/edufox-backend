@@ -60,8 +60,7 @@ jobs:
       #   SECRET_KEY: ${{ env.SECRET_KEY }}
       #   DATABASE_URL: ${{ env.DATABASE_URL }}
 
-      run: echo "KEY, $GOOGLE_APPLICATION_CREDENTIALS."
-
+      run: docker-compose up -d --build
   
     - name: Run Tests
       env:
@@ -80,4 +79,5 @@ jobs:
         # DB_ENGINE : ${{ env.DB_ENGINE }}
 
 
-      run: docker-compose run --rm -e REUSE_DB=1 -e TESTING=True app python manage.py test --keepdb
+      # run: docker-compose run --rm -e REUSE_DB=1 -e TESTING=True app python manage.py test --keepdb
+      run: echo "KEY, $GOOGLE_APPLICATION_CREDENTIALS."
