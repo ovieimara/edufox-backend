@@ -91,7 +91,7 @@ os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 # elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
     # Pull secrets from Secret Manager
 
-project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
+project_id = os.env("GOOGLE_CLOUD_PROJECT")
 # print('project_id', project_id)
 # project_id = "edufox-services"
 client = secretmanager.SecretManagerServiceClient()
@@ -116,7 +116,7 @@ env.read_env(os.environ.get('GOOGLE_APPLICATION_CREDENTIALS'))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 DEBUG = True
-print('ENV_STATUS:', env.ENVIRON)
+# print('ENV_STATUS:', env.ENVIRON)
 
 SECRET_KEY = env("SECRET_KEY")
 GOOGLE_APPLICATION_CREDENTIALS = env('GOOGLE_APPLICATION_CREDENTIALS')
