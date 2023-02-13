@@ -100,7 +100,7 @@ if CLOUDRUN_SERVICE_URL:
     # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     PROTOCOL = "https"
     DOMAIN = service_url
-    os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = None
+    # os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = None
 
 else:
     ALLOWED_HOSTS = ["*"]
