@@ -22,7 +22,7 @@ services:
       build: .
       volumes:
           - .:/usr/src/app
-          - ./creds.json:/creds.json
+        #   - ./creds.json:/creds.json
 
       ports:
           - "8000:8000"
