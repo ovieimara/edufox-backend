@@ -34,15 +34,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 #     DATABASE_URL=(os.environ.get("DATABASE_URL")),
 #     GS_BUCKET_NAME=(str, os.environ.get("GS_BUCKET_NAME")),
 # )
-print('DATABASE_URL', os.getenv('DATABASE_URL'))
-placeholder = (
-        f"SECRET_KEY=django-insecure-5xh$hw9%n$huk$mql=%r7p@dxefh9+hleb7yb$eo_6p)r*$dn^\n"
-        "GS_BUCKET_NAME=edufox-bucket\n"
-        f"DATABASE_URL={os.getenv('DATABASE_URL')}"
-    )
-env.read_env(io.StringIO(placeholder))
+# print('DATABASE_URL', os.getenv('DATABASE_URL'))
+# placeholder = (
+#         f"SECRET_KEY=django-insecure-5xh$hw9%n$huk$mql=%r7p@dxefh9+hleb7yb$eo_6p)r*$dn^\n"
+#         "GS_BUCKET_NAME=edufox-bucket\n"
+#         f"DATABASE_URL={os.getenv('DATABASE_URL')}"
+#     )
+# env.read_env(io.StringIO(placeholder))
 
-env_file = os.path.join(BASE_DIR, ".env")
+# env_file = os.path.join(BASE_DIR, ".env")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
@@ -64,40 +64,40 @@ try:
 except google.auth.exceptions.DefaultCredentialsError:
     pass
 
-if os.path.isfile(env_file):
-    # Use a local secret file, if provided
-    # print('ovie')
-    env.read_env(env_file)
-# ...
-# [START_EXCLUDE]
-elif os.environ.get("GITHUB_ACTIONS", None):
-    # Create local settings if running with CI, for unit testing
+# if os.path.isfile(env_file):
+#     # Use a local secret file, if provided
+#     # print('ovie')
+#     env.read_env(env_file)
+# # ...
+# # [START_EXCLUDE]
+# elif os.environ.get("GITHUB_ACTIONS", None):
+#     # Create local settings if running with CI, for unit testing
 
-    placeholder = (
-        f"SECRET_KEY=django-insecure-5xh$hw9%n$huk$mql=%r7p@dxefh9+hleb7yb$eo_6p)r*$dn^\n"
-        "GS_BUCKET_NAME=edufox-bucket\n"
-        f"DATABASE_URL=postgres://admin:_edufox@123A@//cloudsql/edufox-services:us-central1:edufox-db-instance/edufox_db"
-    )
-    env.read_env(io.StringIO(placeholder))
-# [END_EXCLUDE]
-elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
+#     placeholder = (
+#         f"SECRET_KEY=django-insecure-5xh$hw9%n$huk$mql=%r7p@dxefh9+hleb7yb$eo_6p)r*$dn^\n"
+#         "GS_BUCKET_NAME=edufox-bucket\n"
+#         f"DATABASE_URL=postgres://admin:_edufox@123A@//cloudsql/edufox-services:us-central1:edufox-db-instance/edufox_db"
+#     )
+#     env.read_env(io.StringIO(placeholder))
+# # [END_EXCLUDE]
+# elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
     # Pull secrets from Secret Manager
     
-    project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
-    client = secretmanager.SecretManagerServiceClient()
+project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
+client = secretmanager.SecretManagerServiceClient()
 
-    # service_account_name = f"projects/{project_id}/secrets/SERVICE_ACCOUNT/versions/latest"
-    # service_account_payload = client.access_secret_version(name=service_account_name).payload.data.decode("UTF-8")
-    # # print('SERVICE', service_account_payload)
-    # os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./edufox-services-898b64103ea1.json"
+# service_account_name = f"projects/{project_id}/secrets/SERVICE_ACCOUNT/versions/latest"
+# service_account_payload = client.access_secret_version(name=service_account_name).payload.data.decode("UTF-8")
+# # print('SERVICE', service_account_payload)
+# os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./edufox-services-898b64103ea1.json"
 
-    settings_name = os.environ.get("SETTINGS_NAME", "django_settings")
-    
-    name = f"projects/{project_id}/secrets/{settings_name}/versions/latest"
-    
-    payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
-    # print('GOOGLE_CLOUD_PROJECT', payload)
-    env.read_env(io.StringIO(payload))
+settings_name = os.environ.get("SETTINGS_NAME", "django_settings")
+
+name = f"projects/{project_id}/secrets/{settings_name}/versions/latest"
+
+payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
+# print('GOOGLE_CLOUD_PROJECT', payload)
+env.read_env(io.StringIO(payload))
 # else:
 #     raise Exception("No local .env or GOOGLE_CLOUD_PROJECT detected. No secrets found.")
 
