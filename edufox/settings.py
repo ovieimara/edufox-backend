@@ -205,12 +205,12 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'edufox.wsgi.application'
-DB_NAME=os.environ.get("DB_NAME")
-DB_PASSWORD=os.environ.get("DB_PASSWORD")
-DB_HOST=os.environ.get("DB_HOST")
-DB_PORT=os.environ.get("DB_PORT")
-DB_ENGINE = os.environ.get('DB_ENGINE')
-DATABASE_URL = os.environ.get('DATABASE_URL')
+# DB_NAME=os.environ.get("DB_NAME")
+# DB_PASSWORD=os.environ.get("DB_PASSWORD")
+# DB_HOST=os.environ.get("DB_HOST")
+# DB_PORT=os.environ.get("DB_PORT")
+# DB_ENGINE = os.environ.get('DB_ENGINE')
+# DATABASE_URL = os.environ.get('DATABASE_URL')
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
