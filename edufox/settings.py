@@ -79,6 +79,8 @@ elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
 # SECURITY WARNING: keep the secret key used in production secret!
 DEBUG = env('DEBUG')
 # SECRET_KEY = env('SECRET_KEY')
+print('USE_CLOUD_SQL_AUTH_PROXY', os.environ.get("USE_CLOUD_SQL_AUTH_PROXY"))
+
 SECRET_KEY = os.environ.get('SECRET_KEY')
 print('SECRET_KEY', SECRET_KEY)
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -100,7 +102,7 @@ if CLOUDRUN_SERVICE_URL:
     # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     PROTOCOL = "https"
     DOMAIN = service_url
-    # os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = None
+    os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = None
 
 else:
     ALLOWED_HOSTS = ["*"]
