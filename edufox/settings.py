@@ -31,12 +31,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env(
     SECRET_KEY=(str, os.environ.get("SECRET_KEY")),
-    DATABASE_URL=(str, os.environ.get("DATABASE_URL")),
+    DATABASE_URL=(os.environ.get("DATABASE_URL")),
     GS_BUCKET_NAME=(str, os.environ.get("GS_BUCKET_NAME")),
 )
 
-SECRET_KEY = env("SECRET_KEY")
-print('SECRET_KEY', SECRET_KEY)
 
 env_file = os.path.join(BASE_DIR, ".env")
 
@@ -89,9 +87,9 @@ elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
 
 # SECURITY WARNING: keep the secret key used in production secret!
 DEBUG = True
-# SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = env("SECRET_KEY")
 
-# print('SECRET_KEY', SECRET_KEY)
+print('SECRET_KEY', SECRET_KEY)
 print('USE_CLOUD_SQL_AUTH_PROXY', os.environ.get("USE_CLOUD_SQL_AUTH_PROXY"))
 
 # SECURITY WARNING: don't run with debug turned on in production!
