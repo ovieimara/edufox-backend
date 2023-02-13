@@ -31,6 +31,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 arr = os.listdir('.')
 print(arr)
 
+file = ''
+for i in range(len(arr)):
+    if 'gha-creds' in arr[i]:
+        file = arr[i]
+
+
 # env = environ.Env(
 #     GOOGLE_APPLICATION_CREDENTIALS=(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")),
 #     # DATABASE_URL=(os.environ.get("DATABASE_URL")),
@@ -44,7 +50,7 @@ print(arr)
 #     )
 # env.read_env(io.StringIO(placeholder))
 
-env_file = os.path.join(BASE_DIR, "*.json")
+env_file = os.path.join(BASE_DIR, file)
 print(env_file)
 
 # Quick-start development settings - unsuitable for production
