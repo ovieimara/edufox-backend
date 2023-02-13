@@ -35,44 +35,42 @@ env_file = os.path.join(BASE_DIR, ".env")
 # Attempt to load the Project ID into the environment, safely failing on error.
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./creds.json"
 # os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
-os.environ['DATABASE_URL'] = "postgres://admin:_edufox@123A@//cloudsql/edufox-services:us-central1:edufox-db-instance/edufox_db"
 
 try:
     _, os.environ["GOOGLE_CLOUD_PROJECT"] = google.auth.default()
 except google.auth.exceptions.DefaultCredentialsError:
     pass
 
-# if os.path.isfile(env_file):
-#     # Use a local secret file, if provided
-#     # print('ovie')
-#     env.read_env(env_file)
-# # ...
-# elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
-#     # Pull secrets from Secret Manager
+if os.path.isfile(env_file):
+    # Use a local secret file, if provided
+    # print('ovie')
+    env.read_env(env_file)
+# ...
+elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
+    # Pull secrets from Secret Manager
     
-#     project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
-#     client = secretmanager.SecretManagerServiceClient()
+    project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    client = secretmanager.SecretManagerServiceClient()
 
-#     # service_account_name = f"projects/{project_id}/secrets/SERVICE_ACCOUNT/versions/latest"
-#     # service_account_payload = client.access_secret_version(name=service_account_name).payload.data.decode("UTF-8")
-#     # # print('SERVICE', service_account_payload)
-#     # os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./edufox-services-898b64103ea1.json"
+    # service_account_name = f"projects/{project_id}/secrets/SERVICE_ACCOUNT/versions/latest"
+    # service_account_payload = client.access_secret_version(name=service_account_name).payload.data.decode("UTF-8")
+    # # print('SERVICE', service_account_payload)
+    # os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./edufox-services-898b64103ea1.json"
 
-#     settings_name = os.environ.get("SETTINGS_NAME", "django_settings")
+    settings_name = os.environ.get("SETTINGS_NAME", "django_settings")
     
-#     name = f"projects/{project_id}/secrets/{settings_name}/versions/latest"
+    name = f"projects/{project_id}/secrets/{settings_name}/versions/latest"
     
-#     payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
-#     # print('GOOGLE_CLOUD_PROJECT', payload)
-#     env.read_env(io.StringIO(payload))
-# else:
-#     raise Exception("No local .env or GOOGLE_CLOUD_PROJECT detected. No secrets found.")
+    payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
+    # print('GOOGLE_CLOUD_PROJECT', payload)
+    env.read_env(io.StringIO(payload))
+else:
+    raise Exception("No local .env or GOOGLE_CLOUD_PROJECT detected. No secrets found.")
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-DEBUG=True
-SECRET_KEY=os.environ.get('SECRET_KEY')
-DATABASE_URL=os.environ.get('DATABASE_URL')
+DEBUG = env('DEBUG')
+# SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 
 # SECURITY WARNING: It's recommended that you use this when
@@ -103,7 +101,7 @@ else:
 
 # print(ALLOWED_HOSTS)
 
-# CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = True
 # CSRF_TRUSTED_ORIGINS = [
 #     'https://edufox-api-service-5wasy3cpxq-uc.a.run.app',
 #     'https://api-service-5wasy3cpxq-uc.a.run.app',
@@ -208,18 +206,16 @@ WSGI_APPLICATION = 'edufox.wsgi.application'
 # }
 
 # Use django-environ to parse the connection string
-DATABASES = {"default":  env.db()}
-# DATABASES = {"default":  os.environ.get('DATABASE_URL')}
+DATABASES = {"default": env.db()}
 
 # If the flag as been set, configure to use proxy
-# if os.environ.get("USE_CLOUD_SQL_AUTH_PROXY", None):
-print('USE_CLOUD_SQL_AUTH_PROXY', os.environ.get("USE_CLOUD_SQL_AUTH_PROXY"))
-DATABASES["default"]["HOST"] = "cloudsql-proxy"
-DATABASES["default"]["PORT"] = 5432
+if os.getenv("USE_CLOUD_SQL_AUTH_PROXY", None):
+    DATABASES["default"]["HOST"] = "127.0.0.1"
+    DATABASES["default"]["PORT"] = 5432
 
 
 # Define static storage via django-storages[google]
-GS_BUCKET_NAME = os.environ.get("GS_BUCKET_NAME")
+GS_BUCKET_NAME = env("GS_BUCKET_NAME")
 STATIC_URL = "/static/"
 DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
 STATICFILES_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
@@ -287,19 +283,12 @@ DJOSER = {
 LOGIN_URL = 'student:login'
 LOGOUT_URL = 'student:logout'
 
-EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND')
-EMAIL_HOST = os.environ.get('EMAIL_HOST')
-EMAIL_PORT = os.environ.get('EMAIL_PORT')
+EMAIL_BACKEND = env('EMAIL_BACKEND')
+EMAIL_HOST = env('EMAIL_HOST')
+EMAIL_PORT = env('EMAIL_PORT')
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
-
-# EMAIL_BACKEND = env('EMAIL_BACKEND')
-# EMAIL_HOST = env('EMAIL_HOST')
-# EMAIL_PORT = env('EMAIL_PORT')
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-# EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 
 
 
