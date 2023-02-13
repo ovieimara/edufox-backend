@@ -29,11 +29,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 # SECRET_KEY = os.environ.get('SECRET_KEY')
 
-env = environ.Env(
-    SECRET_KEY=(str, os.environ.get("SECRET_KEY")),
-    DATABASE_URL=(os.environ.get("DATABASE_URL")),
-    GS_BUCKET_NAME=(str, os.environ.get("GS_BUCKET_NAME")),
-)
+# env = environ.Env(
+#     SECRET_KEY=(str, os.environ.get("SECRET_KEY")),
+#     DATABASE_URL=(os.environ.get("DATABASE_URL")),
+#     GS_BUCKET_NAME=(str, os.environ.get("GS_BUCKET_NAME")),
+# )
 
 
 env_file = os.path.join(BASE_DIR, ".env")
@@ -63,6 +63,17 @@ if os.path.isfile(env_file):
     # print('ovie')
     env.read_env(env_file)
 # ...
+# [START_EXCLUDE]
+elif os.getenv("TRAMPOLINE_CI", None):
+    # Create local settings if running with CI, for unit testing
+
+    placeholder = (
+        f"SECRET_KEY=a\n"
+        "GS_BUCKET_NAME=edufox-bucket\n"
+        f"DATABASE_URL=postgres://admin:_edufox@123A@//cloudsql/edufox-services:us-central1:edufox-db-instance/edufox_db"
+    )
+    env.read_env(io.StringIO(placeholder))
+# [END_EXCLUDE]
 elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
     # Pull secrets from Secret Manager
     
@@ -81,8 +92,8 @@ elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
     payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
     # print('GOOGLE_CLOUD_PROJECT', payload)
     env.read_env(io.StringIO(payload))
-# else:
-#     raise Exception("No local .env or GOOGLE_CLOUD_PROJECT detected. No secrets found.")
+else:
+    raise Exception("No local .env or GOOGLE_CLOUD_PROJECT detected. No secrets found.")
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -245,7 +256,6 @@ USE_CLOUD_SQL_AUTH_PROXY = os.environ.get('USE_CLOUD_SQL_AUTH_PROXY')
 if USE_CLOUD_SQL_AUTH_PROXY:
     DATABASES["default"]["HOST"] = "cloudsql-proxy"
     DATABASES["default"]["PORT"] = 5432
-
 
 # Define static storage via django-storages[google]
 GS_BUCKET_NAME = env("GS_BUCKET_NAME")
