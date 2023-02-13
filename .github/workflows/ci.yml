@@ -63,9 +63,9 @@ jobs:
       run: docker-compose up -d --build
   
     - name: Run Tests
-      env:
-        GOOGLE_APPLICATION_CREDENTIALS: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
-
+      uses: 'google-github-actions/auth@v1'
+      with:
+        credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
         SECRET_KEY: ${{ env.SECRET_KEY }}
         # USE_CLOUD_SQL_AUTH_PROXY: ovie
         # GOOGLE_CLOUD_PROJECT: ${{ env.GOOGLE_CLOUD_PROJECT }}
