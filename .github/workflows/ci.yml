@@ -7,8 +7,9 @@ on:
     branches: [ "master" ]
     
 env:
-  USE_CLOUD_SQL_AUTH_PROXY: ${{ secrets.USE_CLOUD_SQL_AUTH_PROXY }}
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
+  USE_CLOUD_SQL_AUTH_PROXY: ${{ secrets.USE_CLOUD_SQL_AUTH_PROXY }}
+
   # USE_CLOUD_SQL_AUTH_PROXY: ${{ secrets.USE_CLOUD_SQL_AUTH_PROXY }}
 
 #   DATABASE_URL: postgres://admin:_edufox@123A@//cloudsql/edufox-services:us-central1:edufox-db-instance/edufox_db
@@ -46,8 +47,9 @@ jobs:
   
     - name: Run Tests
       env:
-        USE_CLOUD_SQL_AUTH_PROXY: ${{ secrets.USE_CLOUD_SQL_AUTH_PROXY }}
+        
         SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        USE_CLOUD_SQL_AUTH_PROXY: ${{ secrets.USE_CLOUD_SQL_AUTH_PROXY }}
       #   DATABASE_URL : ${{ env.DATABASE_URL }}
       #   GS_BUCKET_NAME : ${{ env.GS_BUCKET_NAME }}
       #   EMAIL_BACKEND: ${{ env.EMAIL_BACKEND }}
