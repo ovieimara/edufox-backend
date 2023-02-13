@@ -13,6 +13,11 @@ env:
   GOOGLE_CLOUD_PROJECT: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
   DATABASE_URL: ${{ secrets.DATABASE_URL }}
   GS_BUCKET_NAME: ${{ secrets.GS_BUCKET_NAME }}
+  EMAIL_BACKEND: ${{ secrets.EMAIL_BACKEND }}
+  EMAIL_HOST : ${{ secrets.EMAIL_HOST }}
+  EMAIL_PORT : ${{ secrets.EMAIL_PORT }}
+  EMAIL_HOST_USER : ${{ secrets.EMAIL_HOST_USER }}
+  EMAIL_HOST_PASSWORD : ${{ secrets.EMAIL_HOST_PASSWORD }}
 
 
   # USE_CLOUD_SQL_AUTH_PROXY: ${{ secrets.USE_CLOUD_SQL_AUTH_PROXY }}
@@ -64,13 +69,10 @@ jobs:
         GOOGLE_CLOUD_PROJECT: ${{ env.GOOGLE_CLOUD_PROJECT }}
         DATABASE_URL: ${{ env.DATABASE_URL }}
         GS_BUCKET_NAME: ${{ env.GS_BUCKET_NAME }}
-
-      #   DATABASE_URL : ${{ env.DATABASE_URL }}
-      #   GS_BUCKET_NAME : ${{ env.GS_BUCKET_NAME }}
-      #   EMAIL_BACKEND: ${{ env.EMAIL_BACKEND }}
-      #   EMAIL_HOST : ${{ env.EMAIL_HOST }}
-      #   EMAIL_PORT : ${{ env.EMAIL_PORT }}
-      #   EMAIL_HOST_USER : ${{ env.EMAIL_HOST_USER }}
-      #   EMAIL_HOST_PASSWORD : ${{ env.EMAIL_HOST_PASSWORD }}
+        EMAIL_BACKEND: ${{ env.EMAIL_BACKEND }}
+        EMAIL_HOST : ${{ env.EMAIL_HOST }}
+        EMAIL_PORT : ${{ env.EMAIL_PORT }}
+        EMAIL_HOST_USER : ${{ env.EMAIL_HOST_USER }}
+        EMAIL_HOST_PASSWORD : ${{ env.EMAIL_HOST_PASSWORD }}
 
       run: docker-compose run --rm -e REUSE_DB=1 -e TESTING=True app python manage.py test --keepdb

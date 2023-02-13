@@ -37,6 +37,11 @@ env_file = os.path.join(BASE_DIR, ".env")
 os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 os.environ['DATABASE_URL'] = ''
 os.environ['GS_BUCKET_NAME'] = ''
+os.environ['EMAIL_BACKEND'] = ''
+os.environ['EMAIL_HOST'] = ''
+os.environ['EMAIL_PORT'] = ''
+os.environ['EMAIL_HOST_USER'] = ''
+os.environ['EMAIL_HOST_PASSWORD'] = ''
 
 try:
     _, os.environ["GOOGLE_CLOUD_PROJECT"] = google.auth.default()
