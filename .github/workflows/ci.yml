@@ -41,7 +41,7 @@ jobs:
       name: 'Authenticate to Google Cloud'
       uses: 'google-github-actions/auth@v1'
       with:
-        service_account: 'my-service-account@my-project.iam.gserviceaccount.com'
+        service_account: 'sa-edufox@edufox-services.iam.gserviceaccount.com'
 
     - name: Build containers
       # env:
