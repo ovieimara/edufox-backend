@@ -9,6 +9,7 @@ on:
 env:
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
   USE_CLOUD_SQL_AUTH_PROXY: ovie
+  GOOGLE_APPLICATION_CREDENTIALS : ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
 
   # USE_CLOUD_SQL_AUTH_PROXY: ${{ secrets.USE_CLOUD_SQL_AUTH_PROXY }}
 
@@ -39,9 +40,9 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - id: 'auth'
       name: 'Authenticate to Google Cloud'
-      uses: 'google-github-actions/auth@v1'
+      uses: google-github-actions/auth@main
       with:
-        service_account: 'sa-edufox@edufox-services.iam.gserviceaccount.com'
+        credentials_json: ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
 
     - name: Build containers
       # env:
