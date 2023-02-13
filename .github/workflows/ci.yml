@@ -7,7 +7,7 @@ on:
     branches: [ "master" ]
     
 env:
-  USE_CLOUD_SQL_AUTH_PROXY: true
+  USE_CLOUD_SQL_AUTH_PROXY: 'true'
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
   # USE_CLOUD_SQL_AUTH_PROXY: ${{ secrets.USE_CLOUD_SQL_AUTH_PROXY }}
 
@@ -47,7 +47,7 @@ jobs:
     - name: Run Tests
       env:
         USE_CLOUD_SQL_AUTH_PROXY: ${{ secrets.USE_CLOUD_SQL_AUTH_PROXY }}
-        SECRET_KEY: true
+        SECRET_KEY: 'true'
       #   DATABASE_URL : ${{ env.DATABASE_URL }}
       #   GS_BUCKET_NAME : ${{ env.GS_BUCKET_NAME }}
       #   EMAIL_BACKEND: ${{ env.EMAIL_BACKEND }}
