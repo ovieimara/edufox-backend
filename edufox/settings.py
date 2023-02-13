@@ -34,7 +34,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 #     DATABASE_URL=(os.environ.get("DATABASE_URL")),
 #     GS_BUCKET_NAME=(str, os.environ.get("GS_BUCKET_NAME")),
 # )
-
+placeholder = (
+        f"SECRET_KEY=django-insecure-5xh$hw9%n$huk$mql=%r7p@dxefh9+hleb7yb$eo_6p)r*$dn^\n"
+        "GS_BUCKET_NAME=edufox-bucket\n"
+        f"DATABASE_URL=postgres://admin:_edufox@123A@//cloudsql/edufox-services:us-central1:edufox-db-instance/edufox_db"
+    )
+env.read_env(io.StringIO(placeholder))
 
 env_file = os.path.join(BASE_DIR, ".env")
 
