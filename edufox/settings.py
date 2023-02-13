@@ -72,6 +72,7 @@ else:
 DEBUG = env('DEBUG')
 # SECRET_KEY = env('SECRET_KEY')
 SECRET_KEY = os.environ.get('SECRET_KEY')
+print('SECRET_KEY', SECRET_KEY)
 # SECURITY WARNING: don't run with debug turned on in production!
 
 # SECURITY WARNING: It's recommended that you use this when
@@ -209,10 +210,10 @@ WSGI_APPLICATION = 'edufox.wsgi.application'
 # Use django-environ to parse the connection string
 DATABASES = {"default": env.db()}
 USE_CLOUD_SQL_AUTH_PROXY = os.environ.get("USE_CLOUD_SQL_AUTH_PROXY")
-print(os.environ.get('USE_CLOUD_SQL_AUTH_PROXY', "USE_CLOUD_SQL_AUTH_PROXY"))
+print(os.environ.get('USE_CLOUD_SQL_AUTH_PROXY', USE_CLOUD_SQL_AUTH_PROXY))
 
 # If the flag as been set, configure to use proxy
-if os.environ.get("USE_CLOUD_SQL_AUTH_PROXY"):
+if USE_CLOUD_SQL_AUTH_PROXY:
     DATABASES["default"]["HOST"] = "cloudsql-proxy"
     DATABASES["default"]["PORT"] = 5432
 
