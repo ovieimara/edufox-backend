@@ -39,17 +39,7 @@ placeholder = (
         "GS_BUCKET_NAME=edufox-bucket\n"
         f"DATABASE_URL=postgres://admin:_edufox@123A@//cloudsql/edufox-services:us-central1:edufox-db-instance/edufox_db"
     )
-
-# placeholder = (
-#         f"SECRET_KEY=django-insecure-5xh$hw9%n$huk$mql=%r7p@dxefh9+hleb7yb$eo_6p)r*$dn^\n"
-#         "GS_BUCKET_NAME=edufox-bucket\n"
-#         "EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend\n"
-#         "EMAIL_HOST=smtp.gmail.com\n"
-#         "EMAIL_PORT=587\n"
-#         "EMAIL_HOST_USER=app.edufox@gmail.com\n"
-#         "EMAIL_HOST_PASSWORD=sofeipbagutmjhkc\n"
-#         f"DATABASE_URL=postgres://admin:_edufox@123A@//cloudsql/edufox-services:us-central1:edufox-db-instance/edufox_db"
-#     )
+env.read_env(io.StringIO(placeholder))
 
 env_file = os.path.join(BASE_DIR, ".env")
 
@@ -115,7 +105,7 @@ elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
 DEBUG = True
 SECRET_KEY = env("SECRET_KEY")
 
-print('SECRET_KEY', SECRET_KEY)
+# print('SECRET_KEY', SECRET_KEY)
 print('USE_CLOUD_SQL_AUTH_PROXY', os.environ.get("USE_CLOUD_SQL_AUTH_PROXY"))
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -341,14 +331,23 @@ DJOSER = {
 LOGIN_URL = 'student:login'
 LOGOUT_URL = 'student:logout'
 
-EMAIL_BACKEND = env('EMAIL_BACKEND')
-EMAIL_HOST = env('EMAIL_HOST')
-EMAIL_PORT = env('EMAIL_PORT')
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+# EMAIL_BACKEND = env('EMAIL_BACKEND')
+# EMAIL_HOST = env('EMAIL_HOST')
+# EMAIL_PORT = env('EMAIL_PORT')
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 
-
+# placeholder = (
+#         f"SECRET_KEY=django-insecure-5xh$hw9%n$huk$mql=%r7p@dxefh9+hleb7yb$eo_6p)r*$dn^\n"
+#         "GS_BUCKET_NAME=edufox-bucket\n"
+#         "EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend\n"
+#         "EMAIL_HOST=smtp.gmail.com\n"
+#         "EMAIL_PORT=587\n"
+#         "EMAIL_HOST_USER=app.edufox@gmail.com\n"
+#         "EMAIL_HOST_PASSWORD=sofeipbagutmjhkc\n"
+#         f"DATABASE_URL=postgres://admin:_edufox@123A@//cloudsql/edufox-services:us-central1:edufox-db-instance/edufox_db"
+#     )
 
 
 # Internationalization
