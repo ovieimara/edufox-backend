@@ -33,7 +33,7 @@ env_file = os.path.join(BASE_DIR, ".env")
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # Attempt to load the Project ID into the environment, safely failing on error.
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./creds.json"
+# os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./creds.json"
 os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 
 try:

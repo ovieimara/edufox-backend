@@ -37,6 +37,12 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        service_account: 'my-service-account@my-project.iam.gserviceaccount.com'
+
     - name: Build containers
       # env:
       #   USE_CLOUD_SQL_AUTH_PROXY: ${{ env.USE_CLOUD_SQL_AUTH_PROXY }}
