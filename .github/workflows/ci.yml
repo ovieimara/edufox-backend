@@ -6,16 +6,16 @@ on:
   pull_request:
     branches: [ "master" ]
     
-env:
-  USE_CLOUD_SQL_AUTH_PROXY: True
-  SECRET_KEY: django-insecure-5xh$hw9%n$huk$mql=%r7p@dxefh9+hleb7yb$eo_6p)r*$dn^
-  DATABASE_URL: postgres://admin:_edufox@123A@//cloudsql/edufox-services:us-central1:edufox-db-instance/edufox_db
-  GS_BUCKET_NAME: edufox-bucket
-  EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
-  EMAIL_HOST: smtp.gmail.com
-  EMAIL_PORT: 587
-  EMAIL_HOST_USER: app.edufox@gmail.com
-  EMAIL_HOST_PASSWORD: sofeipbagutmjhkc
+# env:
+#   USE_CLOUD_SQL_AUTH_PROXY: True
+#   SECRET_KEY: django-insecure-5xh$hw9%n$huk$mql=%r7p@dxefh9+hleb7yb$eo_6p)r*$dn^
+#   DATABASE_URL: postgres://admin:_edufox@123A@//cloudsql/edufox-services:us-central1:edufox-db-instance/edufox_db
+#   GS_BUCKET_NAME: edufox-bucket
+#   EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
+#   EMAIL_HOST: smtp.gmail.com
+#   EMAIL_PORT: 587
+#   EMAIL_HOST_USER: app.edufox@gmail.com
+#   EMAIL_HOST_PASSWORD: sofeipbagutmjhkc
     
 
 jobs:
@@ -35,16 +35,16 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Build containers
-      env:
-        USE_CLOUD_SQL_AUTH_PROXY: ${{ env.USE_CLOUD_SQL_AUTH_PROXY }}
-        SECRET_KEY: ${{ env.SECRET_KEY }}
-        DATABASE_URL: ${{ env.DATABASE_URL }}
+      # env:
+      #   USE_CLOUD_SQL_AUTH_PROXY: ${{ env.USE_CLOUD_SQL_AUTH_PROXY }}
+      #   SECRET_KEY: ${{ env.SECRET_KEY }}
+      #   DATABASE_URL: ${{ env.DATABASE_URL }}
 
       run: docker-compose up -d --build
   
     - name: Run Tests
       env:
-        USE_CLOUD_SQL_AUTH_PROXY: ${{ env.USE_CLOUD_SQL_AUTH_PROXY }}
+        USE_CLOUD_SQL_AUTH_PROXY: ${{ secrets.USE_CLOUD_SQL_AUTH_PROXY }}
         SECRET_KEY: ${{ secrets.SECRET_KEY }}
         DATABASE_URL : ${{ env.DATABASE_URL }}
         GS_BUCKET_NAME : ${{ env.GS_BUCKET_NAME }}
