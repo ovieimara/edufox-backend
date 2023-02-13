@@ -37,7 +37,10 @@ for i in range(len(arr)):
 
 if file:
     print('FILE', file)
+    env_file = os.path.join(BASE_DIR, file)
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = env_file
     os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
+
 
 
 # env = environ.Env(
@@ -53,14 +56,12 @@ if file:
 #     )
 # env.read_env(io.StringIO(placeholder))
 
-env_file = os.path.join(BASE_DIR, file)
 # print(env_file)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # Attempt to load the Project ID into the environment, safely failing on error.
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = env_file
 # os.environ['DATABASE_URL'] = ''
 # # os.environ['GS_BUCKET_NAME'] = ''
 # # os.environ['EMAIL_BACKEND'] = ''
@@ -70,10 +71,7 @@ os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = env_file
 # # os.environ['EMAIL_HOST_PASSWORD'] = ''
 # # os.environ['DB_ENGINE'] = ''
 
-# try:
-#     _, os.environ["GOOGLE_CLOUD_PROJECT"] = google.auth.default()
-# except google.auth.exceptions.DefaultCredentialsError:
-#     pass
+
 
 # if os.path.isfile(env_file):
 #     # Use a local secret file, if provided
