@@ -54,8 +54,6 @@ jobs:
       with:
         credentials_json: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
 
-      run: env
-
     - name: Build containers
       # env:
       #   USE_CLOUD_SQL_AUTH_PROXY: ${{ env.USE_CLOUD_SQL_AUTH_PROXY }}
@@ -66,7 +64,8 @@ jobs:
   
     - name: Run Tests
       env:
-        
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+
         SECRET_KEY: ${{ env.SECRET_KEY }}
         # USE_CLOUD_SQL_AUTH_PROXY: ovie
         # GOOGLE_CLOUD_PROJECT: ${{ env.GOOGLE_CLOUD_PROJECT }}
