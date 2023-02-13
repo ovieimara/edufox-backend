@@ -48,11 +48,11 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
-    # - id: 'auth'
-    #   name: 'Authenticate to Google Cloud'
-    #   uses: 'google-github-actions/auth@@v1'
-    #   with:
-    #     credentials_json: ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@@v1'
+      with:
+        credentials_json: ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
 
     - name: Build containers
       # env:
