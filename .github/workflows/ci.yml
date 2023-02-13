@@ -53,7 +53,7 @@ jobs:
       uses: 'google-github-actions/auth@v1'
       with:
         credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
-        export_default_credentials: true
+        # export_default_credentials: true
 
       env:
         GOOGLE_APPLICATION_CREDENTIALS : ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
