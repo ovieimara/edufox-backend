@@ -34,7 +34,7 @@ env_file = os.path.join(BASE_DIR, ".env")
 
 # Attempt to load the Project ID into the environment, safely failing on error.
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./creds.json"
-# os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
+os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 
 try:
     _, os.environ["GOOGLE_CLOUD_PROJECT"] = google.auth.default()
@@ -51,6 +51,7 @@ elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
     
     project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
     client = secretmanager.SecretManagerServiceClient()
+    os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = None
 
     # service_account_name = f"projects/{project_id}/secrets/SERVICE_ACCOUNT/versions/latest"
     # service_account_payload = client.access_secret_version(name=service_account_name).payload.data.decode("UTF-8")
