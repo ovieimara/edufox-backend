@@ -63,7 +63,7 @@ jobs:
       run: docker-compose up -d --build
   
     - name: Run Tests
-      # env:
+      env:
         GOOGLE_APPLICATION_CREDENTIALS: '${{ env.GOOGLE_APPLICATION_CREDENTIALS }}'
 
         SECRET_KEY: ${{ env.SECRET_KEY }}
