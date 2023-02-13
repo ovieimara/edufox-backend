@@ -34,7 +34,7 @@ env_file = os.path.join(BASE_DIR, ".env")
 
 # Attempt to load the Project ID into the environment, safely failing on error.
 # os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./creds.json"
-os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = ''
+os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 # os.environ['DATABASE_URL'] = ''
 # # os.environ['GS_BUCKET_NAME'] = ''
 # # os.environ['EMAIL_BACKEND'] = ''
