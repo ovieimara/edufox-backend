@@ -69,7 +69,7 @@ jobs:
   
     - name: Run Tests
       env:
-        GOOGLE_APPLICATION_CREDENTIALS: ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ env.GOOGLE_GHA_CREDS_PATH }}
 
 
         SECRET_KEY: ${{ env.SECRET_KEY }}
