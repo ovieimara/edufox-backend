@@ -109,7 +109,7 @@ payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
 # print('GOOGLE_CLOUD_PROJECT', payload)
 env.read_env(io.StringIO(payload))
 
-env.read_env(os.environ.get('GOOGLE_APPLICATION_CREDENTIALS'))
+# env.read_env(os.environ.get('GOOGLE_APPLICATION_CREDENTIALS'))
 # else:
 #     raise Exception("No local .env or GOOGLE_CLOUD_PROJECT detected. No secrets found.")
 
@@ -119,10 +119,10 @@ DEBUG = True
 # print('ENV_STATUS:', env.ENVIRON)
 
 SECRET_KEY = env("SECRET_KEY")
-GOOGLE_APPLICATION_CREDENTIALS = env('GOOGLE_APPLICATION_CREDENTIALS')
+# GOOGLE_APPLICATION_CREDENTIALS = env('GOOGLE_APPLICATION_CREDENTIALS')
 
-print('SECRET_KEY', GOOGLE_APPLICATION_CREDENTIALS)
-print('USE_CLOUD_SQL_AUTH_PROXY', os.environ.get("USE_CLOUD_SQL_AUTH_PROXY"))
+# print('SECRET_KEY', GOOGLE_APPLICATION_CREDENTIALS)
+# print('USE_CLOUD_SQL_AUTH_PROXY', os.environ.get("USE_CLOUD_SQL_AUTH_PROXY"))
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
