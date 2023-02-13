@@ -9,7 +9,7 @@ on:
 env:
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
   # USE_CLOUD_SQL_AUTH_PROXY: ovie
-  GOOGLE_APPLICATION_CREDENTIALS : ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+  # GOOGLE_APPLICATION_CREDENTIALS : ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
   # GOOGLE_CLOUD_PROJECT: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
   DATABASE_URL: ${{ secrets.DATABASE_URL }}
   # GS_BUCKET_NAME: ${{ secrets.GS_BUCKET_NAME }}
@@ -48,11 +48,11 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
-    - id: 'auth'
-      name: 'Authenticate to Google Cloud'
-      uses: 'google-github-actions/auth@@v1'
-      with:
-        credentials_json: ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+    # - id: 'auth'
+    #   name: 'Authenticate to Google Cloud'
+    #   uses: 'google-github-actions/auth@@v1'
+    #   with:
+    #     credentials_json: ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
 
     - name: Build containers
       # env:
