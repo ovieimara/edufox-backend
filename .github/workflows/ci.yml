@@ -60,7 +60,7 @@ jobs:
       #   SECRET_KEY: ${{ env.SECRET_KEY }}
       #   DATABASE_URL: ${{ env.DATABASE_URL }}
 
-      run: docker-compose up -d --build
+      run: env
   
     - name: Run Tests
       env:
