@@ -50,7 +50,8 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - id: 'auth'
       name: 'Authenticate to Google Cloud'
-      GOOGLE_APPLICATION_CREDENTIALS: ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
 
       uses: 'google-github-actions/auth@v1'
       with:
