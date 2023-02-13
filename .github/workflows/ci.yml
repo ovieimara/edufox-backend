@@ -54,9 +54,12 @@ jobs:
       with:
         credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
 
-    - name: Build containers
       env:
         GOOGLE_CREDENTIALS : ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+
+    - name: Build containers
+      # env:
+      #   GOOGLE_CREDENTIALS : ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
 
       #   USE_CLOUD_SQL_AUTH_PROXY: ${{ env.USE_CLOUD_SQL_AUTH_PROXY }}
       #   SECRET_KEY: ${{ env.SECRET_KEY }}
