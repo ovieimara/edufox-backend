@@ -82,7 +82,8 @@ os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 # # [END_EXCLUDE]
 # elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
     # Pull secrets from Secret Manager
-    
+GOOGLE_APPLICATION_CREDENTIALS = env('GOOGLE_APPLICATION_CREDENTIALS')
+
 project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
 # print('project_id', project_id)
 project_id = "edufox-services"
