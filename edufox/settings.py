@@ -148,7 +148,7 @@ else:
     ALLOWED_HOSTS = ["*"]
     PROTOCOL = "http"
     DOMAIN = "127.0.0.1:8000"
-    # os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
+    os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 
 
 # ALLOWED_HOSTS = ["*"]
