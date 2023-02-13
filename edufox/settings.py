@@ -32,10 +32,10 @@ arr = os.listdir('.')
 
 file = ''
 for i in range(len(arr)):
-    if 'gha-creds' in arr[i] or arr[i] == "creds.json":
+    if 'gha-creds' in arr[i]:
         file = arr[i]
 
-if not file:
+if file:
     print('FILE', file)
     os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 
