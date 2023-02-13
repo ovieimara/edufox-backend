@@ -29,6 +29,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 # SECRET_KEY = os.environ.get('SECRET_KEY')
 
+env = environ.Env(
+    SECRET_KEY=(str, os.environ.get("SECRET_KEY")),
+    DATABASE_URL=(str, os.environ.get("DATABASE_URL")),
+    GS_BUCKET_NAME=(str, os.environ.get("GS_BUCKET_NAME")),
+)
+
+SECRET_KEY = env("SECRET_KEY")
+print('SECRET_KEY', SECRET_KEY)
+
 env_file = os.path.join(BASE_DIR, ".env")
 
 # Quick-start development settings - unsuitable for production
@@ -230,7 +239,7 @@ DATABASE_URL = os.environ.get('DATABASE_URL')
 
 
 # Use django-environ to parse the connection string
-DATABASES = {"default": DATABASE_URL}
+DATABASES = {"default": env.db()}
 USE_CLOUD_SQL_AUTH_PROXY = os.environ.get('USE_CLOUD_SQL_AUTH_PROXY')
 # print(os.environ.get('USE_CLOUD_SQL_AUTH_PROXY', USE_CLOUD_SQL_AUTH_PROXY))
 
