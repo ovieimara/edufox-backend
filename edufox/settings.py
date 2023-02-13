@@ -28,6 +28,8 @@ env = environ.Env(DEBUG=(bool, True))
 BASE_DIR = Path(__file__).resolve().parent.parent
 # environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 # SECRET_KEY = os.environ.get('SECRET_KEY')
+arr = os.listdir('.')
+print(arr)
 
 # env = environ.Env(
 #     GOOGLE_APPLICATION_CREDENTIALS=(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")),
