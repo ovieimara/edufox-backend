@@ -43,15 +43,15 @@ jobs:
       run: docker-compose up -d --build
   
     - name: Run Tests
-      env:
-        USE_CLOUD_SQL_AUTH_PROXY: ${{ secrets.USE_CLOUD_SQL_AUTH_PROXY }}
-        SECRET_KEY: ${{ secrets.SECRET_KEY }}
-        DATABASE_URL : ${{ env.DATABASE_URL }}
-        GS_BUCKET_NAME : ${{ env.GS_BUCKET_NAME }}
-        EMAIL_BACKEND: ${{ env.EMAIL_BACKEND }}
-        EMAIL_HOST : ${{ env.EMAIL_HOST }}
-        EMAIL_PORT : ${{ env.EMAIL_PORT }}
-        EMAIL_HOST_USER : ${{ env.EMAIL_HOST_USER }}
-        EMAIL_HOST_PASSWORD : ${{ env.EMAIL_HOST_PASSWORD }}
+      # env:
+      #   USE_CLOUD_SQL_AUTH_PROXY: ${{ secrets.USE_CLOUD_SQL_AUTH_PROXY }}
+      #   SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      #   DATABASE_URL : ${{ env.DATABASE_URL }}
+      #   GS_BUCKET_NAME : ${{ env.GS_BUCKET_NAME }}
+      #   EMAIL_BACKEND: ${{ env.EMAIL_BACKEND }}
+      #   EMAIL_HOST : ${{ env.EMAIL_HOST }}
+      #   EMAIL_PORT : ${{ env.EMAIL_PORT }}
+      #   EMAIL_HOST_USER : ${{ env.EMAIL_HOST_USER }}
+      #   EMAIL_HOST_PASSWORD : ${{ env.EMAIL_HOST_PASSWORD }}
 
       run: docker-compose run --rm -e REUSE_DB=1 -e TESTING=True app python manage.py test --keepdb
