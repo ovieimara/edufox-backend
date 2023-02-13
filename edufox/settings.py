@@ -44,13 +44,13 @@ print(arr)
 #     )
 # env.read_env(io.StringIO(placeholder))
 
-# env_file = os.path.join(BASE_DIR, ".env")
+env_file = os.path.join(BASE_DIR, ".json")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # Attempt to load the Project ID into the environment, safely failing on error.
-# os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./creds.json"
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = env_file
 os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 # os.environ['DATABASE_URL'] = ''
 # # os.environ['GS_BUCKET_NAME'] = ''
