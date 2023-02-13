@@ -51,7 +51,6 @@ elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
     
     project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
     client = secretmanager.SecretManagerServiceClient()
-    os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = None
 
     # service_account_name = f"projects/{project_id}/secrets/SERVICE_ACCOUNT/versions/latest"
     # service_account_payload = client.access_secret_version(name=service_account_name).payload.data.decode("UTF-8")
@@ -93,6 +92,8 @@ if CLOUDRUN_SERVICE_URL:
     # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     PROTOCOL = "https"
     DOMAIN = service_url
+    os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = None
+
 else:
     ALLOWED_HOSTS = ["*"]
     PROTOCOL = "http"
