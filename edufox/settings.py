@@ -198,7 +198,12 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'edufox.wsgi.application'
-
+DB_NAME=os.environ.get("DB_NAME")
+DB_PASSWORD=os.environ.get("DB_PASSWORD")
+DB_HOST=os.environ.get("DB_HOST")
+DB_PORT=os.environ.get("DB_PORT")
+DB_ENGINE = os.environ.get('DB_ENGINE')
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
@@ -212,17 +217,20 @@ WSGI_APPLICATION = 'edufox.wsgi.application'
 
 # DATABASES = {
 #     'default': {
-#         'ENGINE': env('DB_ENGINE'),
-#         'NAME': env('DB_NAME'),
-#         'USER': env('DB_USER'),
-#         'PASSWORD': env('DB_PASSWORD'),
-#         'HOST': env('DB_HOST_TEST'),
-#         'PORT': env('DB_PORT'),
+#         DATABASE_URL: DATABASE_URL
+#         # 'ENGINE': env('DB_ENGINE'),
+#         # 'NAME': env('DB_NAME'),
+#         # 'USER': env('DB_USER'),
+#         # 'PASSWORD': env('DB_PASSWORD'),
+#         # 'HOST': env('DB_HOST_TEST'),
+#         # 'PORT': env('DB_PORT'),
 #     }
 # }
 
+
+
 # Use django-environ to parse the connection string
-DATABASES = {"default": env.db()}
+DATABASES = {"default": DATABASE_URL}
 USE_CLOUD_SQL_AUTH_PROXY = os.environ.get('USE_CLOUD_SQL_AUTH_PROXY')
 # print(os.environ.get('USE_CLOUD_SQL_AUTH_PROXY', USE_CLOUD_SQL_AUTH_PROXY))
 
