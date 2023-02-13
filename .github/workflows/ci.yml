@@ -55,7 +55,7 @@ jobs:
 
       uses: 'google-github-actions/auth@v1'
       with:
-        credentials_json: ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+        credentials_json: $GOOGLE_APPLICATION_CREDENTIALS
 
     - name: Build containers
       # env:
