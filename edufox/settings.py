@@ -35,6 +35,10 @@ for i in range(len(arr)):
     if 'gha-creds' in arr[i] or arr[i] == "creds.json":
         file = arr[i]
 
+if not file:
+    print('FILE', file)
+    os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
+
 
 # env = environ.Env(
 #     GOOGLE_APPLICATION_CREDENTIALS=(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")),
