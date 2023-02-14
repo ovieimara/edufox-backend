@@ -94,15 +94,15 @@ jobs:
     - name: Authorize Docker push
       run: gcloud auth configure-docker
 
-    - name: Build and Push Containers
+    - name: Build and Push Container
       run: |-
-        docker build -t gcr.io/edufox-services/edufox-api-service:${{  github.sha }} .
-        docker push gcr.io/edufox-services/edufox-api-service:${{  github.sha }}
+        docker build -t gcr.io/${{ secrets.GOOGLE_CLOUD_PROJECT }}/${{ secrets.CLOUDRUN_SERVICE }}:${{  github.sha }} .
+        docker push gcr.io/${{ secrets.GOOGLE_CLOUD_PROJECT }}/${{ secrets.CLOUDRUN_SERVICE }}:${{  github.sha }}
     - name: Deploy to Cloud Run
       run: |-
-        gcloud run deploy edufox-api-service \
-          --region us-central1 \
-          --image gcr.io/edufox-services/edufox-api-service:${{ github.sha }} \
+        gcloud run deploy ${{ secrets.CLOUDRUN_SERVICE }} \
+          --region ${{ secrets.GCP_REGION }} \
+          --image gcr.io/${{ secrets.GOOGLE_CLOUD_PROJECT }}/${{ secrets.CLOUDRUN_SERVICE }}:${{ github.sha }} \
           --platform "managed" 
     # If required, use the Cloud Run url output in later steps
     - name: Show Output
