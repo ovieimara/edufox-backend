@@ -94,7 +94,7 @@ jobs:
     - name: Authorize Docker push
       run: gcloud auth configure-docker
 
-    - name: Build and Push Containers
+    - name: Build and Push Container
       run: |-
         docker build -t gcr.io/${{secrets.GOOGLE_CLOUD_PROJECT}}/${{secrets.CLOUDRUN_SERVICE}}:${{  github.sha }} .
         docker push gcr.io/${{secrets.GOOGLE_CLOUD_PROJECT}}/${{secrets.CLOUDRUN_SERVICE}}:${{  github.sha }}
@@ -107,3 +107,7 @@ jobs:
     # If required, use the Cloud Run url output in later steps
     - name: Show Output
       run: echo ${{ steps.deploy.outputs.url }}
+
+
+          name: "gcr.io/cloud-builders/docker"
+    args: ["build", "-t", "gcr.io/${PROJECT_ID}/${_SERVICE_NAME}", "."]
