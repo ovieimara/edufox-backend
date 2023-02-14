@@ -96,7 +96,7 @@ jobs:
 
     - name: Build and Push Container
       run: |-
-        docker build -t gcr.io/edufox-services/edufox-api-service:${{  github.sha }} .
+        docker build -t gcr.io/${{secrets.GOOGLE_CLOUD_PROJECT}}/edufox-api-service:${{  github.sha }} .
         docker push gcr.io/edufox-services/edufox-api-service:${{  github.sha }}
     - name: Deploy to Cloud Run
       run: |-
