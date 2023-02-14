@@ -107,7 +107,3 @@ jobs:
     # If required, use the Cloud Run url output in later steps
     - name: Show Output
       run: echo ${{ steps.deploy.outputs.url }}
-
-
-          name: "gcr.io/cloud-builders/docker"
-    args: ["build", "-t", "gcr.io/${PROJECT_ID}/${_SERVICE_NAME}", "."]
