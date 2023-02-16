@@ -11,7 +11,7 @@ from rest_framework.decorators import api_view, permission_classes
 from .permissions import IsStaffEditorPermission
 from django.contrib.auth.models import User
 from .serializers import StudentSerializer, TempStudentSerializer, UserSerializer
-from .models import Student, TempStudent
+from .models import Student, TempStudent, Grade
 import requests
 from datetime import datetime
 # from decouple import config
@@ -37,6 +37,7 @@ class StudentListCreateAPIView(generics.ListCreateAPIView):
         username = serializer.validated_data.get('username')
         email = serializer.validated_data.get('email')
         password = serializer.validated_data.get('password')
+        grade = serializer.validated_data.get('grade')
         data = {
             "username" : username,
             "email" : email,
@@ -46,9 +47,11 @@ class StudentListCreateAPIView(generics.ListCreateAPIView):
             response = client.post(reverse('student:user-list'), data=data)
         else:
             response = requests.post(getUrl('user-list', "student"), data=data)
-        # print('RESPONSE: ', response)
         if response.status_code == status.HTTP_201_CREATED:
-            super().perform_create(serializer)
+            if grade:
+                instance = Grade.objects.get(name=grade)
+                serializer.save(grade=instance)
+                # super().perform_create(serializer)
 
 # class TempStudentCreateAPIView(generics.ListCreateAPIView):
 #     queryset = TempStudent.objects.all()

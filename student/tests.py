@@ -4,6 +4,7 @@ from rest_framework import status
 from django.urls import reverse
 from rest_framework.test import APIClient
 from .models import TempStudent
+from course.models import Grade
 
 User = get_user_model()
 
@@ -23,7 +24,11 @@ class SignupTestCase(TestCase):
                 'image_url' : 'image',
                 'name_institution' : 'uniben'
         }
-        
+        Grade.objects.create(
+            code='grade1', 
+            name='Grade 1', 
+            description='Grade 1'
+        )
 
     def test_signup(self):
 

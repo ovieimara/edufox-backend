@@ -16,15 +16,15 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include, re_path
 # from rest_framework.documentation import include_docs_urls
-from rest_framework_swagger.views import get_swagger_view
 from student.views import CreateAPIUser, apiViewManager
+from rest_framework_swagger.views import get_swagger_view
 
 schema_view = get_swagger_view(title='EduFox API')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v1/auth/', include('student.urls')),
-    path('api/users', CreateAPIUser.as_view(), name="api-user"),
+    # path('api/v1/auth/', include('student.urls')),
     path('api/auth', apiViewManager, name="api-view"),
+    path('api/', include('version.urls')),
     re_path(r'^$', schema_view),
 ]

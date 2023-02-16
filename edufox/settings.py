@@ -29,12 +29,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 # SECRET_KEY = os.environ.get('SECRET_KEY')
 arr = os.listdir('.')
-
+# os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 file = ''
 for i in range(len(arr)):
-    if 'gha-creds' in arr[i]:
+    if 'gha-creds' in arr[i] or arr[i] == 'creds.json':
         file = arr[i]
-
+print('FILE::', file)
 if file:
     print('FILE', file)
     env_file = os.path.join(BASE_DIR, file)
@@ -199,6 +199,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'student',
+    'course',
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
@@ -278,6 +279,7 @@ DATABASES = {"default": env.db()}
 # If the flag as been set, configure to use proxy
 if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
     DATABASES["default"]["HOST"] = "cloudsql-proxy"
+    # DATABASES["default"]["HOST"] = "127.0.0.1"
     DATABASES["default"]["PORT"] = 5432
 
 # Define static storage via django-storages[google]
