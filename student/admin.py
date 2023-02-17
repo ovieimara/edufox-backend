@@ -29,6 +29,9 @@ class TempStudentAdmin(admin.ModelAdmin):
 class StudentAdmin(admin.ModelAdmin):
     list_display = ['phone_number', 'grade', 'age', 'gender', 'image_url']
 
+class StudentAdmin(admin.ModelAdmin):
+    list_display = ['phone_number', 'grade', 'age', 'gender', 'image_url']
+
 
 # admin.site.unregister(User)
 # admin.site.register(Student)

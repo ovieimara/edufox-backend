@@ -34,7 +34,6 @@ class StudentListCreateAPIView(generics.ListCreateAPIView):
     permission_classes = [AllowAny]
 
     def perform_create(self, serializer):
-        print('grade: ', 'oviemuno')
         username = serializer.validated_data.get('username')
         email = serializer.validated_data.get('email')
         password = serializer.validated_data.get('password')
@@ -48,7 +47,6 @@ class StudentListCreateAPIView(generics.ListCreateAPIView):
         
         if django_settings.DOMAIN == "127.0.0.1:8000":
             response = client.post(reverse('student:user-list'), data=data)
-            # print('DOMAIN', reverse('student:user-list'))
         else:
             response = requests.post(getUrl('user-list', "student"), data=data)
         if response.status_code == status.HTTP_201_CREATED:

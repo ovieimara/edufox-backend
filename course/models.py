@@ -48,14 +48,15 @@ class Video(models.Model):
     thumbnail =  models.URLField(null=True)
     url =  models.URLField(null=True, blank=True, default='')
     tags =  models.JSONField(null=True, blank=True, default=dict)
-    views = models.ForeignKey(View, related_name='views', on_delete=models.CASCADE)
-    likes = models.SmallIntegerField(null=True, blank=True, default=0)
-    rating = models.IntegerField(null=True, blank=True, default=0)
-    comments = models.IntegerField(null=True, blank=True, default=0)
     subject = models.ForeignKey(Subject, related_name='subjects', on_delete=models.CASCADE)
     grade = models.ForeignKey(Grade, related_name='grades', null=True, on_delete=models.SET_NULL)
     created = models.DateField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
+    # views = models.ForeignKey(View, related_name='views', on_delete=models.CASCADE)
+    # likes = models.SmallIntegerField(null=True, blank=True, default=0)
+    # rating = models.IntegerField(null=True, blank=True, default=0)
+    # comments = models.IntegerField(null=True, blank=True, default=0)
+
 
     def __str__(self) -> str:
         return self.title
