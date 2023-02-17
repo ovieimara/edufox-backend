@@ -28,13 +28,13 @@ class SignupTestCase(TestCase):
 
     def test_create_subject(self):
         Subject.objects.create(
-            code='phy101', 
-            name='Physics', 
-            description='Physics',
+            code='che141', 
+            name='Chemistry', 
+            description='Chemistry',
         )
-        grade = Subject.objects.get(name='Physics')
-        self.assertEqual(grade.name, 'Physics')
-        self.assertEqual(grade.code, 'phy101')
+        grade = Subject.objects.get(name='Chemistry')
+        self.assertEqual(grade.name, 'Chemistry')
+        self.assertEqual(grade.code, 'che141')
 
     def test_create_lecturer(self):
         Lecturer.objects.create(
