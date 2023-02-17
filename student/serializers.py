@@ -15,7 +15,7 @@ class StudentSerializer(serializers.ModelSerializer):
     age = serializers.IntegerField(default=0)
     user = UserSerializer(default={})
     gender = serializers.ChoiceField(choices=['male', 'female'], default='')
-    image_url = serializers.CharField(default="")
+    # image_url = serializers.CharField(default="")
     name_institution = serializers.CharField(default="")
     # email = serializers.EmailField()
 
@@ -43,10 +43,10 @@ class TempStudentSerializer(serializers.ModelSerializer):
     username = serializers.CharField(default="")
     email = serializers.EmailField(default="")
     phone_number = serializers.CharField(default="")
-    grade = serializers.ChoiceField(choices=['KG 1', 'KG 2', 'KG 3', 'KG 4', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'JSS 1', 'JSS 2', 'JSS 3', 'SSS 1', 'SSS 2', 'SSS 3'])
+    # grade = serializers.ChoiceField(choices=['KG 1', 'KG 2', 'KG 3', 'KG 4', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'JSS 1', 'JSS 2', 'JSS 3', 'SSS 1', 'SSS 2', 'SSS 3'])
     age = serializers.IntegerField(default=0)
     gender = serializers.ChoiceField(choices=['male', 'female'])
-    image_url = serializers.CharField(default="")
+    # image_url = serializers.CharField(default="")
     name_institution = serializers.CharField(default="")
 
     # email = serializers.EmailField(validators=[unique_user_email])

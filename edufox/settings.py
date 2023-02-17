@@ -36,7 +36,6 @@ for i in range(len(arr)):
         file = arr[i]
 print('FILE::', file)
 if file:
-    print('FILE', file)
     env_file = os.path.join(BASE_DIR, file)
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = env_file
     os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
@@ -138,8 +137,9 @@ DOMAIN = ""
 # print('CLOUDRUN_SERVICE_URL: ', CLOUDRUN_SERVICE_URL)
 if CLOUDRUN_SERVICE_URL:
     service_url = urlparse(CLOUDRUN_SERVICE_URL).netloc
-    ALLOWED_HOSTS = [service_url]
-    CSRF_TRUSTED_ORIGINS = [CLOUDRUN_SERVICE_URL]
+    ALLOWED_HOSTS = [service_url, 'api-service-5wasy3cpxq-uc.a.run.app']
+    CSRF_TRUSTED_ORIGINS = [CLOUDRUN_SERVICE_URL, 
+    'https://api-service-5wasy3cpxq-uc.a.run.app']
     # SECURE_SSL_REDIRECT = True
     # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     PROTOCOL = "https"
@@ -278,8 +278,8 @@ DATABASES = {"default": env.db()}
 
 # If the flag as been set, configure to use proxy
 if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
-    DATABASES["default"]["HOST"] = "cloudsql-proxy"
-    # DATABASES["default"]["HOST"] = "127.0.0.1"
+    # DATABASES["default"]["HOST"] = "cloudsql-proxy"
+    DATABASES["default"]["HOST"] = "127.0.0.1"
     DATABASES["default"]["PORT"] = 5432
 
 # Define static storage via django-storages[google]
@@ -351,12 +351,12 @@ DJOSER = {
 LOGIN_URL = 'student:login'
 LOGOUT_URL = 'student:logout'
 
-# EMAIL_BACKEND = env('EMAIL_BACKEND')
-# EMAIL_HOST = env('EMAIL_HOST')
-# EMAIL_PORT = env('EMAIL_PORT')
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-# EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+EMAIL_BACKEND = env('EMAIL_BACKEND')
+EMAIL_HOST = env('EMAIL_HOST')
+EMAIL_PORT = env('EMAIL_PORT')
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 
 # placeholder = (
 #         f"SECRET_KEY=django-insecure-5xh$hw9%n$huk$mql=%r7p@dxefh9+hleb7yb$eo_6p)r*$dn^\n"

@@ -43,8 +43,10 @@ class StudentListCreateAPIView(generics.ListCreateAPIView):
             "email" : email,
             "password" : password,
         }
+        
         if django_settings.DOMAIN == "127.0.0.1:8000":
             response = client.post(reverse('student:user-list'), data=data)
+            # print('DOMAIN', reverse('student:user-list'))
         else:
             response = requests.post(getUrl('user-list', "student"), data=data)
         if response.status_code == status.HTTP_201_CREATED:
@@ -99,7 +101,7 @@ class ActivateUser(UserViewSet):
         user.is_active = True
         user.save()
 
-        print('USER', user, get_user_email(user))
+        # print('USER', user, get_user_email(user))
 
         signals.user_activated.send(
             sender=self.__class__, user=user, request=self.request
@@ -127,17 +129,20 @@ def updateActivatedUser(temp_user):
     if temp_student:
         data = {
             "phone_number": temp_student.phone_number,
-            "grade" : temp_student.grade,
+            # "grade" : temp_student.grade,
             "age" : temp_student.age,
             "image_url" : temp_student.image_url,
             "registration_date" : temp_student.registration_date,
             "last_updated" : datetime.utcnow()
         }
+        grade = temp_student.grade
+        if grade:
+            instance = Grade.objects.get(name=grade)
         user.first_name = temp_student.first_name
         user.last_name = temp_student.last_name
         serialized_student = StudentSerializer(data=data)
         serialized_student.is_valid(raise_exception=True)
-        serialized_student.save(user=user)
+        serialized_student.save(user=user, grade=instance)
         temp_student.delete()
     # print(serialized_student.data)
 
