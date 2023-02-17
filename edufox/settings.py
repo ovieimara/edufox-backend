@@ -32,8 +32,8 @@ arr = os.listdir('.')
 # os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 file = ''
 for i in range(len(arr)):
-    # if 'gha-creds' in arr[i] or 'creds.json' == arr[i]: #github ci/cd
-    if 'gha-creds' in arr[i]:
+    if 'gha-creds' in arr[i] or 'creds.json' == arr[i]: #github ci/cd
+    # if 'gha-creds' in arr[i]:
         file = arr[i]
 # print('FILE::', file)
 if file:
