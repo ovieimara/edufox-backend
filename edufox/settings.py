@@ -32,9 +32,11 @@ arr = os.listdir('.')
 # os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 file = ''
 for i in range(len(arr)):
-    if 'gha-creds' in arr[i] or 'creds.json' == arr[i]:
+    # if 'gha-creds' in arr[i] or 'creds.json' == arr[i]: #github
+    if 'gha-creds' in arr[i]:
+
         file = arr[i]
-print('FILE::', file)
+# print('FILE::', file)
 if file:
     env_file = os.path.join(BASE_DIR, file)
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = env_file
