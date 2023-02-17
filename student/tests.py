@@ -21,7 +21,7 @@ class SignupTestCase(TestCase):
                 'grade': 'Grade 1',
                 'age': 6,
                 'gender' : 'male',
-                'image_url' : 'image',
+                'image_url' : '',
                 'name_institution' : 'uniben'
         }
         Grade.objects.create(
