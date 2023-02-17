@@ -9,7 +9,7 @@ from .permissions import IsStaffEditorPermission
 class ListCreateAPIGrades(generics.ListCreateAPIView):
     queryset = Grade.objects.all()
     serializer_class = GradeSerializer
-    permission_classes = [IsAdminUser, IsStaffEditorPermission]
+    # permission_classes = [IsAdminUser, IsStaffEditorPermission]
 
 class UpdateAPIGrades(generics.RetrieveUpdateDestroyAPIView):
     queryset = Grade.objects.all()

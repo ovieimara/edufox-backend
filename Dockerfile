@@ -3,7 +3,7 @@ RUN pip install --upgrade pip
 COPY . /usr/src/app
 WORKDIR /usr/src/app
 # Removes output stream buffering, allowing for more efficient logging
-ENV PYTHONUNBUFFERED 1
+# ENV PYTHONUNBUFFERED 1
 RUN pip install -r requirements.txt
 EXPOSE 8000
 CMD ["python3", "manage.py", "runserver", "0.0.0.0:8000"]

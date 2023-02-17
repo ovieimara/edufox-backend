@@ -34,10 +34,12 @@ class StudentListCreateAPIView(generics.ListCreateAPIView):
     permission_classes = [AllowAny]
 
     def perform_create(self, serializer):
+        print('grade: ', 'oviemuno')
         username = serializer.validated_data.get('username')
         email = serializer.validated_data.get('email')
         password = serializer.validated_data.get('password')
         grade = serializer.validated_data.get('grade')
+        print('grade: ', grade)
         data = {
             "username" : username,
             "email" : email,
@@ -50,11 +52,12 @@ class StudentListCreateAPIView(generics.ListCreateAPIView):
         else:
             response = requests.post(getUrl('user-list', "student"), data=data)
         if response.status_code == status.HTTP_201_CREATED:
-            if grade:
-                instance = Grade.objects.get(name=grade)
-                print('instance', type(instance))
-                serializer.save(grade=instance)
-                # super().perform_create(serializer)
+            # if grade:
+            #     instance = Grade.objects.get(name=grade)
+            #     print('instance', type(instance))
+            #     serializer.save(grade=instance)
+            super().perform_create(serializer)
+
 
 # class TempStudentCreateAPIView(generics.ListCreateAPIView):
 #     queryset = TempStudent.objects.all()
@@ -130,20 +133,21 @@ def updateActivatedUser(temp_user):
     if temp_student:
         data = {
             "phone_number": temp_student.phone_number,
-            # "grade" : temp_student.grade,
+            "grade" : temp_student.grade,
             "age" : temp_student.age,
             "image_url" : temp_student.image_url,
             "registration_date" : temp_student.registration_date,
             "last_updated" : datetime.utcnow()
         }
         grade = temp_student.grade
-        if grade:
-            instance = Grade.objects.get(name=grade)
+        # instance = None
+        # if grade:
+        #     instance = Grade.objects.get(name=grade)
         user.first_name = temp_student.first_name
         user.last_name = temp_student.last_name
         serialized_student = StudentSerializer(data=data)
         serialized_student.is_valid(raise_exception=True)
-        serialized_student.save(user=user, grade=instance)
+        serialized_student.save(user=user)
         temp_student.delete()
     # print(serialized_student.data)
 

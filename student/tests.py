@@ -11,6 +11,11 @@ User = get_user_model()
 class SignupTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
+        self.grade = Grade.objects.create(
+            code='grade1', 
+            name='Grade 1', 
+            description='Grade 1'
+        )
         self.data = {
                 'first_name': 'test',
                 'last_name': 'user',
@@ -18,20 +23,15 @@ class SignupTestCase(TestCase):
                 'email': 'imaraovie@gmail.com',
                 'password': 'testpassword@123A',
                 'phone_number' : '08023168805',
-                'grade': 'Grade 1',
+                'grade': self.grade.pk,
                 'age': 6,
                 'gender' : 'male',
                 'image_url' : '',
                 'name_institution' : 'uniben'
         }
-        Grade.objects.create(
-            code='grade1', 
-            name='Grade 1', 
-            description='Grade 1'
-        )
 
     def test_signup(self):
-
+        
         response = self.client.post(reverse('student:user-list'), data=self.data)
         # print('FIRST', response.json())
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
