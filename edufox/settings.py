@@ -32,8 +32,8 @@ arr = os.listdir('.')
 # os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 file = ''
 for i in range(len(arr)):
-    if 'gha-creds' in arr[i] or 'creds.json' == arr[i]: #github ci/cd
-    # if 'gha-creds' in arr[i]:
+    # if 'gha-creds' in arr[i] or 'creds.json' == arr[i]: #github ci/cd
+    if 'gha-creds' in arr[i]:
         file = arr[i]
 # print('FILE::', file)
 if file:
@@ -278,10 +278,10 @@ DATABASES = {"default": env.db()}
 # print(os.environ.get('USE_CLOUD_SQL_AUTH_PROXY', USE_CLOUD_SQL_AUTH_PROXY))
 
 # If the flag as been set, configure to use proxy
-# if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
-#     DATABASES["default"]["HOST"] = "cloudsql-proxy" #CI.yml
-#     # DATABASES["default"]["HOST"] = "127.0.0.1" #local
-#     DATABASES["default"]["PORT"] = 5432
+if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
+    # DATABASES["default"]["HOST"] = "cloudsql-proxy" #CI.yml
+    DATABASES["default"]["HOST"] = "127.0.0.1" #local
+    DATABASES["default"]["PORT"] = 5432
 
 # Define static storage via django-storages[google]
 GS_BUCKET_NAME = env("GS_BUCKET_NAME")

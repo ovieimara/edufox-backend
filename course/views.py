@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework import generics, status
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly
 from .models import (Grade, Subject, Lecturer, Video, Rate, Comment, 
 InteractionType, Interaction, Test, Assessment)
 from .serializers import (GradeSerializer, SubjectSerializer, LecturerSerializer, 
@@ -12,7 +12,7 @@ from .permissions import IsStaffEditorPermission
 class ListCreateAPIGrades(generics.ListCreateAPIView):
     queryset = Grade.objects.all()
     serializer_class = GradeSerializer
-    # permission_classes = [IsAdminUser, IsStaffEditorPermission]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     def perform_create(self, serializer):
         if self.request.user.IsStaffEditorPermission:
             return super().perform_create(serializer)
