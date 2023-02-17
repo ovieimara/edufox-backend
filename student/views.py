@@ -52,6 +52,7 @@ class StudentListCreateAPIView(generics.ListCreateAPIView):
         if response.status_code == status.HTTP_201_CREATED:
             if grade:
                 instance = Grade.objects.get(name=grade)
+                print('instance', type(instance))
                 serializer.save(grade=instance)
                 # super().perform_create(serializer)
 
