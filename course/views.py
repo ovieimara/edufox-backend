@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework import generics, status
-from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly, AllowAny
 from .models import (Grade, Subject, Lecturer, Video, Rate, Comment, 
 InteractionType, Interaction, Test, Assessment)
 from .serializers import (GradeSerializer, SubjectSerializer, LecturerSerializer, 

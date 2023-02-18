@@ -11,7 +11,7 @@ class StudentSerializer(serializers.ModelSerializer):
     # first_name = serializers.CharField()
     # last_name = serializers.CharField()
     phone_number = serializers.CharField(default="")
-    # grade = serializers.ChoiceField(choices=['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'], default='')
+    grade = serializers.StringRelatedField()
     age = serializers.IntegerField(default=0)
     user = UserSerializer(default={})
     gender = serializers.ChoiceField(choices=['male', 'female'], default='')
