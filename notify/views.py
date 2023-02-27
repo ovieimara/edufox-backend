@@ -15,7 +15,9 @@ verified_number = "+2347048536974"
 # verified_number = "+2348023168805"
 
 
-client = twiClient(account_sid, os.environ.get("auth_token"))
+# client = twiClient(account_sid, os.environ.get("auth_token"))
+client = twiClient(account_sid, auth_token)
+
 
 # Create your views here.
 
