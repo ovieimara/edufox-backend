@@ -33,7 +33,7 @@ class SignupTestCase(TestCase):
                 'gender' : 'male',
                 'image_url' : '',
                 'name_institution' : 'uniben',
-                'country': self.country
+                'country': self.country.pk,
         }
 
     def test_signup(self):
