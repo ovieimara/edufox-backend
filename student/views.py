@@ -1,17 +1,17 @@
 from django.shortcuts import render
 from django.urls import reverse
-from django.shortcuts import HttpResponsePermanentRedirect
+from django.shortcuts import HttpResponsePermanentRedirect, get_object_or_404
 from djoser.views import UserViewSet
 from djoser import email
 from django.http import HttpRequest
-from rest_framework import generics, status
+from rest_framework import generics, status, mixins
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticatedOrReadOnly
 from rest_framework.decorators import api_view, permission_classes
 from .permissions import IsStaffEditorPermission
 from django.contrib.auth.models import User
-from .serializers import StudentSerializer, TempStudentSerializer, UserSerializer
-from .models import Student, TempStudent, Grade
+from .serializers import StudentSerializer, TempStudentSerializer, UserSerializer, CountrySerializer
+from .models import Student, TempStudent, Grade, Country
 import requests
 from datetime import datetime
 # from decouple import config
@@ -20,6 +20,9 @@ from djoser.compat import get_user_email
 from djoser.conf import settings
 from django.conf import settings as django_settings
 from rest_framework.test import APIClient
+from notify.views import createOTP, verifyOTP
+from notify.constants import OTP_APPROVED
+from .constants import country_codes
 
 # import socket
 
@@ -34,13 +37,19 @@ class StudentListCreateAPIView(generics.ListCreateAPIView):
     permission_classes = [AllowAny]
 
     def perform_create(self, serializer):
-        username = serializer.validated_data.get('username')
+        # username = serializer.validated_data.get('username')
         email = serializer.validated_data.get('email')
         password = serializer.validated_data.get('password')
-        grade = serializer.validated_data.get('grade')
-        print('grade: ', grade)
+        # grade = serializer.validated_data.get('grade')
+        phone_number = serializer.validated_data.get('phone_number')
+        country = serializer.validated_data.get('country')
+        # print('country', country.name)
+        # obj = Country.objects.get(name__iexact=country.name)
+        obj = get_object_or_404(Country, name__iexact=country.name)
+        # print(obj.code)
+        phone = f"{obj.code}{phone_number}"
         data = {
-            "username" : username,
+            "username" : phone,
             "email" : email,
             "password" : password,
         }
@@ -55,7 +64,10 @@ class StudentListCreateAPIView(generics.ListCreateAPIView):
             #     instance = Grade.objects.get(name=grade)
             #     print('instance', type(instance))
             #     serializer.save(grade=instance)
-            super().perform_create(serializer)
+            createOTP(phone)
+            return super().perform_create(serializer)
+
+        return status.HTTP_400_BAD_REQUEST
 
 
 # class TempStudentCreateAPIView(generics.ListCreateAPIView):
@@ -87,6 +99,56 @@ class StudentListCreateAPIView(generics.ListCreateAPIView):
 
 #         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+def verifyOTPCode(request, *args, **kwargs):
+    otp = kwargs.get('otp')
+    print('otp: ', otp)
+    username = kwargs.get('username')
+    data = {
+       'username': username
+    }
+    
+    if otp:
+        response = verifyOTP(otp)
+        if response.status == OTP_APPROVED:
+            # print('DOMAIN', django_settings.DOMAIN)
+            url = getUrl('student-activate', "student", data)
+            if django_settings.DOMAIN == "127.0.0.1:8000":
+               return client.put(url)
+
+            return requests.put(url)
+        return status.HTTP_401_UNAUTHORIZED
+    
+    return status.HTTP_400_BAD_REQUEST
+
+class ActivatePhoneNumberAPIView(generics.RetrieveUpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    lookup_field = 'username'
+    permission_classes = [AllowAny]
+
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        serializer = self.get_serializer(user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(is_active=True)
+        signals.user_activated.send(
+            sender=self.__class__, user=user, request=self.request
+        )
+
+        serializer_updated = updateActivatedUser(user)
+        if settings.SEND_CONFIRMATION_EMAIL and serializer_updated:
+            context = {"user": user}
+            to = [get_user_email(user)]
+            settings.EMAIL.confirmation(self.request, context).send(to)
+
+        if getattr(user, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            user._prefetched_objects_cache = {}
+        return Response(serializer.data)
+
 class ActivateUser(UserViewSet):
     def activation(self, request, *args, **kwargs):
         new_request = HttpRequest()
@@ -104,19 +166,16 @@ class ActivateUser(UserViewSet):
         user.is_active = True
         user.save()
 
-        # print('USER', user, get_user_email(user))
-
         signals.user_activated.send(
             sender=self.__class__, user=user, request=self.request
         )
-
-        if settings.SEND_CONFIRMATION_EMAIL:
+        serialized = updateActivatedUser(user)  
+        if settings.SEND_CONFIRMATION_EMAIL and serialized:
             context = {"user": user}
             to = [get_user_email(user)]
             settings.EMAIL.confirmation(self.request, context).send(to)
-            updateActivatedUser(user)                
 
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(serialized, status=status.HTTP_204_NO_CONTENT)
 
 class ActivationEmail(email.ActivationEmail):
     template_name = 'activation.html'
@@ -125,8 +184,9 @@ class ConfirmationEmail(email.ConfirmationEmail):
     template_name = 'confirmation.html'
 
 def updateActivatedUser(temp_user):
-    # print('TOKEN', token)
+    
     email = get_user_email(temp_user)
+    # print('TOKEN', email)
     temp_student = TempStudent.objects.filter(email=email, username=temp_user.username).first()
     user = User.objects.get(username=temp_user.username, email=email)
     if temp_student:
@@ -138,37 +198,16 @@ def updateActivatedUser(temp_user):
             "registration_date" : temp_student.registration_date,
             "last_updated" : datetime.utcnow()
         }
-        grade = temp_student.grade
-        print(grade)
-        # instance = None
-        # if grade:
-        #     instance = Grade.objects.get(name=grade)
         user.first_name = temp_student.first_name
         user.last_name = temp_student.last_name
         serialized_student = StudentSerializer(data=data)
         serialized_student.is_valid(raise_exception=True)
-        serialized_student.save(user=user, grade=grade)
+        serialized_student.save(user=user, grade=temp_student.grade)
         temp_student.delete()
-    # print(serialized_student.data)
 
-        # return serialized_student.data.get('user')
-    
-    # return dict
-    # data = {
-    #     'username' : username,
-    #     'password' : user.password
-    # }
-    # response = requests.post(getUrl('login'), data=data)
-    # print('RESPONSE TOKENS: ', response.json().get('auth_token'))
-    # token = f"Token {response.json().get('auth_token')}" 
-    # print("TOOOOKKENS: ", token)
-    # header = {
-    #     'Authorization': token
-    # }
-    # data = {'uid': uid}
+        return serialized_student.data
 
-    # return requests.post(getUrl('student-activate'), headers=header)
-
+    return dict
 
 class CreateAPIUser(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -185,7 +224,30 @@ def apiViewManager(request, *args, **kwargs):
         return HttpResponsePermanentRedirect('/token/login')
     return HttpResponsePermanentRedirect('/')
 
+class ListCreateAPICountry(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
+    queryset = Country.objects.all()
+    serializer_class = CountrySerializer
+    lookup_field = 'pk'
+    # permission_classes = [IsStaffEditorPermission]
 
+    def get(self, request, *args, **kwargs):
+        if kwargs.get('pk') is not None:
+            return self.retrieve(request, *args, **kwargs)
+
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        if not kwargs.get('pk') and request.user.is_staff:
+            return self.create(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        if kwargs.get('pk') and request.user.is_staff:
+            return self.update(request, *args, **kwargs)
+        return None
+
+    
+
+    
 
 
 # class ActivateStudentAPIView(generics.ListCreateAPIView):
@@ -215,19 +277,10 @@ def apiViewManager(request, *args, **kwargs):
 #             temp_student.delete()
 
 
-def getUrl(url, app):
-    # print(settings.__dict__)
+def getUrl(url, app, data=None):
+    if not data:
+        data = {}
     host = django_settings.DOMAIN
     protocol = django_settings.PROTOCOL
-    # host = "0.0.0.0:8000"
-    # try:
-    #     host, *_ = socket.gethostbyaddr(socket.gethostname())
-    # except socket.herror:
-    #    pass
-
-    # protocol = 'https://' if request.is_secure() else 'http://'
     name = f"{app}:{url}"
-    print('USER LIST', f"{protocol}://{host}{reverse(name)}")
-
-    # return f"DOMAIN{reverse(name)}"
-    return f"{protocol}://{host}{reverse(name)}"
+    return f"{protocol}://{host}{reverse(name, kwargs=data)}"

@@ -201,12 +201,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'student',
     'course',
+    'notify',
+    'subscribe',
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
-    # 'coreapi',
-    # 'drf_yasg',
     'rest_framework_swagger',
+    'django_filters',
     
 ]
 
@@ -279,8 +280,8 @@ DATABASES = {"default": env.db()}
 
 # If the flag as been set, configure to use proxy
 if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
-    DATABASES["default"]["HOST"] = "cloudsql-proxy" #CI.yml
-    # DATABASES["default"]["HOST"] = "127.0.0.1" #local
+    # DATABASES["default"]["HOST"] = "cloudsql-proxy" #CI.yml
+    DATABASES["default"]["HOST"] = "127.0.0.1" #local
     DATABASES["default"]["PORT"] = 5432
 
 # Define static storage via django-storages[google]
@@ -316,12 +317,18 @@ REST_FRAMEWORK =  {
     ],
 
     "DEFAULT_PERMISSION_CLASSES" : [
-    'rest_framework.permissions.IsAuthenticated'
+    'rest_framework.permissions.IsAuthenticatedOrReadOnly'
    ],
-    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema'
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.OrderingFilter',
+        'rest_framework.filters.SearchFilter',
+    ],
+    'DEFAULT_PAGINATION_CLASS' : 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE' : 10,
 
 }
-
 
 DJOSER = {
     'SET_PASSWORD_RETRIES': 5,

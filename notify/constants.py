@@ -1,0 +1,1 @@
+OTP_APPROVED = 'approved'

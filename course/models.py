@@ -46,6 +46,8 @@ class Video(models.Model):
     duration = models.CharField(db_index = True, max_length=255, null=True, blank=True, default='')
     resolution = models.CharField(db_index = True, max_length=255, null=True, blank=True, default='')
     thumbnail =  models.URLField(null=True)
+    topic = models.CharField(db_index = True, max_length=255, null=True, blank=True, default='')
+    lesson = models.SmallIntegerField(db_index = True, null=True, blank=True, default=0)
     url =  models.URLField(null=True, blank=True, default='')
     tags =  models.JSONField(null=True, blank=True, default=dict)
     subject = models.ForeignKey(Subject, related_name='subjects', on_delete=models.CASCADE)
@@ -79,6 +81,7 @@ class Comment(models.Model):
 class InteractionType(models.Model):
     code = models.CharField(max_length=127, null=True, default='')
     name = models.CharField(db_index=True, max_length=127, default='')
+    description = models.TextField(blank=True, default='')
 
     def __str__(self) -> str:
         return self.name

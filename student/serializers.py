@@ -1,10 +1,11 @@
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from .validators import validate_username
 from djoser.serializers import UserSerializer
-from .models import (Student, TempStudent)
+from .models import (Student, TempStudent, Country)
 
-User = get_user_model()
+# User = get_user_model()
 
 class StudentSerializer(serializers.ModelSerializer):
     # student_id = serializers.CharField(default="")
@@ -40,14 +41,15 @@ class TempStudentSerializer(serializers.ModelSerializer):
     # student_id = serializers.CharField(default="")
     first_name = serializers.CharField(default="")
     last_name = serializers.CharField(default="")
-    username = serializers.CharField(default="")
+    # username = serializers.CharField()
     email = serializers.EmailField(default="")
-    phone_number = serializers.CharField(default="")
+    phone_number = serializers.CharField(max_length=15, allow_blank=False, trim_whitespace=True, default="")
     # grade = serializers.ChoiceField(choices=['KG 1', 'KG 2', 'KG 3', 'KG 4', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'JSS 1', 'JSS 2', 'JSS 3', 'SSS 1', 'SSS 2', 'SSS 3'])
     age = serializers.IntegerField(default=0)
     gender = serializers.ChoiceField(choices=['male', 'female'])
     # image_url = serializers.CharField(default="")
     name_institution = serializers.CharField(default="")
+    # otp_code = serializers.SerializerMethodField()
 
     # email = serializers.EmailField(validators=[unique_user_email])
 
@@ -57,6 +59,12 @@ class TempStudentSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True},
         'user': {'read_only': True}}
 
+    def validate(self, attrs):
+        phone_number = attrs.get('phone_number')
+        country = attrs.get('country')
+        obj = get_object_or_404(Country, name__iexact=country.name)
+        attrs['username'] = obj.code + phone_number
+        return super().validate(attrs)
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -64,4 +72,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['username', 'email', 'password']
         extra_kwargs = {'password': {'write_only': True}}
 
-    
+class CountrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Country
+        fields = "__all__"

@@ -19,9 +19,18 @@ class Student(models.Model):
     def __str__(self) -> str:
         return f"{self.user.first_name} {self.user.last_name}"
 
+class Country(models.Model):
+    code = models.CharField(db_index=True, max_length=15, unique=True, null=True, blank=True, default="")
+    name = models.CharField(db_index=True, unique=True, max_length=100, null=True, blank=True, default="")
+    created = models.DateTimeField(db_index=True, null=True, auto_now_add=True)
+    updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
+
+    def __str__(self) -> str:
+        return f"{self.name}"
+
 class TempStudent(models.Model):
     # student_id = models.CharField(db_index=True, max_length=15, null = True, blank=True, default="")
-    username = models.CharField(db_index=True, max_length=255, null = True, blank=True, unique=True, default="")
+    username = models.CharField(db_index=True, max_length=255, null=True, blank=True, default="")
     first_name  = models.CharField(db_index=True, max_length=255, null = True, blank=True, default="")
     last_name  = models.CharField(db_index=True, max_length=255, null = True, blank=True, default="")
     email = models.EmailField()
@@ -33,6 +42,7 @@ class TempStudent(models.Model):
     gender = models.CharField(db_index=True, max_length=255, null=True)
     image_url = models.URLField(null = True, blank=True, default='')
     name_institution = models.CharField(max_length=255, null = True, blank=True)
+    country = models.ForeignKey(Country, related_name='countries', null=True, on_delete=models.SET_NULL)
     registration_date = models.DateTimeField(db_index=True, null=True, auto_now_add=True)
     last_updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
 

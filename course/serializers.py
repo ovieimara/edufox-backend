@@ -1,6 +1,8 @@
+from datetime import datetime
 from rest_framework import serializers
 from .models import (Grade, Comment, Rate, Subject, Lecturer, Video, Interaction, 
 InteractionType, Test, Assessment)
+from subscribe.models import Subscribe
 
 class GradeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -28,9 +30,21 @@ class LecturerSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class VideoSerializer(serializers.ModelSerializer):
+    is_subscribed = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = Video
         fields = '__all__'
+
+    def get_is_subscribed(self, obj):
+        now = datetime.now()
+        request = self.context.get('request')
+        subscriptions = request.user.user_subscriptions
+        if subscriptions.exists():
+            subscribe = subscriptions.filter(grade=obj.grade, expiry_date__gte=now).first()
+        # subscribe = Subscribe.objects.filter(user=request.user, grade=obj.grade, expiry_date__gte=now).first()
+            if subscribe.exists():
+                return subscribe.is_valid(now)
+        return False
 
 class InteractionTypeSerializer(serializers.ModelSerializer):
     class Meta:

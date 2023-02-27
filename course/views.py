@@ -14,7 +14,7 @@ class ListCreateAPIGrades(generics.ListCreateAPIView):
     serializer_class = GradeSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     def perform_create(self, serializer):
-        if self.request.user.IsStaffEditorPermission:
+        if self.request.user.is_staff:
             return super().perform_create(serializer)
         return status.HTTP_403_FORBIDDEN
 
@@ -48,7 +48,12 @@ class UpdateAPILecturer(generics.RetrieveUpdateDestroyAPIView):
 class ListCreateAPIVideo(generics.ListCreateAPIView):
     queryset = Video.objects.select_related('grade', 'subject').all()
     serializer_class = VideoSerializer
-    permission_classes = [IsAdminUser, IsStaffEditorPermission]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def perform_create(self, serializer):
+        if self.request.user.is_staff:
+            return super().perform_create(serializer)
+        return status.HTTP_403_FORBIDDEN
 
 class UpdateAPIVideo(generics.RetrieveUpdateDestroyAPIView):
     queryset = Video.objects.select_related('grade', 'subject').all()

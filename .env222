@@ -26,3 +26,7 @@ USE_CLOUD_SQL_AUTH_PROXY=True
 GOOGLE_CLOUD_PROJECT=edufox-services
 DATABASE_URL=postgres://admin:_edufox@123A@//cloudsql/edufox-services:us-central1:edufox-db-instance/edufox_db
 GOOGLE_APPLICATION_CREDENTIALS=creds.json
+account_sid=AC31285f7730586b37af4cb9ebb195cbb8
+auth_token=263641b76fe494e77a309aa07b1675d2
+verify_sid=VAd8947ceec0be9888a04ebeb8667ca577
+verified_number=+2347048536974

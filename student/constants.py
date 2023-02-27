@@ -1,0 +1,1 @@
+country_codes = {'NIGERIA' : '+234'}
