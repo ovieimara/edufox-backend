@@ -25,7 +25,7 @@ from notify.constants import OTP_APPROVED
 from .constants import country_codes
 
 # import socket
-
+address = ["127.0.0.1:8000", "0.0.0.1:8000"]
 # HOST = config('HOST')
 client = APIClient()
 class StudentListCreateAPIView(generics.ListCreateAPIView):
@@ -64,7 +64,8 @@ class StudentListCreateAPIView(generics.ListCreateAPIView):
             #     instance = Grade.objects.get(name=grade)
             #     print('instance', type(instance))
             #     serializer.save(grade=instance)
-            createOTP(phone)
+            if django_settings.DOMAIN not in address :
+                createOTP(phone)
             return super().perform_create(serializer)
 
         return status.HTTP_400_BAD_REQUEST
