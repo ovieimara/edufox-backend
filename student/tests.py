@@ -5,6 +5,7 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 from .models import TempStudent
 from course.models import Grade
+from .models import Country
 
 User = get_user_model()
 
@@ -16,18 +17,23 @@ class SignupTestCase(TestCase):
             name='Grade 1', 
             description='Grade 1'
         )
+        self.country = Country.objects.create(
+            code='+234', 
+            name='Nigeria', 
+        )
         self.data = {
                 'first_name': 'test',
                 'last_name': 'user',
                 'username': 'testuser',
                 'email': 'imaraovie@gmail.com',
                 'password': 'testpassword@123A',
-                'phone_number' : '08023168805',
+                'phone_number' : '+2347048536974',
                 'grade': self.grade.pk,
                 'age': 6,
                 'gender' : 'male',
                 'image_url' : '',
-                'name_institution' : 'uniben'
+                'name_institution' : 'uniben',
+                'country': self.country
         }
 
     def test_signup(self):
