@@ -24,7 +24,7 @@ class SignupTestCase(TestCase):
         self.data = {
                 'first_name': 'test',
                 'last_name': 'user',
-                'username': 'testuser',
+                'username': '+23407048536974',
                 'email': 'imaraovie@gmail.com',
                 'password': 'testpassword@123A',
                 'phone_number' : '07048536974',
