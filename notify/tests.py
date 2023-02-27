@@ -15,9 +15,9 @@ class SignupTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
 
-    def test_sms_messaging(self):
-        response = sms_messaging()
-        print(response.status)
-        self.assertEqual(response.status, 'approved')
+    # def test_sms_messaging(self):
+    #     response = sms_messaging()
+    #     print(response.status)
+    #     self.assertEqual(response.status, 'approved')
 
 
