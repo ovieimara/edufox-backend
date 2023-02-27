@@ -27,7 +27,7 @@ class SignupTestCase(TestCase):
                 'username': 'testuser',
                 'email': 'imaraovie@gmail.com',
                 'password': 'testpassword@123A',
-                'phone_number' : '+2347048536974',
+                'phone_number' : '07048536974',
                 'grade': self.grade.pk,
                 'age': 6,
                 'gender' : 'male',
