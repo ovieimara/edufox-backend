@@ -367,8 +367,8 @@ DJOSER = {
 
 # AUTH_USER_MODEL = 'student.Student'
 
-LOGIN_URL = 'student:login'
-LOGOUT_URL = 'student:logout'
+LOGIN_URL = 'api:login'
+LOGOUT_URL = 'api:logout'
 
 EMAIL_BACKEND = env('EMAIL_BACKEND')
 EMAIL_HOST = env('EMAIL_HOST')

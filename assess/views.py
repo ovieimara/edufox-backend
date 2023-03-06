@@ -4,12 +4,19 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from .models import Test, Assessment, Level
 from .serializers import TestSerializer, AssessmentSerializer, LevelSerializer
+from course.models import Grade, Subject
+from django.shortcuts import get_object_or_404
+
 # from .permissions import IsStaffEditorPermission
 # Create your views here.
 
 class ListCreateUpdateAPITest(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
-    queryset = Test.objects.select_related('subject', 'grade').all().order_by('subject', 'topic')
+    queryset = Test.objects.select_related('subject', 'grade').all().order_by('subject__name', 'topic')
     serializer_class = TestSerializer
+    filterset_fields = ['grade', 'subject', 'topic', 'lesson']
+    ordering_fields = ['title', 'topic']
+    search_fields = ['title', 'topic', 'lesson', 'tags', 'subject__name', 'subject__description', 'grade__name', 'grade__description']
+    # permission_classes = [AllowAny]
     # permission_classes = [IsAdminUser, IsStaffEditorPermission]
     def get(self, request, *args, **kwargs):
         if kwargs.get('pk') is not None:
@@ -33,30 +40,80 @@ class ListCreateUpdateAPITest(mixins.CreateModelMixin, mixins.ListModelMixin,  m
 #     serializer_class = TestSerializer
 #     permission_classes = [IsAdminUser, IsStaffEditorPermission]
 
-class ListCreateUpdateAPIAssessment(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
+# class ListCreateUpdateAPIAssessment(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
+#     queryset = Assessment.objects.select_related('user').all()
+#     serializer_class = AssessmentSerializer
+#     permission_classes = [IsAuthenticated]
+#     filterset_fields = ['user', 'test__grade', 'test__subject', 'topic', 'lesson']
+
+#     def get(self, request, *args, **kwargs):
+#         if kwargs.get('pk') is not None:
+#             kwargs.get('grade')
+#             return self.retrieve(request, *args, **kwargs)
+
+#         return self.list(request, *args, **kwargs)
+
+#     def post(self, request, *args, **kwargs):
+#         if not kwargs.get('pk') and request.user.is_staff:
+#             return self.create(request, *args, **kwargs)
+#         return Response(status=status.HTTP_403_FORBIDDEN)
+
+#     def put(self, request, *args, **kwargs):
+#         if kwargs.get('pk') and request.user.is_staff:
+#             return self.update(request, *args, **kwargs)
+#         return Response(status=status.HTTP_403_FORBIDDEN)
+
+class UpdateAPIAssessment(generics.RetrieveUpdateDestroyAPIView):
     queryset = Assessment.objects.select_related('user').all()
     serializer_class = AssessmentSerializer
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, *args, **kwargs):
-        if kwargs.get('pk') is not None:
-            return self.retrieve(request, *args, **kwargs)
+class ListCreateAPIAssessment(generics.ListCreateAPIView):
+    '''
+    list the authenticated user's test questions(assessments) taken. You can provide query parameters to filter the assessments. The query parameters include: grade, subject, topic, lesson and level e.g
+    /assess?subject=subject&grade=grade
+    '''
+    queryset = Assessment.objects.select_related('user').all().order_by('pk')
+    serializer_class = AssessmentSerializer
+    permission_classes = [IsAuthenticated]
 
-        return self.list(request, *args, **kwargs)
+    def get_queryset(self):
+        response = []
+        grade = self.request.query_params.get('grade')
+        subject = self.request.query_params.get('subject')
+        topic = self.request.query_params.get('topic')
+        level = self.request.query_params.get('level')
+        lesson = self.request.query_params.get('lesson')
+        assessments = self.request.user.assessments.all().order_by('pk')
+        if grade:
+            grade_instance = get_object_or_404(Grade, name=grade)
+            # print(grade_instance)
+            assessments = assessments.filter(test__grade=grade_instance)
 
-    def post(self, request, *args, **kwargs):
-        if not kwargs.get('pk') and request.user.is_staff:
-            return self.create(request, *args, **kwargs)
-        return Response(status=status.HTTP_403_FORBIDDEN)
+        if subject:
+            subject_instance = get_object_or_404(Subject, name=subject)
+            # print(subject_instance)
+            assessments = assessments.filter(test__subject=subject_instance)
 
-    def put(self, request, *args, **kwargs):
-        if kwargs.get('pk') and request.user.is_staff:
-            return self.update(request, *args, **kwargs)
-        return Response(status=status.HTTP_403_FORBIDDEN)
+        if topic:
+            assessments = assessments.filter(test__topic=topic)
 
-# class UpdateAPIAssessment(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = Assessment.objects.select_related('user').all()
-#     serializer_class = AssessmentSerializer
+        if lesson:
+            assessments = assessments.filter(test__lesson=lesson)
+
+        if level:
+            assessments = assessments.filter(test__level=level)
+
+
+        return assessments
+    
+    # def perform_create(self, serializer):
+    #     user = self.request.user
+    #     if user:
+    #         serializer.save(user=user)
+
+        # return Response(status.HTTP_401_UNAUTHORIZED)
+        # return super().perform_create(serializer)
 
 class ListCreateUpdateAPILevel(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = Level.objects.all()

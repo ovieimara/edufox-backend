@@ -115,8 +115,8 @@ class SignupTestCase(TestCase):
         list_response = self.client.get(reverse('assess:assess-list'))
         detail_response = self.client.get(reverse('assess:assess-detail', kwargs={'pk': post_response.json().get('id')}))
 
-        print('get_response_assessment: ', (post_response.json()))
-        print('get_response_assessment: ', (detail_response.json()))
+        # print('get_response_assessment: ', (list_response.json()))
+        # print('get_response_assessment: ', (detail_response.json()))
         self.assertEqual(post_response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(post_response.json().get('answer').get('1'), 'A')
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
