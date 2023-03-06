@@ -99,7 +99,7 @@ class SignupTestCase(TestCase):
             "lesson": 1,
             "url": "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8",
             "tags": "test",
-            "resolution": 1,
+            "resolution": self.resolution.pk,
             "subject": self.subject.pk,
             "grade": self.grade.pk
         }
