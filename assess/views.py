@@ -6,39 +6,76 @@ from .models import Test, Assessment, Level
 from .serializers import TestSerializer, AssessmentSerializer, LevelSerializer
 from course.models import Grade, Subject
 from django.shortcuts import get_object_or_404
-
-# from .permissions import IsStaffEditorPermission
+from .permissions import IsStaffEditorPermission
 # Create your views here.
 
-class ListCreateUpdateAPITest(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
+class ListCreateAPITest(generics.ListCreateAPIView):
+    '''
+    Retrieve Test questions for the subject, the grade, under a topic and lesson
+    example request url '/tests?grade=grade&subject=subject&topic=topic&lesson=lesson'
+    '''
     queryset = Test.objects.select_related('subject', 'grade').all().order_by('subject__name', 'topic')
     serializer_class = TestSerializer
-    filterset_fields = ['grade', 'subject', 'topic', 'lesson']
+    # filterset_fields = ['grade', 'subject', 'topic', 'lesson']
     ordering_fields = ['title', 'topic']
     search_fields = ['title', 'topic', 'lesson', 'tags', 'subject__name', 'subject__description', 'grade__name', 'grade__description']
+
+    def get_queryset(self):
+        grade = self.request.query_params.get('grade')
+        subject = self.request.query_params.get('subject')
+        topic = self.request.query_params.get('topic')
+        level = self.request.query_params.get('level')
+        lesson = self.request.query_params.get('lesson')
+        tests = Test.objects.all().order_by('pk')
+        if grade:
+            grade_instance = get_object_or_404(Grade, name=grade)
+            tests = tests.filter(test__grade=grade_instance)
+
+        if subject:
+            subject_instance = get_object_or_404(Subject, name=subject)
+            tests = tests.filter(test__subject=subject_instance)
+
+        if topic:
+            tests = tests.filter(test__topic=topic)
+
+        if lesson:
+            tests = tests.filter(test__lesson=lesson)
+
+        if level:
+            tests = tests.filter(test__level=level)
+
+
+        return tests
+    
+    def perform_create(self, serializer):
+        user = self.request.user
+        if user.is_staff:
+            return super().perform_create(serializer)
+        return Response(status=status.HTTP_403_FORBIDDEN)
+        
     # permission_classes = [AllowAny]
     # permission_classes = [IsAdminUser, IsStaffEditorPermission]
-    def get(self, request, *args, **kwargs):
-        if kwargs.get('pk') is not None:
-            return self.retrieve(request, *args, **kwargs)
+    # def get(self, request, *args, **kwargs):
+    #     if kwargs.get('pk') is not None:
+    #         return self.retrieve(request, *args, **kwargs)
 
-        return self.list(request, *args, **kwargs)
+    #     return self.list(request, *args, **kwargs)
 
-    def post(self, request, *args, **kwargs):
-        if not kwargs.get('pk') and request.user.is_staff:
-            return self.create(request, *args, **kwargs)
-        return Response(status=status.HTTP_403_FORBIDDEN)
+    # def post(self, request, *args, **kwargs):
+    #     if not kwargs.get('pk') and request.user.is_staff:
+    #         return self.create(request, *args, **kwargs)
+    #     return Response(status=status.HTTP_403_FORBIDDEN)
 
-    def put(self, request, *args, **kwargs):
-        if kwargs.get('pk') and request.user.is_staff:
-            return self.update(request, *args, **kwargs)
-        return Response(status=status.HTTP_403_FORBIDDEN)
+    # def put(self, request, *args, **kwargs):
+    #     if kwargs.get('pk') and request.user.is_staff:
+    #         return self.update(request, *args, **kwargs)
+    #     return Response(status=status.HTTP_403_FORBIDDEN)
 
 
-# class UpdateAPITest(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = Test.objects.select_related('subject', 'grade').all()
-#     serializer_class = TestSerializer
-#     permission_classes = [IsAdminUser, IsStaffEditorPermission]
+class UpdateAPITest(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Test.objects.select_related('subject', 'grade').all()
+    serializer_class = TestSerializer
+    permission_classes = [IsStaffEditorPermission]
 
 # class ListCreateUpdateAPIAssessment(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
 #     queryset = Assessment.objects.select_related('user').all()
