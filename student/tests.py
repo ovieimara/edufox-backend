@@ -38,7 +38,7 @@ class SignupTestCase(TestCase):
 
     def test_signup(self):
         
-        response = self.client.post(reverse('student:user-list'), data=self.data)
+        response = self.client.post(reverse('api:user-list'), data=self.data)
         # print('FIRST', response.json())
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -47,9 +47,8 @@ class SignupTestCase(TestCase):
         self.assertEqual(user.email, 'imaraovie@gmail.com')
 
     def test_student_list_create_api_view(self):
-
         response = self.client.post(reverse('student:student-list'), data=self.data, format='json')
-        print('resp', response.json())
+        # print('resp', response.json())
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(TempStudent.objects.count(), 1)
         self.assertEqual(TempStudent.objects.get().username, '+23407048536974')

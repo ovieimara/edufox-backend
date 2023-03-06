@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django import forms
 from django.contrib.auth.models import User
-from .models import Grade, Subject, Lecturer, Rate, Video, Comment, InteractionType, Interaction, Test, Assessment
+from .models import Grade, Subject, Lecturer, Rate, Video, Comment, InteractionType, Interaction
+# from assess.models import  Test, Assessment
 
 # Register your models here.
 
@@ -34,13 +35,13 @@ class InteractionAdmin(admin.ModelAdmin):
     list_display = ['user', 'type', 'video', 'video_time_of_interaction', 
     'seek_fwd', 'seek_prev', 'created', 'updated']
 
-class TestAdmin(admin.ModelAdmin):
-    list_display = ['code', 'subject', 'question', 'options', 'grade', 'difficulty_level']
+# class TestAdmin(admin.ModelAdmin):
+#     list_display = ['code', 'subject', 'question', 'options', 'grade', 'difficulty_level']
 
-class AssessmentAdmin(admin.ModelAdmin):
-    list_display = ['user', 'get_tests', 'answer', 'result']
-    def get_tests(self, obj):
-        return "\n".join([str(s) for s in obj.test.all()])
+# class AssessmentAdmin(admin.ModelAdmin):
+#     list_display = ['user', 'get_tests', 'answer', 'status']
+#     def get_tests(self, obj):
+#         return "\n".join([str(s) for s in obj.test.all()])
 
 
 admin.site.register(Grade, GradeAdmin)
@@ -51,5 +52,5 @@ admin.site.register(Video, VideoAdmin)
 admin.site.register(Comment, CommentAdmin)
 admin.site.register(InteractionType, InteractionTypeAdmin)
 admin.site.register(Interaction, InteractionAdmin)
-admin.site.register(Test, TestAdmin)
-admin.site.register(Assessment, AssessmentAdmin)
+# admin.site.register(Test, TestAdmin)
+# admin.site.register(Assessment, AssessmentAdmin)

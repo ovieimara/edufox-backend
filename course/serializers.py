@@ -1,7 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from rest_framework import serializers
 from .models import (Grade, Comment, Rate, Subject, Lecturer, Video, Interaction, 
-InteractionType, Test, Assessment)
+InteractionType, Resolution)
+# from assess.models import  Test, Assessment
 from subscribe.models import Subscribe
 
 class GradeSerializer(serializers.ModelSerializer):
@@ -30,20 +31,22 @@ class LecturerSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class VideoSerializer(serializers.ModelSerializer):
-    is_subscribed = serializers.SerializerMethodField(read_only=True)
+    is_subscribed = serializers.SerializerMethodField()
     class Meta:
         model = Video
         fields = '__all__'
+        # depth = 1
 
     def get_is_subscribed(self, obj):
-        now = datetime.now()
         request = self.context.get('request')
-        subscriptions = request.user.user_subscriptions
-        if subscriptions.exists():
-            subscribe = subscriptions.filter(grade=obj.grade, expiry_date__gte=now).first()
-        # subscribe = Subscribe.objects.filter(user=request.user, grade=obj.grade, expiry_date__gte=now).first()
-            if subscribe.exists():
-                return subscribe.is_valid(now)
+        if request.user:
+            subscriptions = request.user.subscriptions_user.all()
+            if subscriptions.exists():
+                subscribed = subscriptions.filter(grade=obj.grade).first()
+                if subscribed:
+                    return subscribed.is_valid(datetime.now())
+                return False
+            return False
         return False
 
 class InteractionTypeSerializer(serializers.ModelSerializer):
@@ -56,18 +59,18 @@ class InteractionSerializer(serializers.ModelSerializer):
         model = Interaction
         fields = "__all__"
 
-class TestSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Test
-        fields = "__all__"
-
-class AssessmentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Assessment
-        fields = "__all__"
-
-
-# class ViewSerializer(serializers.ModelSerializer):
+# class TestSerializer(serializers.ModelSerializer):
 #     class Meta:
-#         model = View
+#         model = Test
 #         fields = "__all__"
+
+# class AssessmentSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Assessment
+#         fields = "__all__"
+
+
+class ResolutionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Resolution
+        fields = "__all__"

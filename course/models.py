@@ -40,18 +40,29 @@ class Lecturer(models.Model):
     def __str__(self) -> str:
         return self.first_name
 
+class Resolution(models.Model):
+    name = models.CharField(null=True, max_length=100, default='')
+    size = models.CharField(null=True, max_length=100, default='')
+    aspect_ratio = models.CharField(null=True, max_length=100, default='')
+    media = models.CharField(null=True, max_length=100, default='')
+    created = models.DateTimeField(null=True, auto_now_add=True)
+    updated = models.DateTimeField( null=True, auto_now=True)
+
+    def __str__(self) -> str:
+        return self.name
+
 class Video(models.Model):
     title = models.CharField(db_index=True, max_length=255, default='')
     description = models.TextField(null=True, blank=True, default='')
     duration = models.CharField(db_index = True, max_length=255, null=True, blank=True, default='')
-    resolution = models.CharField(db_index = True, max_length=255, null=True, blank=True, default='')
+    resolution = models.ForeignKey(Resolution, related_name='resolutions', null=True, on_delete=models.SET_NULL)
     thumbnail =  models.URLField(null=True)
     topic = models.CharField(db_index = True, max_length=255, null=True, blank=True, default='')
     lesson = models.SmallIntegerField(db_index = True, null=True, blank=True, default=0)
     url =  models.URLField(null=True, blank=True, default='')
-    tags =  models.JSONField(null=True, blank=True, default=dict)
-    subject = models.ForeignKey(Subject, related_name='subjects', on_delete=models.CASCADE)
-    grade = models.ForeignKey(Grade, related_name='grades', null=True, on_delete=models.SET_NULL)
+    tags =  models.TextField(null=True, blank=True, default=dict)
+    subject = models.ForeignKey(Subject, related_name='subjects', default=1, on_delete=models.CASCADE)
+    grade = models.ForeignKey(Grade, related_name='grades', null=True, default=1, on_delete=models.SET_NULL)
     created = models.DateField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
     # views = models.ForeignKey(View, related_name='views', on_delete=models.CASCADE)
@@ -97,19 +108,20 @@ class Interaction(models.Model):
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
 
 
-class Test(models.Model):
-    code = models.CharField(max_length=255, null=True, default='')
-    subject = models.ForeignKey(Subject, related_name='test_subjects', null=True, on_delete=models.SET_NULL)
-    question = models.JSONField(default=dict)
-    options = models.JSONField(null=True, default=dict)
-    grade = models.ForeignKey(Grade, related_name='test_grade', null=True, on_delete=models.SET_NULL)
-    difficulty_level = models.CharField(null=True, max_length=127, default='')
+# class Test(models.Model):
+#     code = models.CharField(max_length=255, null=True, default='')
+#     subject = models.ForeignKey(Subject, related_name='test_subjects', null=True, on_delete=models.SET_NULL)
+#     question = models.JSONField(default=dict)
+#     options = models.JSONField(null=True, default=dict)
+#     grade = models.ForeignKey(Grade, related_name='test_grade', null=True, on_delete=models.SET_NULL)
+#     difficulty_level = models.CharField(null=True, max_length=127, default='')
 
-    def __str__(self) -> str:
-        return self.question
+#     def __str__(self) -> str:
+#         return self.question
 
-class Assessment(models.Model):
-    user = models.ForeignKey(User, related_name='assessments', on_delete=models.CASCADE)
-    test = models.ManyToManyField(Test, related_name='tests')
-    answer = models.JSONField(default=dict)
-    result = models.SmallIntegerField(default=0)
+# class Assessment(models.Model):
+#     user = models.ForeignKey(User, related_name='assessments', on_delete=models.CASCADE)
+#     test = models.ManyToManyField(Test, related_name='tests')
+#     answer = models.JSONField(default=dict)
+#     result = models.SmallIntegerField(default=0)
+

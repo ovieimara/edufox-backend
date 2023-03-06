@@ -22,6 +22,7 @@ class Student(models.Model):
 class Country(models.Model):
     code = models.CharField(db_index=True, max_length=15, unique=True, null=True, blank=True, default="")
     name = models.CharField(db_index=True, unique=True, max_length=100, null=True, blank=True, default="")
+    icon = models.URLField(null=True, blank=True)
     created = models.DateTimeField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
 

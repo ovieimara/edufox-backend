@@ -6,12 +6,12 @@ from djoser.views import UserViewSet
 app_name = 'student'
 
 urlpatterns = [
-    path('', include('djoser.urls')),
-    path('', include('djoser.urls.authtoken')),
+    # path('', include('djoser.urls')),
+    # path('', include('djoser.urls.authtoken')),
     path('activate/<uid>/<token>', ActivateUser.as_view({'get': 'activation', 'post': 'activation'}), name='activate'),
-    path('students', StudentListCreateAPIView.as_view(), name='student-list'),
-    path('students/activate/<otp>/<username>', verifyOTPCode, name='otp-activate'),
-    path('students/<username>', ActivatePhoneNumberAPIView.as_view(), name='student-activate'),
+    path('', StudentListCreateAPIView.as_view(), name='student-list'),
+    path('activate/<otp>/<username>', verifyOTPCode, name='otp-activate'),
+    path('<username>', ActivatePhoneNumberAPIView.as_view(), name='student-activate'),
     path('country', ListCreateAPICountry.as_view(), name='country-list'),
     path('country/<int:pk>', ListCreateAPICountry.as_view(), name='country-detail'),
 

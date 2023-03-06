@@ -42,7 +42,6 @@ if file:
     os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 
 
-
 # env = environ.Env(
 #     GOOGLE_APPLICATION_CREDENTIALS=(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")),
 #     # DATABASE_URL=(os.environ.get("DATABASE_URL")),
@@ -202,7 +201,9 @@ INSTALLED_APPS = [
     'student',
     'course',
     'notify',
+    'api',
     'subscribe',
+    'assess',
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
@@ -281,7 +282,7 @@ DATABASES = {"default": env.db()}
 # If the flag as been set, configure to use proxy
 if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
     DATABASES["default"]["HOST"] = "cloudsql-proxy" #CI.yml
-    #DATABASES["default"]["HOST"] = "127.0.0.1" #local
+    # DATABASES["default"]["HOST"] = "127.0.0.1" #local
     DATABASES["default"]["PORT"] = 5432
 
 # Define static storage via django-storages[google]
@@ -325,8 +326,18 @@ REST_FRAMEWORK =  {
         'rest_framework.filters.OrderingFilter',
         'rest_framework.filters.SearchFilter',
     ],
-    'DEFAULT_PAGINATION_CLASS' : 'rest_framework.pagination.LimitOffsetPagination',
+    'DEFAULT_PAGINATION_CLASS' : 'rest_framework.pagination.PageNumberPagination',
+
+    # 'DEFAULT_PAGINATION_CLASS' : 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE' : 10,
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '10/minute',
+        'user': '50/minute'
+    }
 
 }
 
@@ -387,7 +398,7 @@ TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)

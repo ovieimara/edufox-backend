@@ -34,6 +34,8 @@ class StudentListCreateAPIView(generics.ListCreateAPIView):
     """
     queryset = TempStudent.objects.all()
     serializer_class = TempStudentSerializer
+    ordering_fields = ['username']
+
     permission_classes = [AllowAny]
 
     def perform_create(self, serializer):
@@ -55,9 +57,9 @@ class StudentListCreateAPIView(generics.ListCreateAPIView):
         }
         
         if django_settings.DOMAIN == "127.0.0.1:8000":
-            response = client.post(reverse('student:user-list'), data=data)
+            response = client.post(reverse('api:user-list'), data=data)
         else:
-            response = requests.post(getUrl('user-list', "student"), data=data)
+            response = requests.post(getUrl('user-list', "api"), data=data)
         
         if response.status_code == status.HTTP_201_CREATED:
             # if grade:

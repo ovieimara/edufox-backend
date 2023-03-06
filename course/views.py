@@ -1,12 +1,15 @@
 from django.shortcuts import render
-from rest_framework import generics, status
+from rest_framework import generics, status, mixins
 from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly, AllowAny
 from .models import (Grade, Subject, Lecturer, Video, Rate, Comment, 
-InteractionType, Interaction, Test, Assessment)
+InteractionType, Interaction, Resolution)
+# from assess.models import  Test, Assessment
 from .serializers import (GradeSerializer, SubjectSerializer, LecturerSerializer, 
 VideoSerializer, RateSerializer, CommentSerializer, InteractionTypeSerializer, 
-InteractionSerializer, TestSerializer, AssessmentSerializer)
+InteractionSerializer, ResolutionSerializer)
 from .permissions import IsStaffEditorPermission
+from django.core.paginator import Paginator, EmptyPage
+
 
 # Create your views here.
 class ListCreateAPIGrades(generics.ListCreateAPIView):
@@ -46,19 +49,25 @@ class UpdateAPILecturer(generics.RetrieveUpdateDestroyAPIView):
 
 
 class ListCreateAPIVideo(generics.ListCreateAPIView):
-    queryset = Video.objects.select_related('grade', 'subject').all()
+    queryset = Video.objects.select_related('grade', 'subject').all().order_by('pk')
     serializer_class = VideoSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    filterset_fields = ['grade', 'subject', 'topic', 'lesson']
+    ordering_fields = ['title', 'topic']
+    search_fields = ['title', 'descriptions', 'topic', 'lesson', 'tags', 'subject__name', 'subject__description', 'grade__name', 'grade__description']
+    # permission_classes = [AllowAny]
 
     def perform_create(self, serializer):
+        # print('USER: ', self.request.user, self.request.user.is_staff)
         if self.request.user.is_staff:
             return super().perform_create(serializer)
         return status.HTTP_403_FORBIDDEN
+
 
 class UpdateAPIVideo(generics.RetrieveUpdateDestroyAPIView):
     queryset = Video.objects.select_related('grade', 'subject').all()
     serializer_class = VideoSerializer
     permission_classes = [IsAdminUser, IsStaffEditorPermission]
+
 
 class ListCreateAPIRate(generics.ListCreateAPIView):
     queryset = Rate.objects.select_related('video').all()
@@ -93,20 +102,24 @@ class UpdateAPIInteraction(generics.RetrieveUpdateDestroyAPIView):
     queryset = Interaction.objects.select_related('user', 'video', 'type').all()
     serializer_class = InteractionSerializer
 
-class ListCreateAPITest(generics.ListCreateAPIView):
-    queryset = Test.objects.select_related('subject', 'grade').all()
-    serializer_class = TestSerializer
-    permission_classes = [IsAdminUser, IsStaffEditorPermission]
 
-class UpdateAPITest(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Interaction.objects.select_related('subject', 'grade').all()
-    serializer_class = TestSerializer
-    permission_classes = [IsAdminUser, IsStaffEditorPermission]
+class ListCreateAPIResolution(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
+    queryset = Resolution.objects.all()
+    serializer_class = ResolutionSerializer
+    lookup_field = 'pk'
+    # permission_classes = [IsStaffEditorPermission]
 
-class ListCreateAPIAssessment(generics.ListCreateAPIView):
-    queryset = Interaction.objects.select_related('user').all()
-    serializer_class = AssessmentSerializer
+    def get(self, request, *args, **kwargs):
+        if kwargs.get('pk') is not None:
+            return self.retrieve(request, *args, **kwargs)
 
-class UpdateAPIAssessment(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Interaction.objects.select_related('user').all()
-    serializer_class = AssessmentSerializer
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        if not kwargs.get('pk') and request.user.is_staff:
+            return self.create(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        if kwargs.get('pk') and request.user.is_staff:
+            return self.update(request, *args, **kwargs)
+        return None
