@@ -112,7 +112,7 @@ class SignupTestCase(TestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f"Token {token}")
         post_response = self.client.post(reverse('course:videos-list'), data=video, format='json')
         list_response = self.client.get(reverse('course:videos-list'))
-        detail_response = self.client.get(reverse('course:video-detail', kwargs={'pk': 1}))
+        detail_response = self.client.get(reverse('course:video-detail', kwargs={'pk': post_response.json().get('id')}))
 
         print('get_video: ', (post_response.json()))
         self.assertEqual(post_response.status_code, status.HTTP_201_CREATED)
