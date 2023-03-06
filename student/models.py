@@ -40,7 +40,7 @@ class TempStudent(models.Model):
     grade = models.ForeignKey(Grade, related_name='temp_student_grade', null=True, on_delete=models.SET_NULL)
     # grade = models.CharField(db_index=True, max_length=255, null = True, blank=False)
     age = models.SmallIntegerField(db_index=True, null=True)
-    gender = models.CharField(db_index=True, max_length=255, null=True)
+    gender = models.CharField(db_index=True, max_length=255, null=True, blank=True, default='')
     image_url = models.URLField(null = True, blank=True, default='')
     name_institution = models.CharField(max_length=255, null = True, blank=True)
     country = models.ForeignKey(Country, related_name='countries', null=True, on_delete=models.SET_NULL)
