@@ -83,7 +83,7 @@ class SignupTestCase(TestCase):
         list_response = self.client.get(reverse('assess:tests-list'))
         detail_response = self.client.get(reverse('assess:test-detail', kwargs={'pk': self.test.pk}))
 
-        print('get_video_detail: ', (detail_response.json()))
+        # print('get_video_detail: ', (detail_response.json()))
         self.assertEqual(post_response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(post_response.json().get('topic'), 'Tears of Steel')
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)

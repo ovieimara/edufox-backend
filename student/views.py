@@ -20,7 +20,7 @@ from djoser.compat import get_user_email
 from djoser.conf import settings
 from django.conf import settings as django_settings
 from rest_framework.test import APIClient
-from notify.views import createOTP, verifyOTP
+from notify.views import createOTP, verifyOTP, emailVerify
 from notify.constants import OTP_APPROVED
 from .constants import country_codes
 
@@ -68,6 +68,7 @@ class StudentListCreateAPIView(generics.ListCreateAPIView):
             #     serializer.save(grade=instance)
             if django_settings.DOMAIN not in address :
                 createOTP(phone)
+            emailVerify(email)
             return super().perform_create(serializer)
 
         return status.HTTP_400_BAD_REQUEST
@@ -247,10 +248,6 @@ class ListCreateAPICountry(mixins.CreateModelMixin, mixins.ListModelMixin,  mixi
         if kwargs.get('pk') and request.user.is_staff:
             return self.update(request, *args, **kwargs)
         return None
-
-    
-
-    
 
 
 # class ActivateStudentAPIView(generics.ListCreateAPIView):

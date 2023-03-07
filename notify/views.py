@@ -35,3 +35,10 @@ def verifyOTP(otp):
     .verification_checks \
     .create(to=verified_number, code=otp)
     return verification_check
+
+def emailVerify(email):
+    verification = client.verify.v2.services(verify_sid) \
+                     .verifications \
+                     .create(to=email, channel='email')
+
+    return verification

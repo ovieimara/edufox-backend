@@ -114,7 +114,7 @@ class SignupTestCase(TestCase):
         list_response = self.client.get(reverse('course:videos-list'))
         detail_response = self.client.get(reverse('course:video-detail', kwargs={'pk': post_response.json().get('id')}))
 
-        print('get_video: ', (post_response.json()))
+        # print('get_video: ', (post_response.json()))
         self.assertEqual(post_response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(post_response.json().get('topic'), 'Tears of Steel')
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)

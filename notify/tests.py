@@ -5,7 +5,7 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 from course.models import Grade
 from twilio.rest import Client as twiClient
-from .views import sms_messaging
+from .views import sms_messaging, emailVerify
 
 User = get_user_model()
 
@@ -15,9 +15,15 @@ class SignupTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
 
+    def test_email_verify(self):
+        email = 'imaraovie@gmail.com'
+        response = emailVerify(email)
+        print(response)
+
     # def test_sms_messaging(self):
     #     response = sms_messaging()
     #     print(response.status)
     #     self.assertEqual(response.status, 'approved')
+
 
 
