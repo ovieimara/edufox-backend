@@ -30,15 +30,24 @@ def createOTP(phone_number):
     .create(to=phone_number, channel="sms")
     print(verification.status)
 
-def verifyOTP(otp):
+def verifyOTP(otp, phone_number):
     verification_check = client.verify.v2.services(verify_sid) \
     .verification_checks \
-    .create(to=verified_number, code=otp)
+    .create(to=phone_number, code=otp)
     return verification_check
 
-def emailVerify(email):
+def emailOTP(email):
     verification = client.verify.v2.services(verify_sid) \
                      .verifications \
                      .create(to=email, channel='email')
 
     return verification
+
+def verifyEmail(otp, email):
+    verification_check = client.verify \
+                           .v2 \
+                           .services(verify_sid) \
+                           .verification_checks \
+                           .create(to=email, code=otp)
+
+    return verification_check

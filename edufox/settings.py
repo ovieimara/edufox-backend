@@ -272,17 +272,27 @@ WSGI_APPLICATION = 'edufox.wsgi.application'
 #     }
 # }
 
+if os.environ.get('USE_LOCAL_POSTGRESQL'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'edufox_db2',
+            'USER': 'admin2',
+            'PASSWORD': '_admin@123A',
+            'HOST': 'localhost',
+            'PORT': 5432,
+        }
+    }
 
-
-# Use django-environ to parse the connection string
-DATABASES = {"default": env.db()}
+else:
+    DATABASES = {"default": env.db()}
 # USE_CLOUD_SQL_AUTH_PROXY = env('USE_CLOUD_SQL_AUTH_PROXY')
 # print(os.environ.get('USE_CLOUD_SQL_AUTH_PROXY', USE_CLOUD_SQL_AUTH_PROXY))
 
 # If the flag as been set, configure to use proxy
 if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
-    DATABASES["default"]["HOST"] = "cloudsql-proxy" #CI.yml
-    # DATABASES["default"]["HOST"] = "127.0.0.1" #local
+    # DATABASES["default"]["HOST"] = "cloudsql-proxy" #CI.yml
+    DATABASES["default"]["HOST"] = "127.0.0.1" #local
     DATABASES["default"]["PORT"] = 5432
 
 # Define static storage via django-storages[google]

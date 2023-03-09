@@ -6,18 +6,18 @@ from course.models import Grade
 
 class Student(models.Model):
     user = models.OneToOneField(User, related_name='profile', on_delete=models.CASCADE)
-    phone_number = models.CharField(db_index=True, max_length=15, null = True, default="")
+    phone_number = models.CharField(db_index=True, max_length=15)
     grade = models.ForeignKey(Grade, related_name='student_grade', null=True, on_delete=models.SET_NULL)
     # grade = models.CharField(db_index=True, max_length=255, null = True, blank=False)
-    age = models.SmallIntegerField(db_index=True, null=True)
-    gender = models.CharField(db_index=True, max_length=255, null=True)
+    age = models.SmallIntegerField(db_index=True, null=True, default=0)
+    gender = models.CharField(db_index=True, max_length=255, null=True, default='')
     image_url = models.URLField(null=True, blank=True, default='')
-    name_institution = models.CharField(max_length=255, null = True, blank=True)
+    name_institution = models.CharField(max_length=255, null = True, blank=True, default='')
     registration_date = models.DateTimeField(db_index=True, null=True, auto_now_add=True)
     last_updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
 
     def __str__(self) -> str:
-        return f"{self.user.first_name} {self.user.last_name}"
+        return f"{self.user.username}"
 
 class Country(models.Model):
     code = models.CharField(db_index=True, max_length=15, unique=True, null=True, blank=True, default="")

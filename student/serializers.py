@@ -4,6 +4,7 @@ from rest_framework import serializers
 from .validators import validate_username
 from djoser.serializers import UserSerializer
 from .models import (Student, TempStudent, Country)
+from course.models import Grade
 
 # User = get_user_model()
 
@@ -11,14 +12,15 @@ class StudentSerializer(serializers.ModelSerializer):
     # student_id = serializers.CharField(default="")
     # first_name = serializers.CharField()
     # last_name = serializers.CharField()
-    phone_number = serializers.CharField(default="")
+    # phone_number = serializers.CharField(default="")
     grade = serializers.StringRelatedField()
     age = serializers.IntegerField(default=0)
     user = UserSerializer(default={})
-    gender = serializers.ChoiceField(choices=['male', 'female'], default='')
+    gender = serializers.ChoiceField(choices=['male', 'female'], allow_null=True, default='')
     # image_url = serializers.CharField(default="")
-    name_institution = serializers.CharField(default="")
+    name_institution = serializers.CharField(allow_null=True, default="")
     # email = serializers.EmailField()
+    # password = serializers.CharField(allow_null=False)
 
     # email = serializers.EmailField(validators=[unique_user_email])
 
@@ -28,14 +30,26 @@ class StudentSerializer(serializers.ModelSerializer):
         # fields = "__all__"
 
         fields = ['phone_number', 'grade', 'age', 'gender', 'image_url', 'name_institution', 'user']
-        extra_kwargs = {'password': {'write_only': True},
-        'user': {'read_only': True}}
+        extra_kwargs = {'password': {'read_only': True}, 
+        'user': {'read_only': True}
+        }
 
-    # def create(self, validated_data):
-    #     user_name = validated_data.get('username')
-    #     if not user_name:
-    #         validated_data['username'] = validated_data['first_name']
-    #     return super().create(validated_data)
+    def create(self, validated_data):
+        phone_number = validated_data.get('phone_number')
+        user = get_object_or_404(User, username=phone_number)
+
+        if user:
+            validated_data['user'] = user
+        return super().create(validated_data)
+    
+    def update(self, instance, validated_data):
+        grade = validated_data.get('grade')
+        grade_instance = get_object_or_404(Grade, name=grade)
+        print(grade, grade_instance)
+        if grade_instance:
+            validated_data['grade'] = grade_instance
+        return super().update(instance, validated_data)
+    
 
 class TempStudentSerializer(serializers.ModelSerializer):
     # student_id = serializers.CharField(default="")
