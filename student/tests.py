@@ -6,6 +6,8 @@ from rest_framework.test import APIClient
 from .models import TempStudent
 from course.models import Grade
 from .models import Country
+import os
+from django.conf import settings
 
 User = get_user_model()
 
@@ -49,8 +51,7 @@ class SignupTestCase(TestCase):
     def test_student_list_create_api_view(self):
         response = self.client.post(reverse('student:student-list'), data=self.data, format='json')
         instance = response.json()
-        # print("INSTANCE: ", instance)
-        if instance and instance.get('phone_number'):
+        if instance and instance.get('phone_number') and not settings.FILE:
             otp = input("input otp: ")
             data = {
                 "otp" : otp,
@@ -102,14 +103,3 @@ class SignupTestCase(TestCase):
             self.assertEqual(user.get('user').get('username'), '+23407048536974')
             self.assertEqual(user.get('grade'), student.get('grade'))
         
-        # response = self.client.patch(reverse('student:student-detail', kwargs={"phone_number": user.get('username')}), data=student, format='json')
-        # print(response.json())
-        # self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-
-    # def test_student_list_create_api_view(self):
-    #     response = self.client.post(reverse('student:student-list'), data=self.data, format='json')
-    #     # print('resp', response.json())
-    #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    #     self.assertEqual(TempStudent.objects.count(), 1)
-    #     self.assertEqual(TempStudent.objects.get().username, '+23407048536974')

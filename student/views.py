@@ -75,7 +75,8 @@ client = APIClient()
     
 class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.UpdateModelMixin):
     """
-    Signup a new student, with a POST request. user receives a verification link, after verification they are activated.
+    Signup a new student, with a POST request. user receives a verification otp via email and sms, after verification they are activated.
+    After user verifies via OTP, the new student records are updated via patch
     """
     queryset = Student.objects.all().order_by('pk')
     serializer_class = StudentSerializer
@@ -116,7 +117,9 @@ class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.UpdateModelMix
         # print(response.status_code)
         if response and response.status_code == status.HTTP_201_CREATED:
             # createOTP(phone_number)
-            emailOTP(email)
+            # print('settings: ',dir(django_settings))
+            if not django_settings.FILE:
+                emailOTP(email)
             
         return super().create(request, *args, **kwargs)
     
