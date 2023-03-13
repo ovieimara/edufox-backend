@@ -1,3 +1,4 @@
+import json
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from rest_framework import status
@@ -38,6 +39,18 @@ class SignupTestCase(TestCase):
                 # 'country': self.country.pk,
         }
 
+    # def test_verifyOTPCode(self):
+        # data = {
+
+        #     "otp" : '1234',
+        #     "username" : "+23407048536974",
+        #     'email': "imaraovie@gmail.com"
+        # }
+        # print(reverse('student:otp-activate'))
+        # response = self.client.post(reverse('student:otp-activate'), data=data)
+        # print(response.json())
+
+
     # def test_signup(self):
         
     #     response = self.client.post(reverse('api:user-list'), data=self.data)
@@ -49,17 +62,25 @@ class SignupTestCase(TestCase):
     #     self.assertEqual(user.email, 'imaraovie@gmail.com')
 
     def test_student_list_create_api_view(self):
-        response = self.client.post(reverse('student:student-list'), data=self.data, format='json')
+        print(reverse('students-list'))
+        response = self.client.post(reverse('students-list'), data=self.data, format='json')
         instance = response.json()
+        print('instance: ', instance)
         if instance and instance.get('phone_number') and not settings.FILE:
             otp = input("input otp: ")
             data = {
-                "otp" : otp,
-                "username" : instance.get('phone_number'),
-                'email': instance.get('user').get('email')
+                # "otp" : otp,
+                # "username" : instance.get('phone_number'),
+                # 'email': instance.get('user').get('email')
+                 "otp" : otp,
+                "username" : "+23407048536974",
+                'email': "imaraovie@gmail.com"
             }
-            response = self.client.post(reverse('student:otp-activate', kwargs=data))
-            # print(response.json())
+            # print('URL: ', reverse('student:otp-activate', kwargs=data))
+            # url = f"/api/v1/students/{otp}/{instance.get('phone_number')}/{instance.get('user').get('email')}"
+            # response = self.client.post(url)
+            response = self.client.post(reverse('student:otp-activate'), data=data, format='json')
+            print('ACTIVATE RESPONSE', response.json())
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             user = response.json()
             print('user', user)
@@ -69,7 +90,7 @@ class SignupTestCase(TestCase):
             self.assertEqual(instance.is_active, True)
 
             #test user exists
-            response = self.client.post(reverse('student:student-list'), data=self.data, format='json')
+            response = self.client.post(reverse('students-list'), data=self.data, format='json')
             self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
             #test update newly registered student
@@ -80,7 +101,7 @@ class SignupTestCase(TestCase):
                     'email': 'imaraovie@gmail.com',
                     'password': 'password@123A',
                     'phone_number' : '+23407048536974',
-                    'grade': 'Grade 1',
+                    'grade': self.grade.pk,
                     'age': 6,
                     'gender' : 'male',
                     'image_url' : '',
@@ -91,15 +112,23 @@ class SignupTestCase(TestCase):
                 'username': '+23407048536974',
                 'password': 'password@123A',
             })
-            # print(response.json())
+            # print('GRADE: ', self.grade, type(self.grade))
             token = response.json()['auth_token']
             self.client.credentials(HTTP_AUTHORIZATION=f"Token {token}")
 
-            response = self.client.patch(reverse('student:student-list'), data=student, format='json')
+            response = self.client.patch(reverse('students-list'), data=student, format='json')
             # print('response_stu', response.json())
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             user = response.json()
             self.assertEqual(user.get('user').get('email'), 'imaraovie@gmail.com')
             self.assertEqual(user.get('user').get('username'), '+23407048536974')
-            self.assertEqual(user.get('grade'), student.get('grade'))
+            self.assertEqual(user.get('grade'), 'Grade 1')
+
+            #test deletion of user
+            self.client.credentials(HTTP_AUTHORIZATION=f"Token {token}")
+            response = self.client.delete(reverse('students-list'), data={
+                'current_password': 'password@123A',
+            })
+            print('DELETE: ', response)
+            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         

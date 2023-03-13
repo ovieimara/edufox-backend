@@ -137,9 +137,9 @@ DOMAIN = ""
 # print('CLOUDRUN_SERVICE_URL: ', CLOUDRUN_SERVICE_URL)
 if CLOUDRUN_SERVICE_URL:
     service_url = urlparse(CLOUDRUN_SERVICE_URL).netloc
-    ALLOWED_HOSTS = [service_url, 'api-service-5wasy3cpxq-uc.a.run.app']
+    ALLOWED_HOSTS = [service_url, 'api-service-5wasy3cpxq-uc.a.run.app', 'localhost:3000', 'localhost', '127.0.0.1:3000', '127.0.0.1']
     CSRF_TRUSTED_ORIGINS = [CLOUDRUN_SERVICE_URL, 
-    'https://api-service-5wasy3cpxq-uc.a.run.app']
+    'https://api-service-5wasy3cpxq-uc.a.run.app', 'http://localhost:3000', 'http://localhost', 'http://127.0.0.1:3000', 'http://127.0.0.1']
     # SECURE_SSL_REDIRECT = True
     # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     PROTOCOL = "https"
@@ -152,7 +152,14 @@ else:
     DOMAIN = "127.0.0.1:8000"
     # os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 
-
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
 # ALLOWED_HOSTS = ["*"]
 # PROTOCOL = "http"
 # DOMAIN = "127.0.0.1:8000"
@@ -209,12 +216,15 @@ INSTALLED_APPS = [
     'djoser',
     'rest_framework_swagger',
     'django_filters',
+    'corsheaders',
+
     
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -344,10 +354,10 @@ REST_FRAMEWORK =  {
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle'
     ],
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '10/minute',
-        'user': '50/minute'
-    }
+    # 'DEFAULT_THROTTLE_RATES': {
+    #     'anon': '10/minute',
+    #     'user': '50/minute'
+    # }
 
 }
 
@@ -364,8 +374,8 @@ DJOSER = {
     'USERNAME_RESET_CONFIRM_URL': 'username/reset/confirm/{uid}/{token}',
     'ACTIVATION_URL': 'api/v1/auth/activate/{uid}/{token}',
 
-    'SEND_ACTIVATION_EMAIL': True,
-    'SEND_CONFIRMATION_EMAIL': True,
+    # 'SEND_ACTIVATION_EMAIL': True,
+    # 'SEND_CONFIRMATION_EMAIL': True,
     'PASSWORD_RESET_CONFIRM_EMAIL_SUBJECT_TEMPLATE': 'TESTING',
     'EMAIL': {
             'activation': 'student.views.ActivationEmail',

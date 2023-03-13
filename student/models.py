@@ -6,7 +6,7 @@ from course.models import Grade
 
 class Student(models.Model):
     user = models.OneToOneField(User, related_name='profile', on_delete=models.CASCADE)
-    phone_number = models.CharField(db_index=True, max_length=15)
+    phone_number = models.CharField(db_index=True, max_length=15, default='')
     grade = models.ForeignKey(Grade, related_name='student_grade', null=True, on_delete=models.SET_NULL)
     # grade = models.CharField(db_index=True, max_length=255, null = True, blank=False)
     age = models.SmallIntegerField(db_index=True, null=True, default=0)

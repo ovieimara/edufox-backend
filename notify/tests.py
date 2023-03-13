@@ -16,7 +16,8 @@ class SignupTestCase(TestCase):
         self.client = APIClient()
 
     # def test_email_verify(self):
-    #     phone = "+2347048536974"
+    #     # phone = "+2347048536974"
+    #     phone = input('input phone number, e.g +23408023168805: ')
     #     response = createOTP(phone)
     #     otp = input('input otp: ')
     #     response = verifyOTP(otp, phone)
@@ -25,9 +26,10 @@ class SignupTestCase(TestCase):
     # def test_email_verify(self):
     #     email = 'imaraovie@gmail.com'
     #     response = emailOTP(email)
-    #     otp = input('input otp: ')
-    #     response = verifyEmail(otp, email)
-    #     print(response.sid)
+    #     if response.sid:
+    #         otp = input('input otp: ')
+    #         response = verifyEmail(otp, email)
+    #         print(response.sid)
 
     # def test_sms_messaging(self):
     #     response = sms_messaging()

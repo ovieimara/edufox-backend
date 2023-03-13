@@ -8,9 +8,9 @@ app_name = 'student'
 urlpatterns = [
     # path('', include('djoser.urls')),
     # path('', include('djoser.urls.authtoken')),
-    path('activate/<uid>/<token>', ActivateUser.as_view({'get': 'activation', 'post': 'activation'}), name='activate'),
-    path('', StudentListCreateAPIView.as_view(), name='student-list'),
-    path('activate/<otp>/<username>/<email>', verifyOTPCode, name='otp-activate'),
+    path('', StudentListCreateAPIView.as_view(), name='students-list'),
+    # path('activate/<uid>/<token>', ActivateUser.as_view({'get': 'activation', 'post': 'activation'}), name='activate'),
+    path('activate', verifyOTPCode, name='otp-activate'),
     path('<username>', ActivatePhoneNumberAPIView.as_view(), name='student-activate'),
     path('update/<phone_number>', RetrieveUpdateAPIViewStudent.as_view(), name='student-detail'),
     path('country', ListCreateAPICountry.as_view(), name='country-list'),

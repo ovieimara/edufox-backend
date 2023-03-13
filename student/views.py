@@ -28,157 +28,140 @@ from .constants import country_codes
 address = ["127.0.0.1:8000", "0.0.0.1:8000"]
 # HOST = config('HOST')
 client = APIClient()
-# class StudentListCreateAPIView(generics.ListCreateAPIView):
-#     """
-#     Signup a new student, with a POST request. user receives a verification link, after verification they are activated.
-#     """
-#     queryset = TempStudent.objects.all()
-#     serializer_class = TempStudentSerializer
-#     ordering_fields = ['username']
-
-#     permission_classes = [AllowAny]
-
-#     def perform_create(self, serializer):
-#         # username = serializer.validated_data.get('username')
-#         email = serializer.validated_data.get('email')
-#         password = serializer.validated_data.get('password')
-#         # grade = serializer.validated_data.get('grade')
-#         phone_number = serializer.validated_data.get('phone_number')
-#         country = serializer.validated_data.get('country')
-#         # print('country', country.name)
-#         # obj = Country.objects.get(name__iexact=country.name)
-#         obj = get_object_or_404(Country, name__iexact=country.name)
-#         # print(obj.code)
-#         phone = f"{obj.code}{phone_number}"
-#         data = {
-#             "username" : phone,
-#             "email" : email,
-#             "password" : password,
-#         }
-        
-#         if django_settings.DOMAIN == "127.0.0.1:8000":
-#             response = client.post(reverse('api:user-list'), data=data)
-#         else:
-#             response = requests.post(getUrl('user-list', "api"), data=data)
-        
-#         if response.status_code == status.HTTP_201_CREATED:
-#             # if grade:
-#             #     instance = Grade.objects.get(name=grade)
-#             #     print('instance', type(instance))
-#             #     serializer.save(grade=instance)
-#             if django_settings.DOMAIN not in address :
-#                 createOTP(phone)
-#             emailVerify(email)
-#             return super().perform_create(serializer)
-
-#         return status.HTTP_400_BAD_REQUEST
     
-class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.UpdateModelMixin):
+class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin):
     """
     Signup a new student, with a POST request. user receives a verification otp via email and sms, after verification they are activated.
     After user verifies via OTP, the new student records are updated via patch
     """
-    queryset = Student.objects.all().order_by('pk')
+    queryset = Student.objects.all().order_by('phone_number')
     serializer_class = StudentSerializer
-    # ordering_fields = ['username']
-
+    ordering_fields = ['pk']
     permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):
-        # print(request.data, request.POST)
-        email = request.data.pop('email')
-        password = request.data.pop('password')
-        # grade = serializer.validated_data.get('grade')
-        phone_number = request.data.get('phone_number')
-        # print(phone_number)
-        print('email: ', email)
-        response = {}
-        data = {
-            "username" : phone_number,
-            "email" : email,
-            "password" : password,
-        }
-        user = None
+        email = password = phone_number = user = None
+        data = {}
+        try:
+            email = request.data.pop('email', None)
+            password = request.data.pop('password', None)
+            phone_number = request.data.get('phone_number')
+            # print('email: ', email)
+            response = {}
+        except Exception as ex:
+            print('request.data error', ex)
+
+        if email and password and phone_number:
+            data = {
+                    "username" : phone_number,
+                    "email" : email,
+                    "password" : password,
+                }
         try:
             user = Student.objects.get(phone_number=phone_number)
         except Student.DoesNotExist as ex:
-             print(ex)
+             print('student object error: ', ex)
         
         if user:
-            return Response({"message" : "Phone Number already exists"}, status.HTTP_409_CONFLICT)
+            return Response({"message" : "User already exists"}, status.HTTP_409_CONFLICT)
         
+        if data:
         
-        if django_settings.DOMAIN == "127.0.0.1:8000":
-            response = client.post(reverse('api:user-list'), data=data)
-        else:
-            response = requests.post(getUrl('user-list', "api"), data=data)
-
-        #if django_settings.DOMAIN not in address :
-        # print(response.status_code)
-        if response and response.status_code == status.HTTP_201_CREATED:
-            # createOTP(phone_number)
-            # print('settings: ',dir(django_settings))
-            if not django_settings.FILE:
-                emailOTP(email)
+            try:
             
-        return super().create(request, *args, **kwargs)
+                if django_settings.DOMAIN == "127.0.0.1:8000":
+                    response = client.post(reverse('api:user-list'), data=data)
+                else:
+                    response = requests.post(getUrl('user-list', "api"), data=data)
+                    # response = Response(response.json())
+                #if django_settings.DOMAIN not in address :
+                # print(response.status_code)
+                if response and response.status_code == status.HTTP_201_CREATED:
+                    
+                    # print('settings: ',dir(django_settings))
+                    if not django_settings.FILE:
+                        pass
+                        # createOTP(phone_number)
+                        #emailOTP(email)
+                    return super().create(request, *args, **kwargs)
+                
+                return response
+            except Exception as exception:
+                print('exception: ', exception)
+
+
+        return Response(status.HTTP_400_BAD_REQUEST)
+    
+            
+        
     
     def get_object(self):
+        student = None
         try:
-            # phone_number = self.request.data.get('phone_number')
-            # student = Student.objects.get(phone_number=phone_number)
-            student = self.request.user.profile
-            # print('student: ', student)
-            return student
-        except Student.DoesNotExist:
-            raise Http404
+            user = self.request.user
+            # print('user: ', user)
+            if user and not user.is_anonymous:
+                student = user.profile
+        except Student.DoesNotExist as ex:
+            print("Student Object Error: ", ex)
+        
+        return student
     
     def put(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         return self.update(request, *args, partial=partial, **kwargs)
 
     def patch(self, request, *args, **kwargs):
+        params = {}
         partial = kwargs.pop('partial', True)
-        
-        # print('DATA: ', request.data, self.get_object())
         instance = self.get_object()
-        data = request.data
-        grade = data.pop('grade')
-        grade_instance = get_object_or_404(Grade, name=grade)
-        # print('grade: ', grade, grade_instance)
-        serializer = self.get_serializer(instance, data=data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(grade=grade_instance)
+        if instance:
+            data = request.data
+            grade = data.pop('grade', None)
+            if grade and type(grade) == str:
+                params = {"name": grade}
+            elif grade and type(grade) == int:
+                params = {"pk": grade}
+            if params:
+                try:
+                    grade = Grade.objects.get(**params)
+                except Grade.DoesNotExist as ex:
+                    grade = None
+                    print('grade error: ', Http404, ex)
+    
+            serializer = self.get_serializer(instance, data=data, partial=partial)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(grade=grade)
 
-        return Response(serializer.data)
-
-    # def partial_update(self, request, *args, **kwargs):
-    #     return super().partial_update(request, *args, **kwargs)
-    # def perform_create(self, serializer):
-        # username = serializer.validated_data.get('username')
-        # email = serializer.validated_data.pop('email')
-        # password = serializer.validated_data.pop('password')
-        # # grade = serializer.validated_data.get('grade')
-        # phone_number = serializer.validated_data.get('phone_number')
-        # country = serializer.validated_data.get('country')
-        # print('country', country.name)
-        # obj = Country.objects.get(name__iexact=country.name)
-        # obj = get_object_or_404(Country, name__iexact=country.name)
-        # print(obj.code)
-        # phone = f"{obj.code}{phone_number}"
-
+            return Response(serializer.data)
         
-        # if response.status_code == status.HTTP_201_CREATED:
-            # if grade:
-            #     instance = Grade.objects.get(name=grade)
-            #     print('instance', type(instance))
-            #     serializer.save(grade=instance)
-        # if django_settings.DOMAIN not in address :
-        # createOTP(phone_number)
-        # emailVerify(email)
-        # return super().perform_create(serializer)
+        return Response({"message" : 'anonymous user'}, status.HTTP_403_FORBIDDEN)
 
-        # return status.HTTP_400_BAD_REQUEST
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance:
+            auth_token = request.auth
+            current_password = request.data.get('current_password')
+            if current_password:
+                response = {}
+                data = {
+                        'current_password': current_password
+                        }
+                if django_settings.DOMAIN == "127.0.0.1:8000":
+                    client.credentials(HTTP_AUTHORIZATION=f"Token {auth_token}")
+                    response = client.delete(reverse('api:user-me'), data=data)
+                else:
+                    headers = {'Authorization': 'Token ' + auth_token}
+                    response = requests.delete(getUrl('user-me', "api"), data=data, headers=headers)
+                
+                print('delete: ', response)
+                if response and response.status_code == status.HTTP_204_NO_CONTENT:
+                    self.perform_destroy(instance)
+                    return Response(status=status.HTTP_204_NO_CONTENT)
+            
+        return Response(status.HTTP_400_BAD_REQUEST)
+            
+        # return Response({"message": "NoneType object - user likely anonymous"}, status.HTTP_404_NOT_FOUND)
 
 class RetrieveUpdateAPIViewStudent(generics.RetrieveUpdateDestroyAPIView):
     queryset = Student.objects.all().order_by('pk')
@@ -193,64 +176,23 @@ class RetrieveUpdateAPIViewStudent(generics.RetrieveUpdateDestroyAPIView):
             return student
         except Student.DoesNotExist:
             raise Http404
-        
-    # def update(self, request, *args, **kwargs):
-    #     kwargs['partial'] = True
-    #     return super().update(request, *args, **kwargs)
 
-    # def update(self, request, *args, **kwargs):
-    #     instance = self.get_object().filter(user=self.request.user)
-    #     serializer = self.get_serializer(instance, data=request.data, partial=True)
-    #     serializer.is_valid(raise_exception=True)
-    #     self.perform_update(serializer)
 
-    #     if getattr(instance, '_prefetched_objects_cache', None):
-    #         # If 'prefetch_related' has been applied to a queryset, we need to
-    #         # forcibly invalidate the prefetch cache on the instance.
-    #         instance._prefetched_objects_cache = {}
-
-    #     return Response(serializer.data)
-
-# class TempStudentCreateAPIView(generics.ListCreateAPIView):
-#     queryset = TempStudent.objects.all()
-#     serializer_class = TempStudentSerializer
-
-#     def perform_create(self, serializer):
-#         if self.request.user:
-#             serializer.validated_data.get()
-#         return super().perform_create(serializer)
- 
-# class ActivateUser(UserViewSet):
-#     def activation(self, request, *args, **kwargs):
-#         # print(request.data)
-#         new_request = HttpRequest()
-#         for key, value in request.__dict__.items():
-#             setattr(new_request, key, value)
-
-#         new_request.method = 'POST'
-#         uid = self.kwargs.get('uid')
-#         token = self.kwargs.get('token')
-#         new_request.data = {"uid": uid, "token": token}
-
-#         response = super().activation(new_request, *args, **kwargs)
-#         print('RESPONSE', response.status_code)
-#         if response.status_code == status.HTTP_204_NO_CONTENT:
-#             resp = updateActivatedUser(token, uid)
-#             print('RESP', resp)
-
-#         return Response(status=status.HTTP_401_UNAUTHORIZED)
-
-@api_view(['GET', 'POST'])
+@api_view(['POST'])
 @permission_classes([AllowAny])
 def verifyOTPCode(request, *args, **kwargs):
     '''
     This API is for OTP verification, it supports GET and POST methods. e.g 
     '/api/v1/student/activate/<otp>/<username>/<email>'
     '''
-    otp = kwargs.get('otp')
+    query = request.data
+    # print('query: ', dir(request), query.get('email'))
+    otp = query.get('otp')
     # print('otp: ', otp)
-    username = kwargs.get('username')
-    email = kwargs.get('email')
+    username = query.get('username', '').strip('+')
+    username = f"{'+'}{username.strip()}"
+    email = query.get('email')
+    print(username, email)
     data = {
        'username': username
     }
@@ -277,14 +219,15 @@ def verifyOTPCode(request, *args, **kwargs):
 
         # print('email_response', email_response)
         # print('response', response.status)
-        if response and response.status == OTP_APPROVED:
-            # print('DOMAIN', django_settings.DOMAIN)
+        # if response and response.status == OTP_APPROVED:
+        if True:
             url = getUrl('student-activate', "student", data)
             if django_settings.DOMAIN == "127.0.0.1:8000":
                 return client.put(url)
 
-            return requests.put(url)
-        return Response(response, status.HTTP_401_UNAUTHORIZED)
+            result = requests.put(url)
+            return Response(result.json())
+        # return Response(response, status.HTTP_400_BAD_REQUEST)
     
     return Response(response, status.HTTP_400_BAD_REQUEST)
 

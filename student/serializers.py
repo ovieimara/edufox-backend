@@ -18,7 +18,7 @@ class StudentSerializer(serializers.ModelSerializer):
     user = UserSerializer(default={})
     gender = serializers.ChoiceField(choices=['male', 'female'], allow_null=True, default='')
     # image_url = serializers.CharField(default="")
-    name_institution = serializers.CharField(allow_null=True, default="")
+    # name_institution = serializers.CharField(allow_null=True, default="")
     # email = serializers.EmailField()
     # password = serializers.CharField(allow_null=False)
 
@@ -30,25 +30,30 @@ class StudentSerializer(serializers.ModelSerializer):
         # fields = "__all__"
 
         fields = ['phone_number', 'grade', 'age', 'gender', 'image_url', 'name_institution', 'user']
-        extra_kwargs = {'password': {'read_only': True}, 
+        extra_kwargs = {'password': {'write_only': True}, 
         'user': {'read_only': True}
         }
 
     def create(self, validated_data):
         phone_number = validated_data.get('phone_number')
-        user = get_object_or_404(User, username=phone_number)
+        # user = get_object_or_404(User, username=phone_number)
+        user = None
+        try:
+            user = User.objects.get(username=phone_number)
+        except User.DoesNotExist as ex:
+             print(ex)
 
         if user:
             validated_data['user'] = user
         return super().create(validated_data)
     
-    def update(self, instance, validated_data):
-        grade = validated_data.get('grade')
-        grade_instance = get_object_or_404(Grade, name=grade)
-        print(grade, grade_instance)
-        if grade_instance:
-            validated_data['grade'] = grade_instance
-        return super().update(instance, validated_data)
+    # def update(self, instance, validated_data):
+    #     grade = validated_data.get('grade')
+    #     grade_instance = get_object_or_404(Grade, name=grade)
+    #     print(grade, grade_instance)
+    #     if grade_instance:
+    #         validated_data['grade'] = grade_instance
+    #     return super().update(instance, validated_data)
     
 
 class TempStudentSerializer(serializers.ModelSerializer):

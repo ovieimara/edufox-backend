@@ -25,29 +25,53 @@ def sms_messaging():
     otp_code = input("Please enter the OTP:")
 
 def createOTP(phone_number):
-    verification = client.verify.v2.services(verify_sid) \
-    .verifications \
-    .create(to=phone_number, channel="sms")
-    print(verification.status)
+    verification = None
+    try:
+        verification = client.verify.v2.services(verify_sid) \
+        .verifications \
+        .create(to=phone_number, channel="sms")
+        print(verification.status)
+    except Exception as ex:
+        print('SMS OTP creation error: ', ex)
+
+    return verification
+
+    
 
 def verifyOTP(otp, phone_number):
-    verification_check = client.verify.v2.services(verify_sid) \
-    .verification_checks \
-    .create(to=phone_number, code=otp)
+    verification_check = None
+    try:
+        verification_check = client.verify.v2.services(verify_sid) \
+        .verification_checks \
+        .create(to=phone_number, code=otp)
+        
+    except Exception as ex:
+        print('SMS OTP verify error: ', ex)
+
     return verification_check
 
 def emailOTP(email):
-    verification = client.verify.v2.services(verify_sid) \
-                     .verifications \
-                     .create(to=email, channel='email')
+    verification = None
+    try:
+        verification = client.verify.v2.services(verify_sid) \
+                        .verifications \
+                        .create(to=email, channel='email')
+
+    except Exception as ex:
+        print('Email OTP creation error: ', ex)
 
     return verification
 
 def verifyEmail(otp, email):
-    verification_check = client.verify \
-                           .v2 \
-                           .services(verify_sid) \
-                           .verification_checks \
-                           .create(to=email, code=otp)
+    verification_check = None
+    try:
+        verification_check = client.verify \
+                            .v2 \
+                            .services(verify_sid) \
+                            .verification_checks \
+                            .create(to=email, code=otp)
+
+    except Exception as ex:
+        print('Email OTP verify error: ', ex)
 
     return verification_check
