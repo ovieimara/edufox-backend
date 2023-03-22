@@ -30,7 +30,7 @@ def createOTP(phone_number):
         verification = client.verify.v2.services(verify_sid) \
         .verifications \
         .create(to=phone_number, channel="sms")
-        print(verification.status)
+        # print(verification.status)
     except Exception as ex:
         print('SMS OTP creation error: ', ex)
 

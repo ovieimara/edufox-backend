@@ -137,9 +137,9 @@ DOMAIN = ""
 # print('CLOUDRUN_SERVICE_URL: ', CLOUDRUN_SERVICE_URL)
 if CLOUDRUN_SERVICE_URL:
     service_url = urlparse(CLOUDRUN_SERVICE_URL).netloc
-    ALLOWED_HOSTS = [service_url, 'api-service-5wasy3cpxq-uc.a.run.app', 'localhost:3000', 'localhost', '127.0.0.1:3000', '127.0.0.1']
+    ALLOWED_HOSTS = [service_url, 'api-service-5wasy3cpxq-uc.a.run.app', 'localhost:3000', 'localhost', '127.0.0.1:3000', '127.0.0.1', '10.0.2.2']
     CSRF_TRUSTED_ORIGINS = [CLOUDRUN_SERVICE_URL, 
-    'https://api-service-5wasy3cpxq-uc.a.run.app', 'http://localhost:3000', 'http://localhost', 'http://127.0.0.1:3000', 'http://127.0.0.1']
+    'https://api-service-5wasy3cpxq-uc.a.run.app', 'http://localhost:3000', 'http://localhost', 'http://127.0.0.1:3000', 'http://127.0.0.1', 'http://10.0.2.2']
     # SECURE_SSL_REDIRECT = True
     # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     PROTOCOL = "https"
@@ -293,6 +293,15 @@ if os.environ.get('USE_LOCAL_POSTGRESQL'):
             'PORT': 5432,
         }
     }
+
+    ALLOWED_HOSTS = ['10.0.2.2', 'localhost', '*']
+    CORS_ALLOWED_ORIGINS = [
+    'http://localhost:8000',
+    'http://192.168.0.100',
+    'http://192.168.0.100:8000',
+    'http://*:8000',
+    'http://10.0.2.2'
+    ]
 
 else:
     DATABASES = {"default": env.db()}

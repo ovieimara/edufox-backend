@@ -32,8 +32,7 @@ class InteractionTypeAdmin(admin.ModelAdmin):
     list_display = ['code', 'name']
 
 class InteractionAdmin(admin.ModelAdmin):
-    list_display = ['user', 'type', 'video', 'video_time_of_interaction', 
-    'seek_fwd', 'seek_prev', 'created', 'updated']
+    list_display = ['user', 'type', 'video', 'duration', 'created', 'updated']
 
 # class TestAdmin(admin.ModelAdmin):
 #     list_display = ['code', 'subject', 'question', 'options', 'grade', 'difficulty_level']

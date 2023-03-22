@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from rest_framework import serializers
-from .models import (Grade, Comment, Rate, Subject, Lecturer, Video, Interaction, 
-InteractionType, Resolution)
+from .models import (Grade, Comment, Rate, Seek, Subject, Lecturer, Video, Interaction, 
+InteractionType, Resolution, Seek)
 # from assess.models import  Test, Assessment
 from subscribe.models import Subscribe
 
@@ -39,7 +39,7 @@ class VideoSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
-        if request.user:
+        if request and request.user:
             subscriptions = request.user.subscriptions_user.all()
             if subscriptions.exists():
                 subscribed = subscriptions.filter(grade=obj.grade).first()
@@ -55,14 +55,25 @@ class InteractionTypeSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class InteractionSerializer(serializers.ModelSerializer):
+    type = serializers.ChoiceField(choices=['END', 'EXIT', 'PAUSE','PLAY', 'START', 'STOP'])
     class Meta:
         model = Interaction
         fields = "__all__"
 
-# class TestSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Test
-#         fields = "__all__"
+class SeekSerializer(serializers.ModelSerializer):
+    direction = serializers.ChoiceField(choices=['FW', 'RW'])
+    class Meta:
+        model = Seek
+        fields = "__all__"
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        user = request.user
+        # print('USER: ', user)
+        if user and not user.is_anonymous:
+            validated_data['user'] = request.user
+            return super().create(validated_data)
+        return validated_data
 
 # class AssessmentSerializer(serializers.ModelSerializer):
 #     class Meta:

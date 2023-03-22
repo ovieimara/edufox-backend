@@ -92,9 +92,6 @@ class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.RetrieveModelM
 
         return Response(status.HTTP_400_BAD_REQUEST)
     
-            
-        
-    
     def get_object(self):
         student = None
         try:
@@ -151,10 +148,10 @@ class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.RetrieveModelM
                     client.credentials(HTTP_AUTHORIZATION=f"Token {auth_token}")
                     response = client.delete(reverse('api:user-me'), data=data)
                 else:
-                    headers = {'Authorization': 'Token ' + auth_token}
+                    headers = {'Authorization': f"Token {auth_token}"}
                     response = requests.delete(getUrl('user-me', "api"), data=data, headers=headers)
                 
-                print('delete: ', response)
+                # print('delete: ', response.json())
                 if response and response.status_code == status.HTTP_204_NO_CONTENT:
                     self.perform_destroy(instance)
                     return Response(status=status.HTTP_204_NO_CONTENT)

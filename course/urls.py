@@ -2,7 +2,7 @@ from django.urls import path, include
 from .views import (ListCreateAPIGrades, UpdateAPIGrades, ListCreateAPISubject, ListCreateAPIComment, UpdateAPIComment,
 UpdateAPISubject, ListCreateAPILecturer, UpdateAPILecturer, ListCreateAPIRate, 
 UpdateAPIRate, ListCreateAPIInteractionType, ListCreateAPIInteraction, UpdateAPIInteractionType, 
-UpdateAPIInteraction, ListCreateAPIVideo, UpdateAPIVideo, ListCreateAPIResolution)
+UpdateAPIInteraction, ListCreateAPIVideo, UpdateAPIVideo, ListCreateAPIResolution, ListCreateAPISeek, ListDashboardAPI)
 from djoser.views import UserViewSet
 
 app_name = 'course'
@@ -22,12 +22,15 @@ urlpatterns = [
     path('interaction_types/<pk>', UpdateAPIInteractionType.as_view(), name='interaction_type-detail'),
     path('interactions', ListCreateAPIInteraction.as_view(), name='interactions-list'),
     path('interactions/<pk>', UpdateAPIInteraction.as_view(), name='interaction-detail'),
-    # path('tests', ListCreateAPIComment.as_view(), name='tests-list'),
-    # path('tests/<pk>', UpdateAPIComment.as_view(), name='test-detail'),
+    path('seeks', ListCreateAPISeek.as_view(), name='seeks-list'),
+    path('seeks/<pk>', ListCreateAPISeek.as_view(), name='seek-detail'),
     # path('assessments', ListCreateAPIComment.as_view(), name='assessments-list'),
     # path('assessments/<pk>', UpdateAPIComment.as_view(), name='assessment-detail'),
     path('videos', ListCreateAPIVideo.as_view(), name='videos-list'),
+    # path('videos?subject=', ListCreateAPIVideo.as_view(), name='videos-list'),
     path('videos/<pk>', UpdateAPIVideo.as_view(), name='video-detail'),
     path('resolutions', ListCreateAPIResolution.as_view(), name='resolutions-list'),
     path('resolutions/<pk>', ListCreateAPIResolution.as_view(), name='resolution-detail'),
+    path('dashboard', ListDashboardAPI.as_view(), name='dashboard-list'),
+
 ]

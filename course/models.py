@@ -54,7 +54,7 @@ class Resolution(models.Model):
 class Video(models.Model):
     title = models.CharField(db_index=True, max_length=255, default='')
     description = models.TextField(null=True, blank=True, default='')
-    duration = models.CharField(db_index = True, max_length=255, null=True, blank=True, default='')
+    duration = models.CharField(db_index = True, max_length=50, null=True, blank=True, default='')
     resolution = models.ForeignKey(Resolution, related_name='resolutions', null=True, on_delete=models.SET_NULL)
     thumbnail =  models.URLField(null=True)
     topic = models.CharField(db_index = True, max_length=255, null=True, blank=True, default='')
@@ -63,6 +63,8 @@ class Video(models.Model):
     tags =  models.TextField(null=True, blank=True, default=dict)
     subject = models.ForeignKey(Subject, related_name='subjects', default=1, on_delete=models.CASCADE)
     grade = models.ForeignKey(Grade, related_name='grades', null=True, default=1, on_delete=models.SET_NULL)
+    end_start_credits =  models.CharField(max_length=50, null=True, blank=True, default='')
+    start_end_credits =  models.CharField(max_length=50, null=True, blank=True, default='')
     created = models.DateField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
     # views = models.ForeignKey(View, related_name='views', on_delete=models.CASCADE)
@@ -88,6 +90,36 @@ class Comment(models.Model):
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
     video = models.ForeignKey(Video, related_name='video_comments', null=True, on_delete=models.SET_NULL)
 
+class Seek(models.Model):
+    user = models.ForeignKey(User, related_name='seeks', null=True, default=1, on_delete=models.CASCADE)
+    direction = models.CharField(null=True, max_length=10, default='')
+    to_duration = models.CharField(null=True, max_length=50, default='')
+    from_duration = models.CharField(null=True, max_length=50, default='')
+    video = models.ForeignKey(Video, related_name='video_seeks', null=True, on_delete=models.SET_NULL)
+    created = models.DateField(db_index=True, null=True, auto_now_add=True)
+    updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
+
+
+# class Play(models.Model):
+#     duration = models.CharField(null=True, max_length=10, default='')
+#     video = models.ForeignKey(Video, related_name='video_comments', null=True, on_delete=models.SET_NULL)
+#     created = models.DateField(db_index=True, null=True, auto_now_add=True)
+#     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
+
+
+# class Pause(models.Model):
+#     duration = models.CharField(null=True, max_length=10, default='') 
+#     video = models.ForeignKey(Video, related_name='video_comments', null=True, on_delete=models.SET_NULL)
+#     created = models.DateField(db_index=True, null=True, auto_now_add=True)
+#     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
+
+# class Stop(models.Model):
+#     duration = models.CharField(null=True, max_length=10, default='') 
+#     video = models.ForeignKey(Video, related_name='video_comments', null=True, on_delete=models.SET_NULL)
+#     created = models.DateField(db_index=True, null=True, auto_now_add=True)
+#     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
+
+
 
 class InteractionType(models.Model):
     code = models.CharField(max_length=127, null=True, default='')
@@ -99,14 +131,15 @@ class InteractionType(models.Model):
 
 class Interaction(models.Model):
     user = models.ForeignKey(User, related_name='interactions', on_delete=models.CASCADE)
-    type = models.ForeignKey(InteractionType, related_name='types', null=True, on_delete=models.SET_NULL)
+    type = models.CharField(db_index=True, null=True, max_length=50, default='')
     video = models.ForeignKey(Video, related_name='videos', null=True, on_delete=models.SET_NULL)
-    video_time_of_interaction = models.CharField(db_index=True, null=True, max_length=50, default='')
-    seek_fwd = models.CharField(db_index=True, null=True, max_length=50, default='')
-    seek_prev = models.CharField(db_index=True, null=True, max_length=50, default='')
+    duration = models.CharField(db_index=True, null=True, max_length=50, default='')
     created = models.DateField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
 
+    # seek_fwd = models.CharField(null=True, max_length=50, default='')
+    # seek_prev = models.CharField(null=True, max_length=50, default='')
+    # type = models.ForeignKey(InteractionType, related_name='types', null=True, on_delete=models.SET_NULL)
 
 # class Test(models.Model):
 #     code = models.CharField(max_length=255, null=True, default='')
