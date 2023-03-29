@@ -10,7 +10,7 @@ from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticatedOrR
 from rest_framework.decorators import api_view, permission_classes
 from .permissions import IsStaffEditorPermission
 from django.contrib.auth.models import User
-from .serializers import StudentSerializer, TempStudentSerializer, UserSerializer, CountrySerializer
+from .serializers import StudentSerializer, UserSerializer, CountrySerializer
 from .models import Student, TempStudent, Grade, Country
 import requests
 from datetime import datetime

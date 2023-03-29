@@ -9,7 +9,7 @@ class Grade(models.Model):
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
 
     def __str__(self) -> str:
-        return self.name
+        return f"{self.name}"
 
 # Create your models here.
 
@@ -24,6 +24,7 @@ class View(models.Model):
 class Subject(models.Model):
     code = models.CharField(db_index=True, max_length=127)
     name = models.CharField(db_index=True, null=False, unique=True, max_length=255)
+    grade = models.ManyToManyField(Grade, related_name="grade_subjects")
     description = models.TextField(null=True, blank=True, default='')
     credits = models.SmallIntegerField(default=0)
     created = models.DateTimeField(null=True, auto_now_add=True)
@@ -51,33 +52,70 @@ class Resolution(models.Model):
     def __str__(self) -> str:
         return self.name
 
+class Topic(models.Model):
+    chapter = models.SmallIntegerField(null=True, blank=True, default=0)
+    subject = models.ForeignKey(Subject, related_name='subject_topics', null=True, on_delete=models.SET_NULL)
+
+    title = models.CharField(db_index=True, max_length=255, null=True, default='')
+    grade = models.ManyToManyField(Grade, related_name='grade_topics')
+    created = models.DateField(db_index=True, null=True, auto_now_add=True)
+    updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
+
+    def __str__(self) -> str:
+        return f"{self.chapter}. {self.title}"
+
+# class Chapter(models.Model):
+#     num = models.SmallIntegerField(null=True, blank=True, default=0)
+#     topic = models.ForeignKey(Topic, related_name='topic_chapters', null=True, on_delete=models.SET_NULL)
+#     subject = models.ForeignKey(Subject, related_name='subject_chapters', null=True, on_delete=models.SET_NULL)
+#     grade = models.ForeignKey(Grade, related_name='grade_chapters', null=True, default=1, on_delete=models.SET_NULL)
+#     created = models.DateField(db_index=True, null=True, auto_now_add=True)
+#     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
+
+#     def __str__(self) -> str:
+#         return f"{self.num}. {self.topic}"
+# class SubTopic(models.Model):
+#     title = models.CharField(max_length=255, null=True, default='')
+#     subject = models.ForeignKey(Subject, related_name='subject_subtopics', null=True, default=None, on_delete=models.SET_NULL)
+#     created = models.DateField(db_index=True, null=True, auto_now_add=True)
+#     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
+
+class Lesson(models.Model):
+    num = models.SmallIntegerField(null=True, blank=True, default=0)
+    title = models.CharField(max_length=255, null=True, blank=True, default='')
+    topic = models.ForeignKey(Topic, related_name='topic_lessons', null=True, on_delete=models.SET_NULL)
+    subject = models.ForeignKey(Subject, related_name='subject_lessons', null=True, on_delete=models.SET_NULL)
+    grade = models.ManyToManyField(Grade, related_name='grade_lessons')
+    created = models.DateField(db_index=True, null=True, auto_now_add=True)
+    updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
+
+    def __str__(self) -> str:
+        return f"{self.num}. {self.title}"
+    
 class Video(models.Model):
+    lesson = models.ForeignKey(Lesson, related_name='lessons', null=True, on_delete=models.SET_NULL)
     title = models.CharField(db_index=True, max_length=255, default='')
     description = models.TextField(null=True, blank=True, default='')
     duration = models.CharField(db_index = True, max_length=50, null=True, blank=True, default='')
     resolution = models.ForeignKey(Resolution, related_name='resolutions', null=True, on_delete=models.SET_NULL)
     thumbnail =  models.URLField(null=True)
-    topic = models.CharField(db_index = True, max_length=255, null=True, blank=True, default='')
-    lesson = models.SmallIntegerField(db_index = True, null=True, blank=True, default=0)
+    # topic = models.CharField(db_index = True, max_length=255, null=True, blank=True, default='')
+    topic = models.ForeignKey(Topic, related_name='topics', null=True, on_delete=models.SET_NULL)
+    # lesson = models.SmallIntegerField(db_index = True, null=True, blank=True, default=0)
     url =  models.URLField(null=True, blank=True, default='')
     tags =  models.TextField(null=True, blank=True, default=dict)
-    subject = models.ForeignKey(Subject, related_name='subjects', default=1, on_delete=models.CASCADE)
-    grade = models.ForeignKey(Grade, related_name='grades', null=True, default=1, on_delete=models.SET_NULL)
+    subject = models.ForeignKey(Subject, related_name='subject_videos', null=True, on_delete=models.SET_NULL)
+    grade = models.ManyToManyField(Grade, default=[], related_name='grade_videos')
     end_start_credits =  models.CharField(max_length=50, null=True, blank=True, default='')
     start_end_credits =  models.CharField(max_length=50, null=True, blank=True, default='')
     created = models.DateField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
-    # views = models.ForeignKey(View, related_name='views', on_delete=models.CASCADE)
-    # likes = models.SmallIntegerField(null=True, blank=True, default=0)
-    # rating = models.IntegerField(null=True, blank=True, default=0)
-    # comments = models.IntegerField(null=True, blank=True, default=0)
-
 
     def __str__(self) -> str:
         return self.title
 
 class Rate(models.Model):
-    user = models.ForeignKey(User, related_name='user_rating', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='user_ratings', on_delete=models.CASCADE)
     rating = models.SmallIntegerField()
     created = models.DateTimeField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
@@ -90,14 +128,14 @@ class Comment(models.Model):
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
     video = models.ForeignKey(Video, related_name='video_comments', null=True, on_delete=models.SET_NULL)
 
-class Seek(models.Model):
-    user = models.ForeignKey(User, related_name='seeks', null=True, default=1, on_delete=models.CASCADE)
-    direction = models.CharField(null=True, max_length=10, default='')
-    to_duration = models.CharField(null=True, max_length=50, default='')
-    from_duration = models.CharField(null=True, max_length=50, default='')
-    video = models.ForeignKey(Video, related_name='video_seeks', null=True, on_delete=models.SET_NULL)
-    created = models.DateField(db_index=True, null=True, auto_now_add=True)
-    updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
+# class Seek(models.Model):
+#     user = models.ForeignKey(User, related_name='seeks', null=True, default=1, on_delete=models.CASCADE)
+#     direction = models.CharField(null=True, max_length=10, default='')
+#     to_duration = models.CharField(null=True, max_length=50, default='')
+#     from_duration = models.CharField(null=True, max_length=50, default='')
+#     video = models.ForeignKey(Video, related_name='video_seeks', null=True, on_delete=models.SET_NULL)
+#     created = models.DateField(db_index=True, null=True, auto_now_add=True)
+#     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
 
 
 # class Play(models.Model):
@@ -121,13 +159,13 @@ class Seek(models.Model):
 
 
 
-class InteractionType(models.Model):
-    code = models.CharField(max_length=127, null=True, default='')
-    name = models.CharField(db_index=True, max_length=127, default='')
-    description = models.TextField(blank=True, default='')
+# class InteractionType(models.Model):
+#     code = models.CharField(max_length=127, null=True, default='')
+#     name = models.CharField(db_index=True, max_length=127, default='')
+#     description = models.TextField(blank=True, default='')
 
-    def __str__(self) -> str:
-        return self.name
+#     def __str__(self) -> str:
+#         return self.name
 
 class Interaction(models.Model):
     user = models.ForeignKey(User, related_name='interactions', on_delete=models.CASCADE)

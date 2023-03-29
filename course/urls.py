@@ -1,8 +1,9 @@
 from django.urls import path, include
 from .views import (ListCreateAPIGrades, UpdateAPIGrades, ListCreateAPISubject, ListCreateAPIComment, UpdateAPIComment,
 UpdateAPISubject, ListCreateAPILecturer, UpdateAPILecturer, ListCreateAPIRate, 
-UpdateAPIRate, ListCreateAPIInteractionType, ListCreateAPIInteraction, UpdateAPIInteractionType, 
-UpdateAPIInteraction, ListCreateAPIVideo, UpdateAPIVideo, ListCreateAPIResolution, ListCreateAPISeek, ListDashboardAPI)
+UpdateAPIRate, ListCreateAPIInteraction, UpdateAPIInteraction, 
+ListCreateAPIVideo, UpdateAPIVideo, ListCreateAPIResolution, 
+ListDashboardAPI, ListCreateUpdateAPILesson, ListCreateUpdateAPITopic)
 from djoser.views import UserViewSet
 
 app_name = 'course'
@@ -18,12 +19,12 @@ urlpatterns = [
     path('rates/<pk>', UpdateAPIRate.as_view(), name='rate-detail'),
     path('comments', ListCreateAPIComment.as_view(), name='comments-list'),
     path('comments/<pk>', UpdateAPIComment.as_view(), name='comment-detail'),
-    path('interaction_types', ListCreateAPIInteractionType.as_view(), name='interaction_types-list'),
-    path('interaction_types/<pk>', UpdateAPIInteractionType.as_view(), name='interaction_type-detail'),
+    # path('interaction_types', ListCreateAPIInteractionType.as_view(), name='interaction_types-list'),
+    # path('interaction_types/<pk>', UpdateAPIInteractionType.as_view(), name='interaction_type-detail'),
     path('interactions', ListCreateAPIInteraction.as_view(), name='interactions-list'),
     path('interactions/<pk>', UpdateAPIInteraction.as_view(), name='interaction-detail'),
-    path('seeks', ListCreateAPISeek.as_view(), name='seeks-list'),
-    path('seeks/<pk>', ListCreateAPISeek.as_view(), name='seek-detail'),
+    # path('seeks', ListCreateAPISeek.as_view(), name='seeks-list'),
+    # path('seeks/<pk>', ListCreateAPISeek.as_view(), name='seek-detail'),
     # path('assessments', ListCreateAPIComment.as_view(), name='assessments-list'),
     # path('assessments/<pk>', UpdateAPIComment.as_view(), name='assessment-detail'),
     path('videos', ListCreateAPIVideo.as_view(), name='videos-list'),
@@ -32,5 +33,9 @@ urlpatterns = [
     path('resolutions', ListCreateAPIResolution.as_view(), name='resolutions-list'),
     path('resolutions/<pk>', ListCreateAPIResolution.as_view(), name='resolution-detail'),
     path('dashboard', ListDashboardAPI.as_view(), name='dashboard-list'),
+    path('lessons', ListCreateUpdateAPILesson.as_view(), name='lessons-list'),
+    path('lessons/<pk>', ListCreateUpdateAPILesson.as_view(), name='lesson-detail'),
+    path('topics', ListCreateUpdateAPITopic.as_view(), name='topics-list'),
+    path('topics/<pk>', ListCreateUpdateAPITopic.as_view(), name='topic-detail'),
 
 ]

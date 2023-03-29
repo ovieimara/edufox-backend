@@ -10,7 +10,7 @@ class Student(models.Model):
     grade = models.ForeignKey(Grade, related_name='student_grade', null=True, on_delete=models.SET_NULL)
     # grade = models.CharField(db_index=True, max_length=255, null = True, blank=False)
     age = models.SmallIntegerField(db_index=True, null=True, default=0)
-    gender = models.CharField(db_index=True, max_length=255, null=True, default='')
+    gender = models.CharField(db_index=True, max_length=255, blank=True, null=True, default='')
     image_url = models.URLField(null=True, blank=True, default='')
     name_institution = models.CharField(max_length=255, null = True, blank=True, default='')
     registration_date = models.DateTimeField(db_index=True, null=True, auto_now_add=True)

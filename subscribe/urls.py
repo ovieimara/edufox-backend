@@ -1,5 +1,6 @@
 from django.urls import path, include
-from .views import (ListCreateUpdateAPIDiscount, ListCreateUpdateAPISubscribe, ListCreateUpdateAPIPlan)
+from .views import (ListCreateUpdateAPIDiscount, ListCreateUpdateAPISubscribe, 
+                    ListCreateUpdateAPIPlan, ListCreateUpdateAPIBillingProduct)
 from djoser.views import UserViewSet
 
 app_name = 'subscribe'
@@ -13,4 +14,7 @@ urlpatterns = [
     path('discounts/<pk>', ListCreateUpdateAPIDiscount.as_view(), name='discount-details'),
     path('plans', ListCreateUpdateAPIPlan.as_view(), name='plans-list'),
     path('plans/<pk>', ListCreateUpdateAPIPlan.as_view(), name='plan-detail'),
+    path('products', ListCreateUpdateAPIBillingProduct.as_view(), name='products-list'),
+    path('products/<pk>', ListCreateUpdateAPIBillingProduct.as_view(), name='product-detail'),
+
 ]

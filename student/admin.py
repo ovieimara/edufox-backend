@@ -36,4 +36,4 @@ class StudentAdmin(admin.ModelAdmin):
 # admin.site.unregister(User)
 # admin.site.register(Student)
 admin.site.register(Student, StudentAdmin)
-admin.site.register(TempStudent, TempStudentAdmin)
+# admin.site.register(TempStudent, TempStudentAdmin)

@@ -2,15 +2,14 @@ from django.shortcuts import render
 from rest_framework import generics, status, mixins
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly, AllowAny
-from .models import (Grade, Subject, Lecturer, Video, Rate, Comment, 
-InteractionType, Interaction, Resolution, Seek)
+from .models import (Grade, Lesson, Subject, Lecturer, Video, Rate, Comment, Interaction, Resolution, Topic)
 # from assess.models import  Test, Assessment
-from .serializers import (GradeSerializer, SubjectSerializer, LecturerSerializer, 
-VideoSerializer, RateSerializer, CommentSerializer, InteractionTypeSerializer, 
-InteractionSerializer, ResolutionSerializer, SeekSerializer)
+from .serializers import (GradeSerializer, SubjectSerializer, LecturerSerializer, VideoSerializer, RateSerializer, CommentSerializer, 
+InteractionSerializer, ResolutionSerializer, LessonSerializer, TopicSerializer)
 from .permissions import IsStaffEditorPermission
 from django.core.paginator import Paginator, EmptyPage
 from django.contrib.auth.models import User
+from student.models import Student
 
 
 
@@ -52,7 +51,8 @@ class UpdateAPILecturer(generics.RetrieveUpdateDestroyAPIView):
 
 
 class ListCreateAPIVideo(generics.ListCreateAPIView):
-    queryset = Video.objects.select_related('grade', 'subject').all().order_by('pk')
+    # queryset = Video.objects.select_related('grade', 'subject').all().order_by('pk')
+    queryset = Video.objects.select_related('subject').all().order_by('pk')
     serializer_class = VideoSerializer
     filterset_fields = ['grade', 'subject', 'topic', 'lesson']
     ordering_fields = ['title', 'topic']
@@ -67,7 +67,7 @@ class ListCreateAPIVideo(generics.ListCreateAPIView):
 
 
 class UpdateAPIVideo(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Video.objects.select_related('grade', 'subject').all()
+    queryset = Video.objects.select_related('subject').all()
     serializer_class = VideoSerializer
     permission_classes = [IsAdminUser, IsStaffEditorPermission]
 
@@ -88,14 +88,14 @@ class UpdateAPIComment(generics.RetrieveUpdateDestroyAPIView):
     queryset = Comment.objects.select_related('video').all()
     serializer_class = CommentSerializer
 
-class ListCreateAPIInteractionType(generics.ListCreateAPIView):
-    queryset = InteractionType.objects.all()
-    serializer_class = InteractionTypeSerializer
+# class ListCreateAPIInteractionType(generics.ListCreateAPIView):
+#     queryset = InteractionType.objects.all()
+#     serializer_class = InteractionTypeSerializer
 
-class UpdateAPIInteractionType(generics.RetrieveUpdateDestroyAPIView):
-    queryset = InteractionType.objects.all()
-    serializer_class = InteractionTypeSerializer
-    permission_classes = [IsAdminUser, IsStaffEditorPermission]
+# class UpdateAPIInteractionType(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = InteractionType.objects.all()
+#     serializer_class = InteractionTypeSerializer
+#     permission_classes = [IsAdminUser, IsStaffEditorPermission]
 
 class ListCreateAPIInteraction(generics.ListCreateAPIView):
     queryset = Interaction.objects.select_related('user', 'video', 'type').all()
@@ -126,27 +126,70 @@ class ListCreateAPIResolution(mixins.CreateModelMixin, mixins.ListModelMixin,  m
             return self.update(request, *args, **kwargs)
         return None
     
-class ListCreateAPISeek(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
-    queryset = Seek.objects.all()
-    serializer_class = SeekSerializer
-    # lookup_field = 'pk'
+
+class ListCreateUpdateAPILesson(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
+    queryset = Lesson.objects.all()
+    serializer_class = LessonSerializer
+    lookup_field = 'pk'
     # permission_classes = [IsStaffEditorPermission]
-    # permission_classes = []
 
     def get(self, request, *args, **kwargs):
         if kwargs.get('pk') is not None:
             return self.retrieve(request, *args, **kwargs)
+
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        if not kwargs.get('pk'):
+        if not kwargs.get('pk') and request.user.is_staff:
             return self.create(request, *args, **kwargs)
-        return Response(status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, *args, **kwargs):
-        if kwargs.get('pk'):
+        if kwargs.get('pk') and request.user.is_staff:
             return self.update(request, *args, **kwargs)
-        return Response(status.HTTP_400_BAD_REQUEST)
+        return None
+    
+
+class ListCreateUpdateAPITopic(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
+    queryset = Topic.objects.all().order_by('pk')
+    serializer_class = TopicSerializer
+    lookup_field = 'pk'
+    # permission_classes = [IsStaffEditorPermission]
+
+    def get(self, request, *args, **kwargs):
+        if kwargs.get('pk') is not None:
+            return self.retrieve(request, *args, **kwargs)
+
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        if not kwargs.get('pk') and request.user.is_staff:
+            return self.create(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        if kwargs.get('pk') and request.user.is_staff:
+            return self.update(request, *args, **kwargs)
+        return None
+# class ListCreateAPISeek(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
+#     queryset = Seek.objects.all()
+#     serializer_class = SeekSerializer
+#     # lookup_field = 'pk'
+#     # permission_classes = [IsStaffEditorPermission]
+#     # permission_classes = []
+
+#     def get(self, request, *args, **kwargs):
+#         if kwargs.get('pk') is not None:
+#             return self.retrieve(request, *args, **kwargs)
+#         return self.list(request, *args, **kwargs)
+
+#     def post(self, request, *args, **kwargs):
+#         if not kwargs.get('pk'):
+#             return self.create(request, *args, **kwargs)
+#         return Response(status.HTTP_400_BAD_REQUEST)
+
+#     def put(self, request, *args, **kwargs):
+#         if kwargs.get('pk'):
+#             return self.update(request, *args, **kwargs)
+#         return Response(status.HTTP_400_BAD_REQUEST)
     
 
 class ListDashboardAPI(generics.ListAPIView):
@@ -162,11 +205,13 @@ class ListDashboardAPI(generics.ListAPIView):
         serialized_recent = []
         serialized_subjects = []
         serialized_recommend = []
+        
         try:
-            
-            user = request.user
+            user = request.user if request.user else None
             if user and not user.is_anonymous:
+                student = Student.objects.filter(phone_number=user.username).first()
                 user_interactions = user.interactions
+                
                 recent_queryset = user_interactions.all().select_related('video').order_by('-created')[:3]
                 serialized_recent = InteractionSerializer(recent_queryset, many=True).data
 
@@ -182,7 +227,14 @@ class ListDashboardAPI(generics.ListAPIView):
             print("Subjects Error: ", ex)
 
         try:
-            recommend_queryset = Video.objects.select_related('grade', 'subject').filter(tags__icontains='recommend')
+            recommend_queryset = []
+            if student and student.grade:
+                grade = Grade.objects.get(name=student.grade)
+                print('STUDENT: ', grade.pk)
+                recommend_queryset = Video.objects.select_related('subject').filter(tags__icontains='recommend', grade__pk=grade.pk)
+            else:
+                recommend_queryset = Video.objects.select_related('subject').filter(tags__icontains='recommend')
+                
             serialized_recommend= VideoSerializer(recommend_queryset, many=True).data
 
         except Exception as ex:
@@ -205,7 +257,7 @@ class ListDashboardAPI(generics.ListAPIView):
                 "data" : serialized_recommend
             },
         ]
-        print('RESPONSE: ', result)
+        # print('RESPONSE: ', result)
         return Response(result)
     
 

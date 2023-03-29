@@ -282,32 +282,33 @@ WSGI_APPLICATION = 'edufox.wsgi.application'
 #     }
 # }
 
-if os.environ.get('USE_LOCAL_POSTGRESQL'):
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'edufox_db2',
-            'USER': 'admin2',
-            'PASSWORD': '_admin@123A',
-            'HOST': 'localhost',
-            'PORT': 5432,
-        }
-    }
+# if os.environ.get('USE_LOCAL_POSTGRESQL'):
+#     DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.postgresql',
+#             'NAME': 'edufox_db2',
+#             'USER': 'admin2',
+#             'PASSWORD': '_admin@123A',
+#             'HOST': 'localhost',
+#             'PORT': 5432,
+#         }
+#     }
 
-    ALLOWED_HOSTS = ['10.0.2.2', 'localhost', '*']
-    CORS_ALLOWED_ORIGINS = [
-    'http://localhost:8000',
-    'http://192.168.0.100',
-    'http://192.168.0.100:8000',
-    'http://*:8000',
-    'http://10.0.2.2'
-    ]
+#     ALLOWED_HOSTS = ['10.0.2.2', 'localhost', '*']
+#     CORS_ALLOWED_ORIGINS = [
+#     'http://localhost:8000',
+#     'http://192.168.0.100',
+#     'http://192.168.0.100:8000',
+#     'http://*:8000',
+#     'http://10.0.2.2'
+#     ]
 
-else:
-    DATABASES = {"default": env.db()}
+# else:
+#     DATABASES = {"default": env.db()}
 # USE_CLOUD_SQL_AUTH_PROXY = env('USE_CLOUD_SQL_AUTH_PROXY')
 # print(os.environ.get('USE_CLOUD_SQL_AUTH_PROXY', USE_CLOUD_SQL_AUTH_PROXY))
 
+DATABASES = {"default": env.db()}
 # If the flag as been set, configure to use proxy
 if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
     DATABASES["default"]["HOST"] = "cloudsql-proxy" #CI.yml

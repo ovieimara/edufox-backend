@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Discount, Plan, Subscribe
+from .models import Discount, Plan, Subscribe, InAppPayment, Product
 from datetime import timedelta
 
 class DiscountSerializer(serializers.ModelSerializer):
@@ -26,13 +26,21 @@ class SubscribeSerializer(serializers.ModelSerializer):
         fields = ['user', 'plan', 'grade', 'expiry_date']
         # depth = 1
 
-    # def get_expiry_date(self, obj):
-    #     #created + plan.duration
-    #     return obj.created + timedelta(days=obj.plan.duration)
+class AppleIAPSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InAppPayment
+        fields = '__all__'
 
-    # def get_expiry(self, obj):
-    #     print(obj.plan.duration)
-    #     return obj.get_expiry_date()
+class ProductIdSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(write_only=True)
+    platform = serializers.CharField(write_only=True)
+    class Meta:
+        model = Product
+        fields = '__all__'
+        # extra_kwargs = {'name': {'write_only': True}, 
+        # 'platform': {'write_only': True}
+        # }
+
 
 
 
