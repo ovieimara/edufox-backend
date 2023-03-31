@@ -93,7 +93,7 @@ class Lesson(models.Model):
         return f"{self.num}. {self.title}"
     
 class Video(models.Model):
-    lesson = models.ForeignKey(Lesson, related_name='lessons', null=True, on_delete=models.SET_NULL)
+    lesson = models.ForeignKey(Lesson, related_name='lesson_videos', null=True, on_delete=models.SET_NULL)
     title = models.CharField(db_index=True, max_length=255, default='')
     description = models.TextField(null=True, blank=True, default='')
     duration = models.CharField(db_index = True, max_length=50, null=True, blank=True, default='')

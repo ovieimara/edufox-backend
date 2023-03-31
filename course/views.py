@@ -192,7 +192,7 @@ class ListCreateUpdateAPITopic(mixins.CreateModelMixin, mixins.ListModelMixin,  
 #         return Response(status.HTTP_400_BAD_REQUEST)
     
 
-class ListDashboardAPI(generics.ListAPIView):
+class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = Subject.objects.all().order_by('name')
     serializer_class = SubjectSerializer
     # filterset_fields = ['grade', 'subject', 'topic', 'lesson']
@@ -205,11 +205,38 @@ class ListDashboardAPI(generics.ListAPIView):
         serialized_recent = []
         serialized_subjects = []
         serialized_recommend = []
+        result = []
         
+        subject = kwargs.get('subject')
+        grade = kwargs.get('grade')
+        
+        user = request.user if request.user else None
         try:
-            user = request.user if request.user else None
             if user and not user.is_anonymous:
-                student = Student.objects.filter(phone_number=user.username).first()
+                student = Student.objects.get(phone_number=user.username)
+                
+                if student and not grade:
+                    grade = Grade.objects.get(name=student.grade)
+                    grade = grade.pk
+            
+            if subject and grade:
+                subject_instance = Subject.objects.get(pk=subject)
+                topics_queryset = subject_instance.subject_topics.all().filter(grade__pk=grade)
+                # print('subject: ', grade.pk)
+                serialized_topics= TopicSerializer(topics_queryset, many=True).data
+                result = [
+                    {
+                        "title": 'Topics',
+                        "data" : serialized_topics
+                    }
+                ]
+                return Response(result)
+        except Exception as ex:
+
+            print("Subject Error: ", ex)
+
+        try:
+            if user:
                 user_interactions = user.interactions
                 
                 recent_queryset = user_interactions.all().select_related('video').order_by('-created')[:3]
@@ -228,10 +255,10 @@ class ListDashboardAPI(generics.ListAPIView):
 
         try:
             recommend_queryset = []
-            if student and student.grade:
-                grade = Grade.objects.get(name=student.grade)
-                print('STUDENT: ', grade.pk)
-                recommend_queryset = Video.objects.select_related('subject').filter(tags__icontains='recommend', grade__pk=grade.pk)
+            if grade:
+                
+                # print('STUDENT: ', grade.pk)
+                recommend_queryset = Video.objects.select_related('subject').filter(tags__icontains='recommend', grade__pk=grade)
             else:
                 recommend_queryset = Video.objects.select_related('subject').filter(tags__icontains='recommend')
                 
@@ -261,3 +288,67 @@ class ListDashboardAPI(generics.ListAPIView):
         return Response(result)
     
 
+    # def post(self, request, *args, **kwargs):
+    #     if not kwargs.get('pk'):
+    #         return self.create(request, *args, **kwargs)
+    #     return Response(status.HTTP_400_BAD_REQUEST)
+
+    # def put(self, request, *args, **kwargs):
+    #     if kwargs.get('pk'):
+    #         return self.update(request, *args, **kwargs)
+    #     return Response(status.HTTP_400_BAD_REQUEST)
+    
+
+class ListDashboardLessonsAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
+    queryset = Lesson.objects.all().order_by('num')
+    serializer_class = LessonSerializer
+    # lookup_field = 'pk'
+
+    def get(self, request, *args, **kwargs):
+        student = None
+        result = []
+        
+        topic = kwargs.get('pk')
+        grade = kwargs.get('grade')
+        lesson = kwargs.get('lesson')
+        
+        
+        user = request.user if request.user else None
+        try:
+            if user and not user.is_anonymous:
+                student = Student.objects.get(phone_number=user.username)
+                
+                if student and not grade:
+                    grade = Grade.objects.get(name=student.grade)
+                    grade = grade.pk
+            
+            if topic and grade:
+                topic_obj = Topic.objects.get(pk=topic)
+                lessons_queryset = topic_obj.topic_lessons.all().filter(grade__pk=grade)
+                
+                serialized_lessons = self.get_serializer(lessons_queryset, many=True).data
+                result = [
+                    {
+                        "title": 'Lessons',
+                        "data" : serialized_lessons,
+                    }
+                ]
+
+            if lesson and grade:
+                lesson_obj = Lesson.objects.get(pk=lesson)
+                videos_queryset = lesson_obj.lesson_videos.all().filter(grade__pk=grade)
+                print('videos_queryset: ', videos_queryset)
+                serialized_videos = VideoSerializer(videos_queryset, many=True).data
+                result = [
+                    {
+                        "title": 'Videos',
+                        "data" : serialized_videos,
+                    }
+                ]
+
+                
+        except Exception as ex:
+
+            print("Lessons Error: ", ex)
+
+        return Response(result)
