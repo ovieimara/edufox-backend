@@ -11,7 +11,6 @@ class Grade(models.Model):
     def __str__(self) -> str:
         return f"{self.name}"
 
-# Create your models here.
 
 class View(models.Model):
     user = models.ForeignKey(User, related_name='user_view', on_delete=models.CASCADE)
@@ -62,7 +61,8 @@ class Topic(models.Model):
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
 
     def __str__(self) -> str:
-        return f"{self.chapter}. {self.title}"
+        return self.title
+        # return f"{self.chapter}. {self.title}"
 
 # class Chapter(models.Model):
 #     num = models.SmallIntegerField(null=True, blank=True, default=0)
@@ -81,27 +81,44 @@ class Topic(models.Model):
 #     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
 
 class Lesson(models.Model):
+    LEVEL_CHOICES = ()
     num = models.SmallIntegerField(null=True, blank=True, default=0)
-    title = models.CharField(max_length=255, null=True, blank=True, default='')
-    topic = models.ForeignKey(Topic, related_name='topic_lessons', null=True, on_delete=models.SET_NULL)
+    title = models.CharField(db_index=True, max_length=255, unique=True)
+    topic = models.ForeignKey(Topic, related_name='topic_lessons', on_delete=models.CASCADE)
+    topics = models.CharField(max_length=255, choices=LEVEL_CHOICES, null=True, default=[])
     subject = models.ForeignKey(Subject, related_name='subject_lessons', null=True, on_delete=models.SET_NULL)
     grade = models.ManyToManyField(Grade, related_name='grade_lessons')
     created = models.DateField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
+
+    # @property
+    # def topics(self):
+    #     return []
+        # view = self.context.get('view')
+        # subject = None
+        # if view:
+        #     subject = view.kwargs.get('subject')
+        #     print(view.kwargs)
+        # if subject:
+        #     topics = Topic.objects.filter(subject__pk=subject).values('title')
+        #     print(topics)
+        #     return [topic.get('title') for topic in topics]
 
     def __str__(self) -> str:
         return f"{self.num}. {self.title}"
     
 class Video(models.Model):
     lesson = models.ForeignKey(Lesson, related_name='lesson_videos', null=True, on_delete=models.SET_NULL)
-    title = models.CharField(db_index=True, max_length=255, default='')
+    lessons = models.CharField(max_length=255, choices=(), null=True, default=[])
+    title = models.CharField(db_index=True, max_length=255, unique=True)
     description = models.TextField(null=True, blank=True, default='')
     duration = models.CharField(db_index = True, max_length=50, null=True, blank=True, default='')
     resolution = models.ForeignKey(Resolution, related_name='resolutions', null=True, on_delete=models.SET_NULL)
     thumbnail =  models.URLField(null=True)
     # topic = models.CharField(db_index = True, max_length=255, null=True, blank=True, default='')
     topic = models.ForeignKey(Topic, related_name='topics', null=True, on_delete=models.SET_NULL)
-    # lesson = models.SmallIntegerField(db_index = True, null=True, blank=True, default=0)
+    topics = models.CharField(max_length=255, choices=(), null=True, default=[])
+
     url =  models.URLField(null=True, blank=True, default='')
     tags =  models.TextField(null=True, blank=True, default=dict)
     subject = models.ForeignKey(Subject, related_name='subject_videos', null=True, on_delete=models.SET_NULL)

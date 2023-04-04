@@ -29,6 +29,7 @@ urlpatterns = [
     # path('assessments/<pk>', UpdateAPIComment.as_view(), name='assessment-detail'),
     path('videos', ListCreateAPIVideo.as_view(), name='videos-list'),
     path('videos/<pk>', UpdateAPIVideo.as_view(), name='video-detail'),
+    path('videos/topics/<int:subject>', ListCreateAPIVideo.as_view(), name='videos-list'),
     path('resolutions', ListCreateAPIResolution.as_view(), name='resolutions-list'),
     path('resolutions/<pk>', ListCreateAPIResolution.as_view(), name='resolution-detail'),
     path('dashboard', ListDashboardAPI.as_view(), name='dashboard-list'),
@@ -36,7 +37,8 @@ urlpatterns = [
     path('dashboard/topics/<int:pk>/<int:grade>', ListDashboardLessonsAPI.as_view(), name='dashboard-topics-list'),
     path('dashboard/lessons/<int:lesson>/<int:grade>', ListDashboardLessonsAPI.as_view(), name='dashboard-lessons-list'),
     path('lessons', ListCreateUpdateAPILesson.as_view(), name='lessons-list'),
-    path('lessons/<pk>', ListCreateUpdateAPILesson.as_view(), name='lesson-detail'),
+    path('lessons/<pk>', ListCreateUpdateAPILesson.as_view(), name='lessons-detail'),
+    path('lessons/topics/<int:subject>', ListCreateUpdateAPILesson.as_view(), name='lesson-subject-detail'),
     path('topics', ListCreateUpdateAPITopic.as_view(), name='topics-list'),
     path('topics/<pk>', ListCreateUpdateAPITopic.as_view(), name='topic-detail'),
 

@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
                 ('in_app_ownership_type', models.CharField(default='', max_length=255, null=True)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
-                ('product', models.ForeignKey(default=1, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='products', to='subscribe.product')),
+                ('product', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='products', to='subscribe.product')),
             ],
         ),
         migrations.AddField(

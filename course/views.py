@@ -1,3 +1,4 @@
+import copy
 from django.shortcuts import render
 from rest_framework import generics, status, mixins
 from rest_framework.response import Response
@@ -128,7 +129,7 @@ class ListCreateAPIResolution(mixins.CreateModelMixin, mixins.ListModelMixin,  m
     
 
 class ListCreateUpdateAPILesson(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
-    queryset = Lesson.objects.all()
+    queryset = Lesson.objects.all().order_by('pk')
     serializer_class = LessonSerializer
     lookup_field = 'pk'
     # permission_classes = [IsStaffEditorPermission]
@@ -139,14 +140,28 @@ class ListCreateUpdateAPILesson(mixins.CreateModelMixin, mixins.ListModelMixin, 
 
         return self.list(request, *args, **kwargs)
 
+
     def post(self, request, *args, **kwargs):
         if not kwargs.get('pk') and request.user.is_staff:
+            
+        #     data = copy.deepcopy(request.data)
+        #     topic = Topic.objects.all().first()
+        #     # data['topic'] = "Use of Language"
+        #     # print(data)
+        #     serializer = self.get_serializer(data=data, partial=True)
+        #     serializer.is_valid(raise_exception=True)
+        #     self.perform_create(serializer)
+
+        #     return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
             return self.create(request, *args, **kwargs)
+        
+        return Response(status.HTTP_403_FORBIDDEN)
 
     def put(self, request, *args, **kwargs):
         if kwargs.get('pk') and request.user.is_staff:
             return self.update(request, *args, **kwargs)
-        return None
+        return Response(status.HTTP_403_FORBIDDEN)
     
 
 class ListCreateUpdateAPITopic(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
@@ -205,6 +220,7 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
         serialized_recent = []
         serialized_subjects = []
         serialized_recommend = []
+        topics_lessons = []
         result = []
         
         subject = kwargs.get('subject')
@@ -222,14 +238,29 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
             if subject and grade:
                 subject_instance = Subject.objects.get(pk=subject)
                 topics_queryset = subject_instance.subject_topics.all().filter(grade__pk=grade)
-                # print('subject: ', grade.pk)
-                serialized_topics= TopicSerializer(topics_queryset, many=True).data
-                result = [
-                    {
-                        "title": 'Topics',
-                        "data" : serialized_topics
-                    }
-                ]
+
+                for topic in topics_queryset.all():
+                        lessons_queryset = topic.topic_lessons.all().filter(grade__pk=grade)
+                        print(lessons_queryset)
+                        serialized_lessons = LessonSerializer(lessons_queryset, many=True).data
+                        serialized_topic = TopicSerializer(topic).data
+                        obj = {"title" : serialized_topic, "data" : serialized_lessons}
+                        topics_lessons.append(obj)
+
+                # result = {
+                #         "title": 'Topics and Lessons',
+                #         "data" : topics_lessons,
+                #     }
+                result = topics_lessons
+
+                # serialized_topics= TopicSerializer(topics_queryset, many=True).data
+                # result = [
+                #     {
+                #         "title": 'Topics and Lessons',
+                #         "data" : serialized_topics
+                #         "data" : [{'topic' : 'title', 'topic_id' : 'id' 'lessons': 'lessons'}]
+                #     }
+                # ]
                 return Response(result)
         except Exception as ex:
 
@@ -336,15 +367,15 @@ class ListDashboardLessonsAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  m
 
             if lesson and grade:
                 lesson_obj = Lesson.objects.get(pk=lesson)
-                videos_queryset = lesson_obj.lesson_videos.all().filter(grade__pk=grade)
-                print('videos_queryset: ', videos_queryset)
-                serialized_videos = VideoSerializer(videos_queryset, many=True).data
-                result = [
-                    {
-                        "title": 'Videos',
-                        "data" : serialized_videos,
-                    }
-                ]
+                videos_queryset = lesson_obj.lesson_videos.all().filter(grade__pk=grade).first()
+                # print('videos_queryset: ', videos_queryset)
+                serialized_videos = VideoSerializer(videos_queryset).data
+                # result = {
+                #         "title": 'Lesson',
+                #         "data" : serialized_videos,
+                #     }
+                result = serialized_videos
+                
 
                 
         except Exception as ex:
@@ -352,3 +383,4 @@ class ListDashboardLessonsAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  m
             print("Lessons Error: ", ex)
 
         return Response(result)
+    

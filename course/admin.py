@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django import forms
 from django.contrib.auth.models import User
-from .models import Grade, Subject, Lecturer, Rate, Video, Comment, Interaction
+from .models import Grade, Subject, Lecturer, Rate, Video, Comment, Interaction, Lesson
 # from assess.models import  Test, Assessment
 
 # Register your models here.
@@ -39,8 +39,12 @@ class CommentAdmin(admin.ModelAdmin):
 class InteractionAdmin(admin.ModelAdmin):
     list_display = ['user', 'type', 'video', 'duration', 'created', 'updated']
 
-# class TestAdmin(admin.ModelAdmin):
-#     list_display = ['code', 'subject', 'question', 'options', 'grade', 'difficulty_level']
+class LessonAdmin(admin.ModelAdmin):
+    list_display = ['num', 'title', 'topic', 'subject', 'get_grades']
+
+    def get_grades(self, obj):
+        return "\n".join([str(s) for s in obj.grade.all()])
+
 
 # class AssessmentAdmin(admin.ModelAdmin):
 #     list_display = ['user', 'get_tests', 'answer', 'status']
@@ -56,5 +60,5 @@ admin.site.register(Video, VideoAdmin)
 admin.site.register(Comment, CommentAdmin)
 # admin.site.register(InteractionType, InteractionTypeAdmin)
 admin.site.register(Interaction, InteractionAdmin)
-# admin.site.register(Test, TestAdmin)
+admin.site.register(Lesson, LessonAdmin)
 # admin.site.register(Assessment, AssessmentAdmin)

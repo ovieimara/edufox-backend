@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Discount, Plan, Subscribe, InAppPayment, Product
+from .models import Discount, Plan, Subscribe, InAppPayment, Product, AppleNotify
 from datetime import timedelta
 
 class DiscountSerializer(serializers.ModelSerializer):
@@ -23,17 +23,21 @@ class SubscribeSerializer(serializers.ModelSerializer):
     # expiry_date = serializers.Ser
     class Meta:
         model = Subscribe
-        fields = ['user', 'plan', 'grade', 'expiry_date']
+        fields = ['user', 'grade', 'product', 'payment_method', 'expiry_date']
         # depth = 1
 
-class AppleIAPSerializer(serializers.ModelSerializer):
+class InAppPaymentSerializer(serializers.ModelSerializer):
+    # PAYMENT_METHOD_CHOICES = [
+    #     (payment.id, payment.name) for payment in InAppPayment.objects.all()
+    # ]
+    # payment = serializers.ChoiceField(InAppPayment, '')
     class Meta:
         model = InAppPayment
         fields = '__all__'
 
-class ProductIdSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(write_only=True)
-    platform = serializers.CharField(write_only=True)
+class ProductSerializer(serializers.ModelSerializer):
+    # name = serializers.CharField(write_only=True)
+    # platform = serializers.CharField(write_only=True)
     class Meta:
         model = Product
         fields = '__all__'
@@ -41,6 +45,11 @@ class ProductIdSerializer(serializers.ModelSerializer):
         # 'platform': {'write_only': True}
         # }
 
+class AppleNotifySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = AppleNotify
+        fields = '__all__'
 
 
 

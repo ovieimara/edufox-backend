@@ -19,15 +19,21 @@ class Plan(models.Model):
     currency = models.CharField(max_length=15, null=True, default='=N=')
     description = models.TextField(null=True, default='')
     duration = models.SmallIntegerField(default=0)
-    discount = models.ForeignKey(Discount, related_name='discounts', null=True, default=1, on_delete=models.SET_NULL)
+    discount = models.ForeignKey(Discount, related_name='discount_plans', null=True, on_delete=models.SET_NULL)
 
     def __str__(self) -> str:
         return f"{self.name}-{self.amount}"
     
 class Product(models.Model):
-    name = models.CharField(max_length=255, null=True, default='')
-    product_id = models.CharField(max_length=255, null=True, default='')
-    platform = models.CharField(max_length=255, null=True, default='')
+    name = models.CharField(max_length=255, null=True,  blank=True, unique=True, default='')
+    product_id = models.CharField(max_length=255, null=True, unique=True, blank=True, default='')
+    amount = models.IntegerField(default=0)
+    currency = models.CharField(max_length=15, null=True,  blank=True,default='=N=')
+    duration = models.SmallIntegerField(null=True, blank=True, default=0)
+    discount = models.ForeignKey(Discount, related_name='discount_products', null=True, on_delete=models.SET_NULL)
+    platform = models.CharField(max_length=255, null=True, blank=True, default='')
+    description = models.TextField(null=True, blank=True, default='')
+
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -35,18 +41,16 @@ class Product(models.Model):
         return self.name
 
 class InAppPayment(models.Model):
-    name = models.CharField(max_length=255, null=True, default='')
-    environment = models.CharField(max_length=255, null=True, default='')
-    original_transaction_id = models.CharField(max_length=255, null=True, default='')
-    transaction_id = models.CharField(max_length=255, null=True, default='')
-    posix_date_time = models.CharField(max_length=255, null=True, default='')
-    expires_date = models.CharField(max_length=255, null=True, default='')
-    # product_id = models.CharField(max_length=255, null=True, default='')
-    product = models.ForeignKey(Product, related_name='products', null=True, default=1, on_delete=models.SET_NULL)
-    original_transaction_id2 = models.CharField(max_length=255, null=True, default='')
-    auto_renew_status = models.CharField(max_length=255, null=True, default='')
-    expiration_intent = models.CharField(max_length=255, null=True, default='')
-    in_app_ownership_type = models.CharField(max_length=255, null=True, default='')
+    name = models.CharField(max_length=255, null=True, blank=True, default='')
+    environment = models.CharField(max_length=255, null=True, blank=True,default='')
+    original_transaction_id = models.CharField(max_length=255, null=True, blank=True, default='')
+    transaction_id = models.CharField(max_length=255, null=True, blank=True,default='')
+    expires_date = models.CharField(max_length=255, null=True, blank=True, default='')
+    original_purchase_date = models.DateTimeField(null=True, blank=True, default=datetime.now)
+    product = models.ForeignKey(Product, related_name='products', null=True, blank=True, on_delete=models.SET_NULL)
+    auto_renew_status = models.CharField(max_length=255, null=True, blank=True, default='')
+    expiration_intent = models.CharField(max_length=255, null=True, blank=True, default='')
+    in_app_ownership_type = models.CharField(max_length=255, null=True, blank=True, default='')
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -54,18 +58,18 @@ class InAppPayment(models.Model):
         return self.name
     
 class Subscribe(models.Model):
-    user = models.ForeignKey(User, related_name='subscriptions_user', null=True, default=1,
-    on_delete=models.SET_NULL)
-    plan = models.ForeignKey(Plan, related_name='plans', null=True, default=1, on_delete=models.SET_NULL)
-    payment = models.ForeignKey(InAppPayment, related_name='gateways', null=True, on_delete=models.SET_NULL)
-    grade = models.ForeignKey(Grade, related_name='subscription_grade', null=True, default=1, on_delete=models.SET_NULL)
+    user = models.ForeignKey(User, related_name='subscriptions_user', null=True, on_delete=models.SET_NULL)
+    product = models.ForeignKey(Product, related_name='product_subscribers', null=True, on_delete=models.SET_NULL)
+    # plan = models.ForeignKey(Plan, related_query_name='plans', on_delete=models.SET_NULL, null=True, blank=True)
+    payment_method= models.ForeignKey(InAppPayment, related_name='payment_method_subscriptions', null=True, on_delete=models.SET_NULL)
+    grade = models.ForeignKey(Grade, related_name='subscription_grade', null=True, on_delete=models.SET_NULL)
     created = models.DateTimeField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
-    # expiry_date = models.DateTimeField(db_index=True, null=True, default=datetime.now)
 
     @property
     def expiry_date(self):
-        return self.created + timedelta(days=self.plan.duration)
+        # print(self.created , self.created + timedelta(days=self.product.duration))
+        return self.created + timedelta(days=self.product.duration)
 
     def is_valid(self, now):
         expiry_date = self.expiry_date
@@ -74,5 +78,22 @@ class Subscribe(models.Model):
             return True
 
         return False
+    
+class AppleNotify(models.Model):
+    name = models.CharField(max_length=255, null=True, blank=True, default='Apple In-App')
+    environment = models.CharField(max_length=255, null=True, blank=True,default='')
+    original_transaction_id = models.CharField(max_length=255, null=True, blank=True, default='')
+    transaction_id = models.CharField(max_length=255, null=True, blank=True,default='')
+    expires_date = models.CharField(max_length=255, null=True, blank=True, default='')
+    original_purchase_date = models.DateTimeField(null=True, blank=True, default=datetime.now)
+    product_id = models.CharField(max_length=255, null=True, blank=True, default='')
+    auto_renew_status = models.CharField(max_length=255, null=True, blank=True, default='')
+    expiration_intent = models.CharField(max_length=255, null=True, blank=True, default='')
+    in_app_ownership_type = models.CharField(max_length=255, null=True, blank=True, default='')
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    
+
 
 
