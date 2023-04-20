@@ -4,7 +4,7 @@ from django.test import Client, TestCase
 from rest_framework import status
 from django.urls import reverse
 from rest_framework.test import APIClient
-from .models import Grade, Subject, Lecturer, Video, Resolution
+from .models import Grade, Lesson, Subject, Lecturer, Topic, Video, Resolution
 import json
 
 User = get_user_model()
@@ -86,7 +86,26 @@ class SignupTestCase(TestCase):
                 'phone_number' : '+23407048536974',
         }
 
+        self.topic = Topic.objects.create(
+            chapter = 1,
+            title = "Elements",
+            subject = None,
+            # grade = None
+        )
+        self.topic.grade.set([self.grade.pk, self.grade1.pk])
 
+        self.lesson = Lesson.objects.create(
+            num= 1,
+            title = "Elements 1",
+            topic = self.topic,
+            subject = self.subject,
+            # grade = None
+            # grades = [
+            #     "Grade 1"
+            # ]
+        )
+
+        self.lesson.grade.set([self.grade.pk])
 
     def test_create_grade(self):
         Grade.objects.create(
@@ -117,6 +136,9 @@ class SignupTestCase(TestCase):
         lecturer = Lecturer.objects.get(first_name='ovie')
         self.assertEqual(lecturer.first_name, 'ovie')
         self.assertEqual(lecturer.last_name, 'imara')
+
+    # def test_create_lessons(self):
+
 
     # def test_seek(self):
     #     obj = {
@@ -157,17 +179,19 @@ class SignupTestCase(TestCase):
     def test_ListCreateAPIVideo(self):
         video = {
             "id": 1,
-            "title": "Tears of Steel",
+            "title": "Tears of Steel2",
             "description": "Tears of Steel",
             "duration": "2:00",
             "thumbnail": "https://picsum.photos/200/300",
-            "topic": None,
-            "lesson": None,
+            "topic": self.topic.pk,
+            "lesson": self.lesson.pk,
             "url": "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8",
             "tags": "recommend",
             "resolution": self.resolution.pk,
             "subject": self.subject.pk,
-            "grade": [ 3, 4]
+            "grade": [ 3, 4],
+            "lessons": self.lesson.title,
+            "topics": self.topic.title
         }
 
         response = self.client.post(reverse('api:login'), data={
@@ -187,7 +211,7 @@ class SignupTestCase(TestCase):
         self.assertGreater(len(list_response.json().get('results')), 0)
         self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
         self.assertGreater(len(detail_response.json()), 0)
-        self.assertEqual(detail_response.json().get('title'), 'Tears of Steel')
+        self.assertEqual(detail_response.json().get('title'), video.get('title'))
 
         url = f"{reverse('course:videos-list')}?subject={self.subject.pk}"
         response = self.client.get(url)

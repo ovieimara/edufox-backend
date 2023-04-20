@@ -14,14 +14,14 @@ class Migration(migrations.Migration):
             model_name='subscribe',
             name='created',
         ),
-        migrations.RemoveField(
-            model_name='subscribe',
-            name='grade',
-        ),
-        migrations.RemoveField(
-            model_name='subscribe',
-            name='payment_method',
-        ),
+        # migrations.RemoveField(
+        #     model_name='subscribe',
+        #     name='grade',
+        # ),
+        # migrations.RemoveField(
+        #     model_name='subscribe',
+        #     name='payment_method',
+        # ),
         migrations.RemoveField(
             model_name='subscribe',
             name='updated',

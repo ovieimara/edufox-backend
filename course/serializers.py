@@ -3,6 +3,8 @@ from rest_framework import serializers
 from .models import (Grade, Comment, Rate, Subject, Lecturer, Video, Interaction, Resolution, Topic, Lesson)
 # from assess.models import  Test, Assessment
 from subscribe.models import Subscribe
+from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
+
 
 class GradeSerializer(serializers.ModelSerializer):
 
@@ -39,17 +41,18 @@ class VideoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Video
         fields = '__all__'
+        # exclude = ['grade', 'subject', 'topic', 'lesson']
         extra_kwargs = {'topics': {'write_only': True},
                 'topic': {'read_only' : True},
                 'lesson': {'read_only' : True},
                 }
-        # validators = [
-        #     serializers.UniqueTogetherValidator(
-        #         queryset=Video.objects.all(),
-        #         fields=('lesson', 'topic'),
-        #         message='Combination of lesson and topic already exists.'
-        #     )
-        # ]
+        validators = [
+            serializers.UniqueTogetherValidator(
+                queryset=Video.objects.all(),
+                fields=('lesson', 'topic'),
+                message='Combination of lesson and topic already exists.'
+            )
+        ]
         # depth = 1
 
     
@@ -168,14 +171,24 @@ class ResolutionSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class TopicSerializer(serializers.ModelSerializer):
-    # level = serializers.ChoiceField(choices=['Chapter', 'Lesson'])
-    # subject = serializers.StringRelatedField()
-    # grade = serializers.SerializerMethodField()
+    title = serializers.CharField(max_length=255)
     class Meta:
         model = Topic
         exclude = ('created', 'updated')
-        # fields = "__all__"
-
+        # extra_kwargs = {
+        #         'title': {
+        #             'validators': [
+        #                 UniqueValidator(
+        #                     queryset=Topic.objects.all()
+        #                 )
+        #             ]
+        #         }
+        #     }
+    def validate_title(self, value):
+        if Topic.objects.filter(title=value).exists():
+            raise serializers.ValidationError('This field must be unique.')
+        return value
+    
     def get_grade(self, obj):
         # return GradeSerializer(obj.grade.all(), many=True).data
         return [grade.name for grade in obj.grade.all()]
@@ -192,6 +205,8 @@ class LessonSerializer(serializers.ModelSerializer):
     topics = serializers.ChoiceField(choices=[], write_only=True)
     topic = serializers.StringRelatedField()
     grades = serializers.SerializerMethodField()
+    title = serializers.CharField(max_length=255)
+    
     class Meta:
         model = Lesson
         fields = ['num', 'title', 'topic', 'subject', 'grade', 'grades', 'topics']
@@ -199,13 +214,10 @@ class LessonSerializer(serializers.ModelSerializer):
         extra_kwargs = {'topics': {'write_only': True},
                         'topic': {'read_only' : True}
                         }
-        # validators = [
-        #     serializers.UniqueTogetherValidator(
-        #         queryset=Lesson.objects.all(),
-        #         fields=['title', 'topic'],
-        #         message='Combination of title and topic already exists.'
-        #     )
-        # ]
+    def validate_title(self, value):
+        if Topic.objects.filter(title=value).exists():
+            raise serializers.ValidationError('This field must be unique.')
+        return value
 
     def __init__(self, *args, my_choices=None, **kwargs):
         if not my_choices:

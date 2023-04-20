@@ -14,10 +14,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='inapppayment',
-            name='product',
-        ),
+        # migrations.RemoveField(
+        #     model_name='inapppayment',
+        #     name='product',
+        # ),
         migrations.RemoveField(
             model_name='subscribe',
             name='product',
@@ -27,11 +27,11 @@ class Migration(migrations.Migration):
             name='discount',
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='discount_plans', to='subscribe.discount'),
         ),
-        migrations.AlterField(
-            model_name='subscribe',
-            name='grade',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='subscription_grade', to='course.grade'),
-        ),
+        # migrations.AlterField(
+        #     model_name='subscribe',
+        #     name='grade',
+        #     field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='subscription_grade', to='course.grade'),
+        # ),
         migrations.AlterField(
             model_name='subscribe',
             name='user',

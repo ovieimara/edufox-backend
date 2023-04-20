@@ -91,23 +91,21 @@ if FILE:
 # elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
     # Pull secrets from Secret Manager
 
-# project_id = os.env("GOOGLE_CLOUD_PROJECT")
-# print('project_id', project_id)
-project_id = "edufox-services"
+# PROJECT_ID = os.env("GOOGLE_CLOUD_PROJECT")
+# print('PROJECT_ID', PROJECT_ID)
+PROJECT_ID = "edufox-services"
 client = secretmanager.SecretManagerServiceClient()
 
-# service_account_name = f"projects/{project_id}/secrets/SERVICE_ACCOUNT/versions/latest"
-# service_account_payload = client.access_secret_version(name=service_account_name).payload.data.decode("UTF-8")
-# # print('SERVICE', service_account_payload)
-# os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./edufox-services-898b64103ea1.json"
+
 
 settings_name = os.environ.get("SETTINGS_NAME", "django_settings")
-
-name = f"projects/{project_id}/secrets/{settings_name}/versions/latest"
-
+name = f"projects/{PROJECT_ID}/secrets/{settings_name}/versions/latest"
 payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
-# print('GOOGLE_CLOUD_PROJECT', payload)
 env.read_env(io.StringIO(payload))
+
+# service_account_name = f"projects/{PROJECT_ID}/secrets/SERVICE_ACCOUNT/versions/latest"
+# service_account_payload = client.access_secret_version(name=service_account_name).payload.data.decode("UTF-8")
+# env.read_env(io.StringIO(service_account_payload))
 
 # env.read_env(os.environ.get('GOOGLE_APPLICATION_CREDENTIALS'))
 # else:
@@ -137,7 +135,7 @@ DOMAIN = ""
 # print('CLOUDRUN_SERVICE_URL: ', CLOUDRUN_SERVICE_URL)
 if CLOUDRUN_SERVICE_URL:
     service_url = urlparse(CLOUDRUN_SERVICE_URL).netloc
-    ALLOWED_HOSTS = [service_url, 'api-service-5wasy3cpxq-uc.a.run.app', 'localhost:3000', 'localhost', '127.0.0.1:3000', '127.0.0.1', '10.0.2.2']
+    ALLOWED_HOSTS = [service_url, 'api-service-5wasy3cpxq-uc.a.run.app', 'localhost:3000', 'localhost', '127.0.0.1:3000', '127.0.0.1', '10.0.2.2', 'http://localhost:3000']
     CSRF_TRUSTED_ORIGINS = [CLOUDRUN_SERVICE_URL, 
     'https://api-service-5wasy3cpxq-uc.a.run.app', 'http://localhost:3000', 'http://localhost', 'http://127.0.0.1:3000', 'http://127.0.0.1', 'http://10.0.2.2']
     # SECURE_SSL_REDIRECT = True
@@ -147,10 +145,20 @@ if CLOUDRUN_SERVICE_URL:
     # os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = None
 
 else:
-    ALLOWED_HOSTS = ["*"]
+    # ALLOWED_HOSTS = ["*"]
     PROTOCOL = "http"
     DOMAIN = "127.0.0.1:8000"
-    # os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
+    ALLOWED_HOSTS = ['10.0.2.2', 'localhost', '*', ".localhost", "127.0.0.1", ".local", "CTOs-MacBook-Pro.local"]
+    CORS_ALLOWED_ORIGINS = [
+    'http://localhost:8000',
+    'http://192.168.0.100',
+    'http://192.168.0.100:8000',
+    'http://*:8000',
+    'http://10.0.2.2',
+    "http://CTOs-MacBook-Pro.local",
+    ]
+    CORS_ORIGIN_ALLOW_ALL = False 
+    CORS_ALLOW_CREDENTIALS = True 
 
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -166,7 +174,7 @@ CORS_ALLOW_METHODS = [
 
 # print(ALLOWED_HOSTS)
 
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_ALL_ORIGINS = True
 # CSRF_TRUSTED_ORIGINS = [
 #     'https://edufox-api-service-5wasy3cpxq-uc.a.run.app',
 #     'https://api-service-5wasy3cpxq-uc.a.run.app',
@@ -181,18 +189,20 @@ CORS_ALLOW_ALL_ORIGINS = True
 #     'edufox-api-service-5wasy3cpxq-uc.a.run.app',
 # ]
 
-# CORS_ALLOWED_ORIGINS = [
-#     'https://api-service-5wasy3cpxq-uc.a.run.app',
-#     'http://localhost:8000',
-#     'https://edufox-api-service-5wasy3cpxq-uc.a.run.app',
-# ]
-# CORS_ORIGIN_WHITELIST = [
-#     'https://api-service-5wasy3cpxq-uc.a.run.app',
-#     'https://localhost:8000', 'https://127.0.0.1',
-#     'http://localhost:8000', 'http://127.0.0.1',
-#     'https://edufox-api-service-5wasy3cpxq-uc.a.run.app',
-#     'edufox-api-service-5wasy3cpxq-uc.a.run.app',
-# ]
+CORS_ALLOWED_ORIGINS = [
+    'https://api-service-5wasy3cpxq-uc.a.run.app',
+    'http://localhost:8000',
+    'https://edufox-api-service-5wasy3cpxq-uc.a.run.app',
+    'http://localhost:3000',
+]
+CORS_ORIGIN_WHITELIST = [
+    'https://api-service-5wasy3cpxq-uc.a.run.app',
+    'https://localhost:8000', 'https://127.0.0.1',
+    'http://localhost:8000', 'http://127.0.0.1',
+    'https://edufox-api-service-5wasy3cpxq-uc.a.run.app',
+    'edufox-api-service-5wasy3cpxq-uc.a.run.app',
+    'http://localhost:3000'
+]
 
 
 
@@ -282,34 +292,22 @@ WSGI_APPLICATION = 'edufox.wsgi.application'
 #     }
 # }
 
-# if os.environ.get('USE_LOCAL_POSTGRESQL'):
-#     DATABASES = {
-#         'default': {
-#             'ENGINE': 'django.db.backends.postgresql',
-#             'NAME': 'edufox_db2',
-#             'USER': 'admin2',
-#             'PASSWORD': '_admin@123A',
-#             'HOST': 'localhost',
-#             'PORT': 5432,
-#         }
-#     }
+if os.environ.get('USE_LOCAL_POSTGRESQL'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'edufox_db2',
+            'USER': 'admin2',
+            'PASSWORD': '_admin@123A',
+            'HOST': 'localhost',
+            'PORT': 5432,
+        }
+    }
 
-#     ALLOWED_HOSTS = ['10.0.2.2', 'localhost', '*']
-#     CORS_ALLOWED_ORIGINS = [
-#     'http://localhost:8000',
-#     'http://192.168.0.100',
-#     'http://192.168.0.100:8000',
-#     'http://*:8000',
-#     'http://10.0.2.2'
-#     ]
+else:
+    DATABASES = {"default": env.db()}
 
-# else:
-#     DATABASES = {"default": env.db()}
-# USE_CLOUD_SQL_AUTH_PROXY = env('USE_CLOUD_SQL_AUTH_PROXY')
-# print(os.environ.get('USE_CLOUD_SQL_AUTH_PROXY', USE_CLOUD_SQL_AUTH_PROXY))
-
-DATABASES = {"default": env.db()}
-# If the flag as been set, configure to use proxy
+# # If the flag as been set, configure to use proxy
 if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
     # DATABASES["default"]["HOST"] = "cloudsql-proxy" #CI.yml
     DATABASES["default"]["HOST"] = "127.0.0.1" #local
@@ -325,20 +323,20 @@ STATICFILES_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
 
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
+# AUTH_PASSWORD_VALIDATORS = [
+#     {
+#         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+#     },
+#     {
+#         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+#     },
+#     {
+#         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+#     },
+#     {
+#         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+#     },
+# ]
 
 REST_FRAMEWORK =  {
     "DEFAULT_AUTHENTICATION_CLASSES": [

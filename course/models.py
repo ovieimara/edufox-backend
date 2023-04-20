@@ -83,7 +83,7 @@ class Topic(models.Model):
 class Lesson(models.Model):
     LEVEL_CHOICES = ()
     num = models.SmallIntegerField(null=True, blank=True, default=0)
-    title = models.CharField(db_index=True, max_length=255, unique=True)
+    title = models.CharField(db_index=True, max_length=255)
     topic = models.ForeignKey(Topic, related_name='topic_lessons', on_delete=models.CASCADE)
     topics = models.CharField(max_length=255, choices=LEVEL_CHOICES, null=True, default=[])
     subject = models.ForeignKey(Subject, related_name='subject_lessons', null=True, on_delete=models.SET_NULL)
@@ -110,7 +110,7 @@ class Lesson(models.Model):
 class Video(models.Model):
     lesson = models.ForeignKey(Lesson, related_name='lesson_videos', null=True, on_delete=models.SET_NULL)
     lessons = models.CharField(max_length=255, choices=(), null=True, default=[])
-    title = models.CharField(db_index=True, max_length=255, unique=True)
+    title = models.CharField(db_index=True, max_length=255)
     description = models.TextField(null=True, blank=True, default='')
     duration = models.CharField(db_index = True, max_length=50, null=True, blank=True, default='')
     resolution = models.ForeignKey(Resolution, related_name='resolutions', null=True, on_delete=models.SET_NULL)

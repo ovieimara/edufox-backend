@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Discount, Plan, Subscribe, InAppPayment, Product, AppleNotify
+from .models import (Discount, Plan, Subscribe, InAppPayment, Product, 
+                     AppleNotify, AndroidNotify)
 from datetime import timedelta
 
 class DiscountSerializer(serializers.ModelSerializer):
@@ -49,6 +50,13 @@ class AppleNotifySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AppleNotify
+        fields = '__all__'
+
+
+class AndroidNotifySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = AndroidNotify
         fields = '__all__'
 
 

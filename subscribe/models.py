@@ -27,7 +27,7 @@ class Plan(models.Model):
 class Product(models.Model):
     name = models.CharField(max_length=255, null=True,  blank=True, unique=True, default='')
     product_id = models.CharField(max_length=255, null=True, unique=True, blank=True, default='')
-    amount = models.IntegerField(default=0)
+    amount = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
     currency = models.CharField(max_length=15, null=True,  blank=True,default='=N=')
     duration = models.SmallIntegerField(null=True, blank=True, default=0)
     discount = models.ForeignKey(Discount, related_name='discount_products', null=True, on_delete=models.SET_NULL)
@@ -45,7 +45,8 @@ class InAppPayment(models.Model):
     environment = models.CharField(max_length=255, null=True, blank=True,default='')
     original_transaction_id = models.CharField(max_length=255, null=True, blank=True, default='')
     transaction_id = models.CharField(max_length=255, null=True, blank=True,default='')
-    expires_date = models.CharField(max_length=255, null=True, blank=True, default='')
+    # expires_date = models.CharField(max_length=255, null=True, blank=True, default='')
+    expires_date = models.DateTimeField(null=True, blank=True, default=datetime.now)
     original_purchase_date = models.DateTimeField(null=True, blank=True, default=datetime.now)
     product = models.ForeignKey(Product, related_name='products', null=True, blank=True, on_delete=models.SET_NULL)
     auto_renew_status = models.CharField(max_length=255, null=True, blank=True, default='')
@@ -84,7 +85,7 @@ class AppleNotify(models.Model):
     environment = models.CharField(max_length=255, null=True, blank=True,default='')
     original_transaction_id = models.CharField(max_length=255, null=True, blank=True, default='')
     transaction_id = models.CharField(max_length=255, null=True, blank=True,default='')
-    expires_date = models.CharField(max_length=255, null=True, blank=True, default='')
+    expires_date = models.DateTimeField(db_index=True, null=True, default=datetime.now)
     original_purchase_date = models.DateTimeField(null=True, blank=True, default=datetime.now)
     product_id = models.CharField(max_length=255, null=True, blank=True, default='')
     auto_renew_status = models.CharField(max_length=255, null=True, blank=True, default='')
@@ -93,7 +94,21 @@ class AppleNotify(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
-    
-
-
-
+class AndroidNotify(models.Model):
+    name = models.CharField(max_length=255, null=True, blank=True, default='Android In-App')
+    transaction_id = models.CharField(max_length=255, null=True, blank=True, default='')
+    purchase_token = models.CharField(max_length=255, null=True, blank=True, default='')
+    expires_date = models.DateTimeField(db_index=True, null=True, default=datetime.now)
+    purchase_date = models.DateTimeField(null=True, blank=True, default=datetime.now)
+    start_time = models.DateTimeField(null=True, blank=True, default=datetime.now)
+    subscription_Id = models.CharField(max_length=255, null=True, blank=True, default='')
+    purchaseState = models.SmallIntegerField(default=1)
+    acknowledgementState = models.SmallIntegerField(default=0)
+    consumptionState = models.SmallIntegerField(default=0)
+    paymentState = models.SmallIntegerField(default=0)
+    country_code = models.CharField(max_length=255, null=True, blank=True, default='')
+    regionCode = models.CharField(max_length=255, null=True, blank=True, default='')
+    amount = models.DecimalField(max_digits=7, decimal_places=2, default=0.00)
+    currency = models.CharField(max_length=10, null=True, blank=True, default='')
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)

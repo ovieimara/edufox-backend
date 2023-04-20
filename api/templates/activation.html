@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+
+	<title>Email Verification</title>
+</head>
+<body>
+    {% load i18n %}
+    <main>{% block html_body %} 
+
+        <div class="container-fluid"><p>hello</p>
+        <p>{% trans "Please go to the following page to activate account:" %}</p>
+        
+        <p>{% blocktrans %}You're receiving this email because you need to finish activation process on {{ site_name }}.{% endblocktrans %}</p>
+        
+        <p>{% trans "Please go to the following page to activate account:" %}</p>
+        <!-- <p><a href="{{ protocol }}://{{ domain }}/{{ url|safe }}">{{ protocol }}://{{ domain }}/{{ url|safe }}</a></p> -->
+        <!-- <a class="btn btn-primary" href="{{ protocol }}://{{ domain }}/{{ url|safe }}" role="button">Verify</a> -->
+        
+        <form action={{ protocol }}://{{ domain }}/{{ url|safe }} method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-primary">Verify Email</button>
+         </form>
+
+        <p>{% trans "Thanks for using our site! ovide and gang" %}</p>
+        
+        <p>{% blocktrans %}The {{ site_name }} team{% endblocktrans %}</p>
+    </div>
+        {% endblock html_body %}</main>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+  </body>
+</html>
+
+
+<!-- {% block subject %}
+{% blocktrans %}Account activation on {{ site_name }}{% endblocktrans %}
+{% endblock subject %}
+
+{% block text_body %}
+{% blocktrans %}You're receiving this email because you need to finish activation process on {{ site_name }}.{% endblocktrans %}
+
+{% trans "Please go to the following page to activate account:" %}
+{{ protocol }}://{{ domain }}/{{ url|safe }}
+
+{% trans "Thanks for using our site!" %}
+
+{% blocktrans %}The {{ site_name }} team{% endblocktrans %}
+{% endblock text_body %} -->
+
+
+

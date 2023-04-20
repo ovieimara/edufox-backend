@@ -9,9 +9,9 @@ class Migration(migrations.Migration):
         ('course', '0010_lesson_title'),
     ]
 
-    operations = [
-        migrations.RemoveField(
-            model_name='video',
-            name='grade',
-        ),
-    ]
+    # operations = [
+    #     migrations.RemoveField(
+    #         model_name='video',
+    #         name='grade',
+    #     ),
+    # ]

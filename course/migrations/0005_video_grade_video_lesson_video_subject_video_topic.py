@@ -11,24 +11,24 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='video',
-            name='grade',
-            field=models.ManyToManyField(default=[], related_name='grade_videos', to='course.grade'),
-        ),
-        migrations.AddField(
-            model_name='video',
-            name='lesson',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='lessons', to='course.lesson'),
-        ),
-        migrations.AddField(
-            model_name='video',
-            name='subject',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='subject_videos', to='course.subject'),
-        ),
-        migrations.AddField(
-            model_name='video',
-            name='topic',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='topics', to='course.topic'),
-        ),
+        # migrations.AddField(
+        #     model_name='video',
+        #     name='grade',
+        #     field=models.ManyToManyField(default=[], related_name='grade_videos', to='course.grade'),
+        # ),
+        # migrations.AddField(
+        #     model_name='video',
+        #     name='lesson',
+        #     field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='lessons', to='course.lesson'),
+        # ),
+        # migrations.AddField(
+        #     model_name='video',
+        #     name='subject',
+        #     field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='subject_videos', to='course.subject'),
+        # ),
+        # migrations.AddField(
+        #     model_name='video',
+        #     name='topic',
+        #     field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='topics', to='course.topic'),
+        # ),
     ]

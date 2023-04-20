@@ -65,7 +65,7 @@ class SignupTestCase(TestCase):
         print(reverse('students-list'))
         response = self.client.post(reverse('students-list'), data=self.data, format='json')
         instance = response.json()
-        print('instance: ', instance)
+        # print('instance: ', instance)
         if instance and instance.get('phone_number') and not settings.FILE:
             otp = input("input otp: ")
             data = {
@@ -80,10 +80,10 @@ class SignupTestCase(TestCase):
             # url = f"/api/v1/students/{otp}/{instance.get('phone_number')}/{instance.get('user').get('email')}"
             # response = self.client.post(url)
             response = self.client.post(reverse('student:otp-activate'), data=data, format='json')
-            print('ACTIVATE RESPONSE', response.json())
+            # print('ACTIVATE RESPONSE', response.json())
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             user = response.json()
-            print('user', user)
+            # print('user', user)
             self.assertEqual(user.get('email'), 'imaraovie@gmail.com')
             self.assertEqual(user.get('username'), '+23407048536974')
             instance = User.objects.get(username=user.get('username'))
@@ -122,7 +122,7 @@ class SignupTestCase(TestCase):
             user = response.json()
             self.assertEqual(user.get('user').get('email'), 'imaraovie@gmail.com')
             self.assertEqual(user.get('user').get('username'), '+23407048536974')
-            self.assertEqual(user.get('grade'), 'Grade 1')
+            self.assertEqual(user.get('grade'), self.grade.pk)
 
             #test deletion of user
             self.client.credentials(HTTP_AUTHORIZATION=f"Token {token}")

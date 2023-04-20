@@ -11,17 +11,17 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='inapppayment',
-            name='original_transaction_id2',
-        ),
-        migrations.RemoveField(
-            model_name='inapppayment',
-            name='posix_date_time',
-        ),
-        migrations.AddField(
-            model_name='inapppayment',
-            name='original_purchase_date',
-            field=models.DateTimeField(blank=True, default=datetime.datetime.now, null=True),
-        ),
+        # migrations.RemoveField(
+        #     model_name='inapppayment',
+        #     name='original_transaction_id2',
+        # ),
+        # migrations.RemoveField(
+        #     model_name='inapppayment',
+        #     name='posix_date_time',
+        # ),
+        # migrations.AddField(
+        #     model_name='inapppayment',
+        #     name='original_purchase_date',
+        #     field=models.DateTimeField(blank=True, default=datetime.datetime.now, null=True),
+        # ),
     ]

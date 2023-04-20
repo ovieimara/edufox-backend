@@ -13,10 +13,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='inapppayment',
-            name='product',
-        ),
+        # migrations.RemoveField(
+        #     model_name='inapppayment',
+        #     name='product',
+        # ),
         migrations.RemoveField(
             model_name='subscribe',
             name='product',

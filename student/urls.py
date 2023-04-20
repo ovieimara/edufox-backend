@@ -1,7 +1,8 @@
 from django.urls import path, include
-from .views import (ActivateUser, StudentListCreateAPIView, 
-ActivatePhoneNumberAPIView, ListCreateAPICountry, RetrieveUpdateAPIViewStudent, verifyOTPCode)
 from djoser.views import UserViewSet
+from .views import (ActivateUser, StudentListCreateAPIView, 
+ActivatePhoneNumberAPIView, ListCreateAPICountry, RetrieveUpdateAPIViewStudent,
+verifyOTPCode)
 
 app_name = 'student'
 
@@ -15,8 +16,6 @@ urlpatterns = [
     path('update/<phone_number>', RetrieveUpdateAPIViewStudent.as_view(), name='student-detail'),
     path('country', ListCreateAPICountry.as_view(), name='country-list'),
     path('country/<int:pk>', ListCreateAPICountry.as_view(), name='country-detail'),
-
-
-    # path('students/activate', ActivateStudentAPIView.as_view(), name='student-activate'),
+    # path('privacy/privacy', PrivacyPolicy, name='privacy-list'),
     # path('students/<str:username>/', UserUpdateAPIView.as_view(), name='user-update'),
 ]

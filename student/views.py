@@ -34,7 +34,7 @@ class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.RetrieveModelM
     Signup a new student, with a POST request. user receives a verification otp via email and sms, after verification they are activated.
     After user verifies via OTP, the new student records are updated via patch
     """
-    queryset = Student.objects.all().order_by('phone_number')
+    queryset = Student.objects.all().order_by('pk')
     serializer_class = StudentSerializer
     ordering_fields = ['pk']
     permission_classes = [AllowAny]
@@ -46,7 +46,7 @@ class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.RetrieveModelM
             email = request.data.pop('email', None)
             password = request.data.pop('password', None)
             phone_number = request.data.get('phone_number')
-            # print('email: ', email)
+            # print('email: ', email, password, phone_number)
             response = {}
         except Exception as ex:
             print('request.data error', ex)
@@ -57,6 +57,7 @@ class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.RetrieveModelM
                     "email" : email,
                     "password" : password,
                 }
+            # print('DATA1: ', data)
         try:
             user = Student.objects.get(phone_number=phone_number)
         except Student.DoesNotExist as ex:
@@ -65,30 +66,37 @@ class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.RetrieveModelM
         if user:
             return Response({"message" : "User already exists"}, status.HTTP_409_CONFLICT)
         
+        # print('DATA1: ', data)
         if data:
-        
+            resp = {}
+            response = {}
             try:
-            
                 if django_settings.DOMAIN == "127.0.0.1:8000":
-                    response = client.post(reverse('api:user-list'), data=data)
+                    resp = client.post(reverse('api:user-list'), data=data)
+                    response = resp.json()
+                    if resp and resp.status_code == status.HTTP_400_BAD_REQUEST:
+                        return Response(response)
                 else:
-                    response = requests.post(getUrl('user-list', "api"), data=data)
-                    # response = Response(response.json())
-                #if django_settings.DOMAIN not in address :
-                # print(response.status_code)
-                if response and response.status_code == status.HTTP_201_CREATED:
+                    resp = requests.post(getUrl('user-list', "api"), data=data)
                     
-                    # print('settings: ',dir(django_settings))
+                if resp and resp.status_code == status.HTTP_400_BAD_REQUEST:
+                    return Response(resp.json())
+
+                #if django_settings.DOMAIN not in address :
+                # print('RESP: ', resp)
+                if resp and resp.status_code == status.HTTP_201_CREATED:
+                    response = resp.json()
+                    # print(response)
+
                     if not django_settings.FILE:
                         pass
                         # createOTP(phone_number)
                         #emailOTP(email)
                     return super().create(request, *args, **kwargs)
                 
-                return response
+                return Response(response)
             except Exception as exception:
                 print('exception: ', exception)
-
 
         return Response(status.HTTP_400_BAD_REQUEST)
     
@@ -223,6 +231,7 @@ def verifyOTPCode(request, *args, **kwargs):
                 return client.put(url)
 
             result = requests.put(url)
+            print(result.json())
             return Response(result.json())
         # return Response(response, status.HTTP_400_BAD_REQUEST)
     
@@ -399,3 +408,8 @@ def getUrl(url, app, data=None):
     protocol = django_settings.PROTOCOL
     name = f"{app}:{url}"
     return f"{protocol}://{host}{reverse(name, kwargs=data)}"
+
+# @api_view(['GET'])
+# @permission_classes([AllowAny])
+# def PrivacyPolicy(request, *args, **kwargs):
+#     return render(request, 'privacy.html')

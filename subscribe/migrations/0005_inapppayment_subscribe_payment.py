@@ -11,28 +11,28 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.CreateModel(
-            name='InAppPayment',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(default='', max_length=255, null=True)),
-                ('environment', models.CharField(default='', max_length=255, null=True)),
-                ('original_transaction_id', models.CharField(default='', max_length=255, null=True)),
-                ('transaction_id', models.CharField(default='', max_length=255, null=True)),
-                ('posix_date_time', models.CharField(default='', max_length=255, null=True)),
-                ('expires_date', models.CharField(default='', max_length=255, null=True)),
-                ('original_transaction_id2', models.CharField(default='', max_length=255, null=True)),
-                ('auto_renew_status', models.CharField(default='', max_length=255, null=True)),
-                ('expiration_intent', models.CharField(default='', max_length=255, null=True)),
-                ('in_app_ownership_type', models.CharField(default='', max_length=255, null=True)),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('updated', models.DateTimeField(auto_now=True)),
-                ('product', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='products', to='subscribe.product')),
-            ],
-        ),
-        migrations.AddField(
-            model_name='subscribe',
-            name='payment',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='gateways', to='subscribe.inapppayment'),
-        ),
+        # migrations.CreateModel(
+        #     name='InAppPayment',
+        #     fields=[
+        #         ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+        #         ('name', models.CharField(default='', max_length=255, null=True)),
+        #         ('environment', models.CharField(default='', max_length=255, null=True)),
+        #         ('original_transaction_id', models.CharField(default='', max_length=255, null=True)),
+        #         ('transaction_id', models.CharField(default='', max_length=255, null=True)),
+        #         ('posix_date_time', models.CharField(default='', max_length=255, null=True)),
+        #         ('expires_date', models.CharField(default='', max_length=255, null=True)),
+        #         ('original_transaction_id2', models.CharField(default='', max_length=255, null=True)),
+        #         ('auto_renew_status', models.CharField(default='', max_length=255, null=True)),
+        #         ('expiration_intent', models.CharField(default='', max_length=255, null=True)),
+        #         ('in_app_ownership_type', models.CharField(default='', max_length=255, null=True)),
+        #         ('created', models.DateTimeField(auto_now_add=True)),
+        #         ('updated', models.DateTimeField(auto_now=True)),
+        #         ('product', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='products', to='subscribe.product')),
+        #     ],
+        # ),
+        # migrations.AddField(
+        #     model_name='subscribe',
+        #     name='payment',
+        #     field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='gateways', to='subscribe.inapppayment'),
+        # ),
     ]

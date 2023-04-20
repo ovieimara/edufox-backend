@@ -12,9 +12,9 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='subscribe',
-            name='grade',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='subscription_grade', to='course.grade'),
-        ),
+        # migrations.AddField(
+        #     model_name='subscribe',
+        #     name='grade',
+        #     field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='subscription_grade', to='course.grade'),
+        # ),
     ]

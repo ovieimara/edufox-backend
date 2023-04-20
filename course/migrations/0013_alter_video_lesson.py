@@ -10,10 +10,10 @@ class Migration(migrations.Migration):
         ('course', '0012_video_grade'),
     ]
 
-    operations = [
-        migrations.AlterField(
-            model_name='video',
-            name='lesson',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='lesson_videos', to='course.lesson'),
-        ),
-    ]
+    # operations = [
+    #     migrations.AlterField(
+    #         model_name='video',
+    #         name='lesson',
+    #         field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='lesson_videos', to='course.lesson'),
+    #     ),
+    # ]

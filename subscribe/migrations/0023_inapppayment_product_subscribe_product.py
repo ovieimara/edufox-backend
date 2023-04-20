@@ -11,11 +11,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='inapppayment',
-            name='product',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='products', to='subscribe.product'),
-        ),
+        # migrations.AddField(
+        #     model_name='inapppayment',
+        #     name='product',
+        #     field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='products', to='subscribe.product'),
+        # ),
         migrations.AddField(
             model_name='subscribe',
             name='product',

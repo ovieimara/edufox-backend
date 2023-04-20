@@ -1,6 +1,7 @@
 from django.urls import path, include
 from .views import (ListCreateUpdateAPIDiscount, ListCreateUpdateAPISubscribe, 
-                    ListCreateUpdateAPIPlan, ListCreateUpdateAPIBillingProduct)
+                    ListCreateUpdateAPIPlan, ListCreateUpdateAPIBillingProduct, VerifyPurchase, 
+                    AppStoreNotificationHandler, PlayStoreNotificationHandler)
 from djoser.views import UserViewSet
 
 app_name = 'subscribe'
@@ -16,5 +17,9 @@ urlpatterns = [
     path('plans/<pk>', ListCreateUpdateAPIPlan.as_view(), name='plan-detail'),
     path('products', ListCreateUpdateAPIBillingProduct.as_view(), name='products-list'),
     path('products/<pk>', ListCreateUpdateAPIBillingProduct.as_view(), name='product-detail'),
+    path('verifyReceipt', VerifyPurchase, name='verifyReceipt-list'),
+    path('appstorenotify', AppStoreNotificationHandler, name='appstorenotify-list'),
+    path('playstorenotify', PlayStoreNotificationHandler, name='playstorenotify-list'),
+
 
 ]

@@ -9,10 +9,10 @@ class Migration(migrations.Migration):
         ('course', '0011_remove_video_grade'),
     ]
 
-    operations = [
-        migrations.AddField(
-            model_name='video',
-            name='grade',
-            field=models.ManyToManyField(default=[], related_name='grade_videos', to='course.grade'),
-        ),
-    ]
+    # operations = [
+    #     migrations.AddField(
+    #         model_name='video',
+    #         name='grade',
+    #         field=models.ManyToManyField(default=[], related_name='grade_videos', to='course.grade'),
+    #     ),
+    # ]

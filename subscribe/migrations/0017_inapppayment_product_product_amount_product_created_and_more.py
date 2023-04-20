@@ -13,22 +13,22 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='inapppayment',
-            name='product',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='products', to='subscribe.product'),
-        ),
+        # migrations.AddField(
+        #     model_name='inapppayment',
+        #     name='product',
+        #     field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='products', to='subscribe.product'),
+        # ),
         migrations.AddField(
             model_name='product',
             name='amount',
             field=models.IntegerField(default=0),
         ),
-        migrations.AddField(
-            model_name='product',
-            name='created',
-            field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now),
-            preserve_default=False,
-        ),
+        # migrations.AddField(
+        #     model_name='product',
+        #     name='created',
+        #     field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now),
+        #     preserve_default=False,
+        # ),
         migrations.AddField(
             model_name='product',
             name='currency',
@@ -59,21 +59,21 @@ class Migration(migrations.Migration):
         #     name='updated',
         #     field=models.DateTimeField(auto_now=True),
         # ),
-        migrations.AddField(
-            model_name='subscribe',
-            name='created',
-            field=models.DateTimeField(auto_now_add=True, db_index=True, null=True),
-        ),
-        migrations.AddField(
-            model_name='subscribe',
-            name='grade',
-            field=models.ForeignKey(default=1, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='subscription_grade', to='course.grade'),
-        ),
-        migrations.AddField(
-            model_name='subscribe',
-            name='payment_method',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='payment_method_subscriptions', to='subscribe.inapppayment'),
-        ),
+        # migrations.AddField(
+        #     model_name='subscribe',
+        #     name='created',
+        #     field=models.DateTimeField(auto_now_add=True, db_index=True, null=True),
+        # ),
+        # migrations.AddField(
+        #     model_name='subscribe',
+        #     name='grade',
+        #     field=models.ForeignKey(default=1, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='subscription_grade', to='course.grade'),
+        # ),
+        # migrations.AddField(
+        #     model_name='subscribe',
+        #     name='payment_method',
+        #     field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='payment_method_subscriptions', to='subscribe.inapppayment'),
+        # ),
         migrations.AddField(
             model_name='subscribe',
             name='product',
