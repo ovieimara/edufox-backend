@@ -32,10 +32,10 @@ arr = os.listdir('.')
 # os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 FILE = ''
 for i in range(len(arr)):
-    if 'gha-creds' in arr[i] or 'creds.json' == arr[i]: #cloudbuild.yml
-    # if 'gha-creds' in arr[i]: #ci.yml
+    # if 'gha-creds' in arr[i] or 'creds.json' == arr[i]: #cloudbuild.yml
+    if 'gha-creds' in arr[i]: #ci.yml
         FILE = arr[i]
-# print('FILE::', file)
+print('FILE::', FILE)
 if FILE:
     env_file = os.path.join(BASE_DIR, FILE)
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = env_file
@@ -307,8 +307,8 @@ else:
 
 # # If the flag as been set, configure to use proxy
 if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
-    # DATABASES["default"]["HOST"] = "cloudsql-proxy" #CI.yml
-    DATABASES["default"]["HOST"] = "127.0.0.1" #local
+    DATABASES["default"]["HOST"] = "cloudsql-proxy" #CI.yml
+    # DATABASES["default"]["HOST"] = "127.0.0.1" #local
     DATABASES["default"]["PORT"] = 5432
 
 # Define static storage via django-storages[google]
