@@ -39,7 +39,7 @@ print('FILE::', FILE)
 if FILE:
     env_file = os.path.join(BASE_DIR, FILE)
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = env_file
-    os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = True
+    os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'True'
 
 
 # env = environ.Env(
@@ -140,7 +140,7 @@ if CLOUDRUN_SERVICE_URL:
     # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     PROTOCOL = "https"
     DOMAIN = service_url
-    os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = False
+    os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = ''
 
 else:
     # ALLOWED_HOSTS = ["*"]
