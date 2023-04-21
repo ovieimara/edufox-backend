@@ -32,8 +32,8 @@ arr = os.listdir('.')
 # os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
 FILE = ''
 for i in range(len(arr)):
-    # if 'gha-creds' in arr[i] or 'creds.json' == arr[i]: #cloudbuild.yml
-    if 'gha-creds' in arr[i]: #ci.yml
+    if 'gha-creds' in arr[i] or 'creds.json' == arr[i]: #cloudbuild.yml
+    # if 'gha-creds' in arr[i]: #ci.yml
         FILE = arr[i]
 # print('FILE::', file)
 if FILE:
