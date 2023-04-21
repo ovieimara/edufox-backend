@@ -177,20 +177,6 @@ class SignupTestCase(TestCase):
         
 
     def test_ListCreateAPIVideo(self):
-        topic = Topic.objects.create(
-            chapter = 1,
-            title = "Elements",
-            subject = None,
-            # grade = None
-        )
-        topic.grade.set([self.grade.pk, self.grade1.pk])
-
-        lesson = Lesson.objects.create(
-            num= 1,
-            title = "Elements 1",
-            topic = self.topic,
-            subject = self.subject,
-        )
         video = {
             "id": 1,
             "title": "Tears of Steel2",
