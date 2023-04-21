@@ -46,13 +46,13 @@ class VideoSerializer(serializers.ModelSerializer):
                 'topic': {'read_only' : True},
                 'lesson': {'read_only' : True},
                 }
-        validators = [
-            serializers.UniqueTogetherValidator(
-                queryset=Video.objects.all(),
-                fields=('lesson', 'topic'),
-                message='Combination of lesson and topic already exists.'
-            )
-        ]
+        # validators = [
+        #     serializers.UniqueTogetherValidator(
+        #         queryset=Video.objects.all(),
+        #         fields=('lesson', 'topic'),
+        #         message='Combination of lesson and topic already exists.'
+        #     )
+        # ]
         # depth = 1
 
     
@@ -125,8 +125,12 @@ class VideoSerializer(serializers.ModelSerializer):
         title = attrs.get('topics')
         value = attrs.get('lessons')
 
-        topic = Topic.objects.get(title=title)
-        lesson = Lesson.objects.get(title=value)
+        topic = Topic.objects.filter(title=title)
+        if topic:
+            topic = topic.first()
+        lesson = Lesson.objects.filter(title=value)
+        if lesson:
+            lesson = lesson.first()
 
         attrs['topic'] = topic
         attrs['lesson'] = lesson

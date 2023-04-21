@@ -177,19 +177,33 @@ class SignupTestCase(TestCase):
         
 
     def test_ListCreateAPIVideo(self):
+        topic = Topic.objects.create(
+            chapter = 1,
+            title = "Elements",
+            subject = None,
+            # grade = None
+        )
+        topic.grade.set([self.grade.pk, self.grade1.pk])
+
+        lesson = Lesson.objects.create(
+            num= 1,
+            title = "Elements 1",
+            topic = self.topic,
+            subject = self.subject,
+        )
         video = {
             "id": 1,
             "title": "Tears of Steel2",
             "description": "Tears of Steel",
             "duration": "2:00",
             "thumbnail": "https://picsum.photos/200/300",
-            "topic": self.topic.pk,
-            "lesson": self.lesson.pk,
+            # "topic": self.topic.id,
+            # "lesson": self.lesson.id,
             "url": "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8",
             "tags": "recommend",
             "resolution": self.resolution.pk,
             "subject": self.subject.pk,
-            "grade": [ 3, 4],
+            "grade": [3, 4],
             "lessons": self.lesson.title,
             "topics": self.topic.title
         }
