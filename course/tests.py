@@ -189,7 +189,7 @@ class SignupTestCase(TestCase):
             "tags": "recommend",
             "resolution": self.resolution.pk,
             "subject": self.subject.pk,
-            "grade": [3, 4],
+            "grade": [self.grade.pk, self.grade1.pk],
             "lessons": self.lesson.title,
             "topics": self.topic.title
         }
