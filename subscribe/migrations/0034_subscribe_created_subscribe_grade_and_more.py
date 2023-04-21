@@ -13,16 +13,16 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # migrations.AddField(
-        #     model_name='subscribe',
-        #     name='created',
-        #     field=models.DateTimeField(auto_now_add=True, db_index=True, null=True),
-        # ),
-        # migrations.AddField(
-        #     model_name='subscribe',
-        #     name='grade',
-        #     field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='subscription_grade', to='course.grade'),
-        # ),
+        migrations.AddField(
+            model_name='subscribe',
+            name='created',
+            field=models.DateTimeField(auto_now_add=True, db_index=True, null=True),
+        ),
+        migrations.AddField(
+            model_name='subscribe',
+            name='grade',
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='subscription_grade', to='course.grade'),
+        ),
         # migrations.AlterField(
         #     model_name='applenotify',
         #     name='expires_date',
@@ -33,27 +33,27 @@ class Migration(migrations.Migration):
             name='amount',
             field=models.CharField(default='', max_length=100, null=True),
         ),
-        # migrations.CreateModel(
-        #     name='InAppPayment',
-        #     fields=[
-        #         ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-        #         ('name', models.CharField(blank=True, default='', max_length=255, null=True)),
-        #         ('environment', models.CharField(blank=True, default='', max_length=255, null=True)),
-        #         ('original_transaction_id', models.CharField(blank=True, default='', max_length=255, null=True)),
-        #         ('transaction_id', models.CharField(blank=True, default='', max_length=255, null=True)),
-        #         ('expires_date', models.DateTimeField(blank=True, default=datetime.datetime.now, null=True)),
-        #         ('original_purchase_date', models.DateTimeField(blank=True, default=datetime.datetime.now, null=True)),
-        #         ('auto_renew_status', models.CharField(blank=True, default='', max_length=255, null=True)),
-        #         ('expiration_intent', models.CharField(blank=True, default='', max_length=255, null=True)),
-        #         ('in_app_ownership_type', models.CharField(blank=True, default='', max_length=255, null=True)),
-        #         ('created', models.DateTimeField(auto_now_add=True)),
-        #         ('updated', models.DateTimeField(auto_now=True)),
-        #         ('product', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='products', to='subscribe.product')),
-        #     ],
-        # ),
-        # migrations.AddField(
-        #     model_name='subscribe',
-        #     name='payment_method',
-        #     field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='payment_method_subscriptions', to='subscribe.inapppayment'),
-        # ),
+        migrations.CreateModel(
+            name='InAppPayment',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(blank=True, default='', max_length=255, null=True)),
+                ('environment', models.CharField(blank=True, default='', max_length=255, null=True)),
+                ('original_transaction_id', models.CharField(blank=True, default='', max_length=255, null=True)),
+                ('transaction_id', models.CharField(blank=True, default='', max_length=255, null=True)),
+                ('expires_date', models.DateTimeField(blank=True, default=datetime.datetime.now, null=True)),
+                ('original_purchase_date', models.DateTimeField(blank=True, default=datetime.datetime.now, null=True)),
+                ('auto_renew_status', models.CharField(blank=True, default='', max_length=255, null=True)),
+                ('expiration_intent', models.CharField(blank=True, default='', max_length=255, null=True)),
+                ('in_app_ownership_type', models.CharField(blank=True, default='', max_length=255, null=True)),
+                ('created', models.DateTimeField(auto_now_add=True)),
+                ('updated', models.DateTimeField(auto_now=True)),
+                ('product', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='products', to='subscribe.product')),
+            ],
+        ),
+        migrations.AddField(
+            model_name='subscribe',
+            name='payment_method',
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='payment_method_subscriptions', to='subscribe.inapppayment'),
+        ),
     ]

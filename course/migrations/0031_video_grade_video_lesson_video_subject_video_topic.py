@@ -10,25 +10,25 @@ class Migration(migrations.Migration):
         ('course', '0030_video_grade_video_lesson_video_subject_video_topic'),
     ]
 
-    # operations = [
-    #     migrations.AddField(
-    #         model_name='video',
-    #         name='grade',
-    #         field=models.ManyToManyField(default=[], related_name='grade_videos', to='course.grade'),
-    #     ),
-    #     migrations.AddField(
-    #         model_name='video',
-    #         name='lesson',
-    #         field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='lesson_videos', to='course.lesson'),
-    #     ),
-    #     migrations.AddField(
-    #         model_name='video',
-    #         name='subject',
-    #         field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='subject_videos', to='course.subject'),
-    #     ),
-    #     migrations.AddField(
-    #         model_name='video',
-    #         name='topic',
-    #         field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='topics', to='course.topic'),
-    #     ),
-    # ]
+    operations = [
+        migrations.AddField(
+            model_name='video',
+            name='grade',
+            field=models.ManyToManyField(default=[], related_name='grade_videos', to='course.grade'),
+        ),
+        migrations.AddField(
+            model_name='video',
+            name='lesson',
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='lesson_videos', to='course.lesson'),
+        ),
+        migrations.AddField(
+            model_name='video',
+            name='subject',
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='subject_videos', to='course.subject'),
+        ),
+        migrations.AddField(
+            model_name='video',
+            name='topic',
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='topics', to='course.topic'),
+        ),
+    ]
