@@ -14,12 +14,17 @@ class Discount(models.Model):
         return self.name
 
 class Plan(models.Model):
+    plan_id = models.CharField(max_length=100, null=True, default='')
     name = models.CharField(max_length=100, null=True, default='')
-    amount = models.IntegerField()
+    interval = models.CharField(max_length=100, null=True, default='')
+    amount = models.CharField(max_length=100, null=True, default='')
     currency = models.CharField(max_length=15, null=True, default='=N=')
     description = models.TextField(null=True, default='')
     duration = models.SmallIntegerField(default=0)
     discount = models.ForeignKey(Discount, related_name='discount_plans', null=True, on_delete=models.SET_NULL)
+    status = models.BooleanField(default=1)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
         return f"{self.name}-{self.amount}"

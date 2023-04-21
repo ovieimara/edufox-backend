@@ -96,8 +96,6 @@ if FILE:
 PROJECT_ID = "edufox-services"
 client = secretmanager.SecretManagerServiceClient()
 
-
-
 settings_name = os.environ.get("SETTINGS_NAME", "django_settings")
 name = f"projects/{PROJECT_ID}/secrets/{settings_name}/versions/latest"
 payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
@@ -309,8 +307,8 @@ else:
 
 # # If the flag as been set, configure to use proxy
 if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
-    # DATABASES["default"]["HOST"] = "cloudsql-proxy" #CI.yml
-    DATABASES["default"]["HOST"] = "127.0.0.1" #local
+    DATABASES["default"]["HOST"] = "cloudsql-proxy" #CI.yml
+    # DATABASES["default"]["HOST"] = "127.0.0.1" #local
     DATABASES["default"]["PORT"] = 5432
 
 # Define static storage via django-storages[google]

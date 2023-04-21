@@ -10,7 +10,7 @@ class DiscountSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class PlanSerializer(serializers.ModelSerializer):
-    amount = serializers.SerializerMethodField()
+    # amount = serializers.SerializerMethodField()
     class Meta:
         model = Plan
         fields = '__all__'
@@ -18,6 +18,10 @@ class PlanSerializer(serializers.ModelSerializer):
 
     def get_amount(self, obj):
         return f"{obj.amount:,.2f}"
+    
+    def validate_amount(self, value):
+        value = value.replace(",", "")
+        return f"{float(value):,.2f}"
 
 class SubscribeSerializer(serializers.ModelSerializer):
     # expiry_date = serializers.SerializerMethodField()
@@ -35,6 +39,11 @@ class InAppPaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = InAppPayment
         fields = '__all__'
+
+    def validate_amount(self, value):
+        if InAppPayment.objects.filter(amount=value).exists():
+            raise serializers.ValidationError('This field must be unique.')
+        return value
 
 class ProductSerializer(serializers.ModelSerializer):
     # name = serializers.CharField(write_only=True)
