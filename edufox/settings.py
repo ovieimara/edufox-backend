@@ -21,7 +21,7 @@ from urllib.parse import urlparse
 from google.oauth2 import service_account
 
 
-env = environ.Env(DEBUG=(bool, True))
+env = environ.Env(DEBUG=(bool, True), USE_CLOUD_BUILD=(bool, True))
 # environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -132,6 +132,7 @@ PROTOCOL = ""
 DOMAIN = ""
 # print('CLOUDRUN_SERVICE_URL: ', CLOUDRUN_SERVICE_URL)
 if CLOUDRUN_SERVICE_URL:
+    print('CLOUDRUN_SERVICE_URL: ', CLOUDRUN_SERVICE_URL)
     service_url = urlparse(CLOUDRUN_SERVICE_URL).netloc
     ALLOWED_HOSTS = [service_url, 'api-service-5wasy3cpxq-uc.a.run.app', 'localhost:3000', 'localhost', '127.0.0.1:3000', '127.0.0.1', '10.0.2.2', 'http://localhost:3000']
     CSRF_TRUSTED_ORIGINS = [CLOUDRUN_SERVICE_URL, 
@@ -289,7 +290,7 @@ WSGI_APPLICATION = 'edufox.wsgi.application'
 #         # 'PORT': env('DB_PORT'),
 #     }
 # }
-
+# DATABASES = {"default": env.db()}
 if os.environ.get('USE_LOCAL_POSTGRESQL'):
     # print('USE_LOCAL_POSTGRESQL: ', os.environ.get('USE_LOCAL_POSTGRESQL'))
     DATABASES = {
@@ -313,10 +314,9 @@ else:
         }
     }
 
-if CLOUDRUN_SERVICE_URL:
-    print('CLOUDRUN_SERVICE_URL: ', CLOUDRUN_SERVICE_URL)
+if CLOUDRUN_SERVICE_URL or env('USE_CLOUD_BUILD') :
+    # print('CLOUDRUN_SERVICE_URL: ', CLOUDRUN_SERVICE_URL)
     DATABASES = {"default": env.db()}
-
 
 # # If the flag as been set, configure to use proxy
 if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
@@ -324,7 +324,9 @@ if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
     # DATABASES["default"]["HOST"] = "127.0.0.1" #local
     DATABASES["default"]["PORT"] = 5432
 
-print(DATABASES["default"])
+print('DATABASES3 : ', DATABASES["default"])
+print('USE_LOCAL_POSTGRESQL : ', os.environ.get('DB_PASSWORD'))
+
 # Define static storage via django-storages[google]
 GS_BUCKET_NAME = env("GS_BUCKET_NAME")
 STATIC_URL = "/static/"
