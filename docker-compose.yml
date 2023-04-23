@@ -5,7 +5,7 @@ services:
       container_name: cloudsql-proxy
       image: postgres
       environment:
-        POSTGRES_DB: edufox_db
+        POSTGRES_DB: edufox_db3
         POSTGRES_USER: admin
         POSTGRES_PASSWORD: _edufox@123A
       ports:
