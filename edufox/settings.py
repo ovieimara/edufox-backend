@@ -303,8 +303,7 @@ if os.environ.get('USE_LOCAL_POSTGRESQL'):
     }
 
 else:
-    # DATABASES = {"default": env.db()}
-     DATABASES = {
+    DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': 'edufox_testdb',
@@ -312,6 +311,10 @@ else:
             'PASSWORD': '_edufox@123A',
         }
     }
+
+if CLOUDRUN_SERVICE_URL:
+    DATABASES = {"default": env.db()}
+
 
 # # If the flag as been set, configure to use proxy
 if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
