@@ -306,9 +306,9 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'edufox_testdb',
-            'USER': 'admin',
-            'PASSWORD': '_edufox@123A',
+            'NAME':  env('DB_NAME'),
+            'USER': env('DB_NAME'),
+            'PASSWORD': env('DB_PASSWORD'),
         }
     }
 
