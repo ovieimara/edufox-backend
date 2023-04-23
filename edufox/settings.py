@@ -291,6 +291,7 @@ WSGI_APPLICATION = 'edufox.wsgi.application'
 # }
 
 if os.environ.get('USE_LOCAL_POSTGRESQL'):
+    # print('USE_LOCAL_POSTGRESQL: ', os.environ.get('USE_LOCAL_POSTGRESQL'))
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -313,6 +314,7 @@ else:
     }
 
 if CLOUDRUN_SERVICE_URL:
+    print('CLOUDRUN_SERVICE_URL: ', CLOUDRUN_SERVICE_URL)
     DATABASES = {"default": env.db()}
 
 
@@ -322,9 +324,7 @@ if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
     # DATABASES["default"]["HOST"] = "127.0.0.1" #local
     DATABASES["default"]["PORT"] = 5432
 
-if os.environ.get('USE_LOCAL_POSTGRESQL'):
-     DATABASES["default"]["HOST"] = "127.0.0.1" #local
-
+print(DATABASES["default"])
 # Define static storage via django-storages[google]
 GS_BUCKET_NAME = env("GS_BUCKET_NAME")
 STATIC_URL = "/static/"

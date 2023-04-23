@@ -1,25 +1,25 @@
 version: '3'
 
 services:
-    cloudsqlproxy:
-      container_name: cloudsql-proxy
-      image: postgres
-      environment:
-        POSTGRES_DB: ${DB_NAME}
-        POSTGRES_USER: ${DB_USER}
-        POSTGRES_PASSWORD: ${DB_PASSWORD}
-      ports:
-        - 127.0.0.1:5432:5432
-
     # cloudsqlproxy:
-    #     container_name: cloudsql-proxy
-    #     image: gcr.io/cloudsql-docker/gce-proxy
-    #     volumes:
-    #     - ./creds.json:/creds.json
-    #     ports:
+    #   container_name: cloudsql-proxy
+    #   image: postgres
+    #   environment:
+    #     POSTGRES_DB: ${DB_NAME}
+    #     POSTGRES_USER: ${DB_USER}
+    #     POSTGRES_PASSWORD: ${DB_PASSWORD}
+    #   ports:
     #     - 127.0.0.1:5432:5432
-    #     command: /cloud_sql_proxy -instances="edufox-services:us-central1:edufox-db-instance"=tcp:0.0.0.0:5432 -credential_file=/creds.json
-    #     # restart: always
+
+    cloudsqlproxy:
+        container_name: cloudsql-proxy
+        image: gcr.io/cloudsql-docker/gce-proxy
+        volumes:
+        - ./creds.json:/creds.json
+        ports:
+        - 127.0.0.1:5432:5432
+        command: /cloud_sql_proxy -instances="edufox-services:us-central1:edufox-db-instance"=tcp:0.0.0.0:5432 -credential_file=/creds.json
+        # restart: always
 
     app:
       build: .
