@@ -314,7 +314,7 @@ else:
         }
     }
 
-if CLOUDRUN_SERVICE_URL or env('USE_CLOUD_BUILD') :
+if CLOUDRUN_SERVICE_URL or env('USE_CLOUD_BUILD') and not os.environ.get('USE_LOCAL_POSTGRESQL'):
     # print('CLOUDRUN_SERVICE_URL: ', CLOUDRUN_SERVICE_URL)
     DATABASES = {"default": env.db()}
 
@@ -446,7 +446,7 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
-# STATIC_URL = 'static/'
+# STATIC_URL = 'static'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
