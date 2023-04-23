@@ -322,6 +322,9 @@ if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
     # DATABASES["default"]["HOST"] = "127.0.0.1" #local
     DATABASES["default"]["PORT"] = 5432
 
+if os.environ.get('USE_LOCAL_POSTGRESQL'):
+     DATABASES["default"]["HOST"] = "127.0.0.1" #local
+
 # Define static storage via django-storages[google]
 GS_BUCKET_NAME = env("GS_BUCKET_NAME")
 STATIC_URL = "/static/"
