@@ -1,12 +1,12 @@
 version: '3'
 
 services:
-    db:
+    cloudsql-proxy:
       image: postgres
       environment:
         POSTGRES_DB: 'edufox_db'
         POSTGRES_USER: 'admin'
-        POSTGRES_PASSWORD: 'edufox@123A'
+        POSTGRES_PASSWORD: '_edufox@123A'
       ports:
         - 127.0.0.1:5432:5432
 
@@ -33,8 +33,8 @@ services:
     #       - ./.env
 
       depends_on:
-          # - cloudsqlproxy
-          - db
+          - cloudsqlproxy
+      
 
 # services:
 #   app:
