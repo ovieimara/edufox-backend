@@ -294,9 +294,9 @@ if os.environ.get('USE_LOCAL_POSTGRESQL'):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'edufox_db2',
-            'USER': 'admin2',
-            'PASSWORD': '_admin@123A',
+            'NAME':  env("DB_NAME2"),
+            'USER': env('DB_USER2'),
+            'PASSWORD': env('DB_PASSWORD2'),
             'HOST': 'localhost',
             'PORT': 5432,
         }
