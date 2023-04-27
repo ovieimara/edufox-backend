@@ -4,7 +4,7 @@ from .models import Subscribe, AndroidNotify, InAppPayment
 # Register your models here.
 
 class SubscribeAdmin(admin.ModelAdmin):
-    list_display = ['user', 'product', 'payment_method']
+    list_display = ['user', 'product', 'payment_method', 'created']
 
 
 class AndroidNotifyAdmin(admin.ModelAdmin):

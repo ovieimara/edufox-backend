@@ -31,6 +31,25 @@ class SubscribeSerializer(serializers.ModelSerializer):
         fields = ['user', 'grade', 'product', 'payment_method', 'expiry_date']
         # depth = 1
 
+    def create(self, validated_data):
+        payment_method = validated_data.get('payment_method')
+        user = validated_data.get('payment_method')
+        grade = validated_data.get('grade')
+        if payment_method:
+            subscribe = Subscribe.objects.filter(payment_method=payment_method)
+            if subscribe.exists():
+                subscriber = subscribe.first()
+                
+                if not user:
+                    validated_data['user'] = subscriber.user
+
+                if not grade:
+                    validated_data['grade'] = subscriber.grade
+                
+                return super().update(subscriber, validated_data)
+            
+        return super().create(validated_data)
+
 class InAppPaymentSerializer(serializers.ModelSerializer):
     # PAYMENT_METHOD_CHOICES = [
     #     (payment.id, payment.name) for payment in InAppPayment.objects.all()
@@ -45,10 +64,20 @@ class InAppPaymentSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('amount field must be unique.')
         return value
     
-    def validate_transaction_id(self, value):
-        if InAppPayment.objects.filter(transaction_id=value).exists():
-            raise serializers.ValidationError('transaction_id field must be unique.')
-        return value
+    # def validate_transaction_id(self, value):
+    #     if InAppPayment.objects.filter(transaction_id=value).exists():
+    #         raise serializers.ValidationError('transaction_id field must be unique.')
+    #     return value
+    
+    def create(self, validated_data):
+        # print('validated_data: ', validated_data)
+        transaction_id = validated_data.get('transaction_id')
+        if transaction_id:
+            # print('transaction_id: ', transaction_id)
+            payment = InAppPayment.objects.filter(transaction_id=transaction_id)
+            if payment.exists():
+                return super().update(payment.first(), validated_data)
+        return super().create(validated_data)
 
 class ProductSerializer(serializers.ModelSerializer):
     # name = serializers.CharField(write_only=True)
@@ -65,10 +94,18 @@ class AppleNotifySerializer(serializers.ModelSerializer):
     class Meta:
         model = AppleNotify
         fields = '__all__'
-    def validate_transaction_id(self, value):
-        if AppleNotify.objects.filter(transaction_id=value).exists():
-            raise serializers.ValidationError('transaction_id field must be unique.')
-        return value
+    # def validate_transaction_id(self, value):
+    #     if AppleNotify.objects.filter(transaction_id=value).exists():
+    #         raise serializers.ValidationError('transaction_id field must be unique.')
+    #     return value
+
+    def create(self, validated_data):
+        transaction_id = validated_data.get('transaction_id')
+        if transaction_id:
+            payment = AppleNotify.objects.filter(transaction_id=transaction_id)
+            if payment.exists():
+                return super().update(payment.first(), validated_data)
+        return super().create(validated_data)
 
 
 class AndroidNotifySerializer(serializers.ModelSerializer):
@@ -77,10 +114,19 @@ class AndroidNotifySerializer(serializers.ModelSerializer):
         model = AndroidNotify
         fields = '__all__'
 
-    def validate_transaction_id(self, value):
-        if AndroidNotify.objects.filter(transaction_id=value).exists():
-            raise serializers.ValidationError('transaction_id field must be unique.')
-        return value
+    # def validate_transaction_id(self, value):
+    #     if AndroidNotify.objects.filter(transaction_id=value).exists():
+    #         raise serializers.ValidationError('transaction_id field must be unique.')
+    #     return value
+    
+    def create(self, validated_data):
+        # print('validated_data: ', validated_data)
+        transaction_id = validated_data.get('transaction_id')
+        if transaction_id:
+            payment = AndroidNotify.objects.filter(transaction_id=transaction_id)
+            if payment.exists():
+                return super().update(payment.first(), validated_data)
+        return super().create(validated_data)
 
 
 
