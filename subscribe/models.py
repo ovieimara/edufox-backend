@@ -90,7 +90,7 @@ class AppleNotify(models.Model):
     environment = models.CharField(max_length=255, null=True, blank=True,default='')
     original_transaction_id = models.CharField(max_length=255, null=True, blank=True, default='')
     transaction_id = models.CharField(max_length=255, null=True, blank=True,default='')
-    expires_date = models.DateTimeField(db_index=True, null=True, default=datetime.now)
+    # expires_date = models.DateTimeField(db_index=True, null=True, default=datetime.now)
     original_purchase_date = models.DateTimeField(null=True, blank=True, default=datetime.now)
     product_id = models.CharField(max_length=255, null=True, blank=True, default='')
     auto_renew_status = models.CharField(max_length=255, null=True, blank=True, default='')

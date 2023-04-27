@@ -42,7 +42,12 @@ class InAppPaymentSerializer(serializers.ModelSerializer):
 
     def validate_amount(self, value):
         if InAppPayment.objects.filter(amount=value).exists():
-            raise serializers.ValidationError('This field must be unique.')
+            raise serializers.ValidationError('amount field must be unique.')
+        return value
+    
+    def validate_transaction_id(self, value):
+        if InAppPayment.objects.filter(transaction_id=value).exists():
+            raise serializers.ValidationError('transaction_id field must be unique.')
         return value
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -60,6 +65,10 @@ class AppleNotifySerializer(serializers.ModelSerializer):
     class Meta:
         model = AppleNotify
         fields = '__all__'
+    def validate_transaction_id(self, value):
+        if AppleNotify.objects.filter(transaction_id=value).exists():
+            raise serializers.ValidationError('transaction_id field must be unique.')
+        return value
 
 
 class AndroidNotifySerializer(serializers.ModelSerializer):
@@ -67,6 +76,11 @@ class AndroidNotifySerializer(serializers.ModelSerializer):
     class Meta:
         model = AndroidNotify
         fields = '__all__'
+
+    def validate_transaction_id(self, value):
+        if AndroidNotify.objects.filter(transaction_id=value).exists():
+            raise serializers.ValidationError('transaction_id field must be unique.')
+        return value
 
 
 

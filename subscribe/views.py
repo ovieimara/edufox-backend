@@ -123,16 +123,23 @@ class ListCreateUpdateAPIBillingProduct(mixins.CreateModelMixin, mixins.ListMode
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def VerifyPurchase(request, *args, **kwargs):
-    resp = {}
+    resp = result = {}
     response = {}
     response_json = {}
     user = None
+    receipt_data = ''
+    payment = None
     state = status.HTTP_400_BAD_REQUEST
-    receipt_data = request.data.get('receipt-data')
+    # receipt_data = request.data.get('receipt-data')
+    purchase_data = request.data.get('purchase-data')
     is_sandbox = request.data.get('is_sandbox')
     grade = request.data.get('grade')
+    platform = request.data.get('platform')
     # print('RECEIPT: ', receipt_data)
-
+    # if platform == 'android':
+    #     return verifyAndroidPurchase(purchase_data)
+    if platform == 'ios':
+        receipt_data = purchase_data.get('transactionReceipt')
     """
     Verify the purchase receipt data with the app store server and return the
     purchase details if the receipt is valid.
@@ -149,35 +156,52 @@ def VerifyPurchase(request, *args, **kwargs):
     endpoint_url = 'https://buy.itunes.apple.com/verifyReceipt' if not is_sandbox else 'https://sandbox.itunes.apple.com/verifyReceipt'
 
     # Send a POST request to the app store server with the receipt data
-    if receipt_data:
+    if platform == 'ios' and receipt_data:
         data = {"receipt-data": receipt_data, "password": '7f64d85b4b2046e6b0e2499e512d6c31'}
         headers={'Content-Type': 'application/x-www-form-urlencoded'}
         response = requests.post(endpoint_url, json=data, headers=headers)
         # print('RECEIPT: ', response.json())
 
     # If the status code is not 200, the receipt is invalid
-    if response and response.status_code != 200:
+    if platform == 'ios' and response and response.status_code != 200:
         return Response(response.json(), status=response.status_code)
 
     # Parse the response JSON
-    if response:
+    if platform == 'ios' and response:
         response_json = response.json()
 
     # If the response status is not 0, the receipt is invalid
-    if response_json and response_json.get('status') != 0:
+    if platform == 'ios' and response_json and response_json.get('status') != 0:
         return Response(response_json, status.HTTP_400_BAD_REQUEST)
 
     # Get the purchase details from the response JSON
-    result = validate_in_app(response_json)
+    if platform == 'ios':
+        result = validate_in_app(response_json)
+    if platform == 'android':
+        resp = verifyAndroidPurchase(purchase_data, is_sandbox)
+        result = resp
+        state = status.HTTP_200_OK
     
-    if result and result.get('product_id'):
-        product_id = result.get('product_id')
-        product = Product.objects.get(product_id=product_id)
-        payment_serializer = InAppPaymentSerializer(data=result)
-        payment_serializer.is_valid(raise_exception=True)
-        payment = payment_serializer.save(product=product)
-        resp = payment_serializer.data
-        resp['status'] = response_json.get('status')
+    if result and result.get('transaction_id'):
+        # product_id = result.get('product_id')
+        # try:
+        product_id = purchase_data.get('productId')
+        
+
+        try:
+            print('purchase: ', result)
+            product = Product.objects.get(product_id=product_id)
+            payment_serializer = InAppPaymentSerializer(data=result)
+            payment_serializer.is_valid(raise_exception=True)
+            payment = payment_serializer.save(product=product)
+            resp = payment_serializer.data
+        except Exception as ex:
+            #  status.HTTP_409_CONFLICT
+             print(f'payment_serializer exception occurred: {ex}')
+        
+        if platform == 'ios':
+            resp['status'] = response_json.get('status')
+            state = status.HTTP_200_OK
 
         data = {
             "user": None,
@@ -186,18 +210,35 @@ def VerifyPurchase(request, *args, **kwargs):
             "grade": None
         }
 
-        grade = Grade.objects.get(pk=grade)
+        try:
+            grade = Grade.objects.get(pk=grade)
+            if not request.user.is_anonymous:
+                user = request.user
+        except Exception as ex:
+            print(f'Grade exception occurred: {ex}')
+            
+        try:
+            if payment and product and grade and user:
+                subscribe_serializer = SubscribeSerializer(data=data)
+                subscribe_serializer.is_valid(raise_exception=True)
+                subscribe_serializer.save(user = user, product=product, payment_method=payment, grade=grade)
+                state = status.HTTP_201_CREATED
 
-        if not request.user.is_anonymous:
-            user = request.user
-        subscribe_serializer = SubscribeSerializer(data=data)
-        subscribe_serializer.is_valid(raise_exception=True)
-        subscribe_serializer.save(user = user, product=product, payment_method=payment, grade=grade)
-        state = status.HTTP_201_CREATED
+        except Exception as ex:
+            print(f'SubscribeSerializer exception occurred: {ex}')
     
-    print(resp)
+    # print('RESPONSE: ', resp)
     return Response(resp, state)
 
+def verifyAndroidPurchase(purchase, isSandBox):
+    subscription_id = purchase.get('productId')
+    purchase_token = purchase.get('purchaseToken')
+    package_name = purchase.get('packageNameAndroid')
+    # response = verifyAndroidPayment(subscription_id, purchase_token, package_name, isSandBox)
+    
+    # return Response(response)
+    
+    return verify_android_purchase(purchase_token, subscription_id, package_name, isSandBox)
 
 def validate_in_app(receipt_json_data):
     response = {}
@@ -222,7 +263,7 @@ def validate_in_app(receipt_json_data):
             original_transaction_id = latest_receipt_info[0].get('original_transaction_id')
             transaction_id = latest_receipt_info[0].get('transaction_id')
             posix_date_time = latest_receipt_info[0].get('purchase_date_ms')
-            expires_date = latest_receipt_info[0].get('expires_date')
+            expires_date = latest_receipt_info[0].get('expires_date_ms')
             product_id = latest_receipt_info[0].get('product_id')
 
         else:
@@ -247,7 +288,7 @@ def validate_in_app(receipt_json_data):
 
         purchase_details = {
             'name': gateway,
-            'product_id': product_id,
+            # 'product_id': product_id,
             'environment': environment,
             'original_transaction_id': original_transaction_id,
             'transaction_id': transaction_id,
@@ -374,6 +415,7 @@ def verify_apple_pay(notification_type, bundle_id, environment, jws_transaction_
 @permission_classes([AllowAny])
 def PlayStoreNotificationHandler(request):
     state = status.HTTP_400_BAD_REQUEST
+    response = {}
     if request.method == 'POST':
         msg = 'OK'
         envelope = request.data
@@ -382,12 +424,12 @@ def PlayStoreNotificationHandler(request):
         if not envelope:
             msg = "no Pub/Sub message received"
             #printOutLogs(msg)
-            return f"Bad Request: {msg}", 400
+            return Response(data=f"Bad Request: {msg}", status=state)
 
         if not isinstance(envelope, dict) or "message" not in envelope:
             msg = "invalid Pub/Sub message format"
             #printOutLogs(msg)
-            return f"Bad Request: {msg}", 400
+            return Response(data=f"Bad Request: {msg}", status=state)
 
         pubsub_message = envelope.get("message")
         if isinstance(pubsub_message, dict) and "data" in pubsub_message and pubsub_message.get("data"):
@@ -396,9 +438,9 @@ def PlayStoreNotificationHandler(request):
             data = json.loads(data)
             packageName = data.get('packageName')
             if packageName == os.environ.get('PACKAGE_NAME'):
-                response = set_android_pay(data, packageName)
-                if response and response == status.HTTP_200_OK:
-                    state = status.HTTP_200_OK
+                set_android_pay(data, packageName)
+            # if response and response.get('status') == status.HTTP_201_CREATED:
+            state = status.HTTP_200_OK
         
     return Response(state)
 
@@ -433,7 +475,6 @@ def FlutterWaveWebhook(request):
     if event == 'charge.completed':
         # Handle the completed payment event
         transaction_id = payload.get('id')
-        transaction_status = payload.get('status')
         transaction_verification_uri = f'https://api.flutterwave.com/v3/transactions/{transaction_id}/verify'
     
     # Send a GET request to the transaction verification URI with your Flutterwave API keys
@@ -444,47 +485,43 @@ def FlutterWaveWebhook(request):
         # Extract the verification status from the response and update your database accordingly
         # verification_status = response.json()['data']['status']
         data = response.data.get('data')
-        verification_status = ""
-        amount = ""
-        product = ""
-        grade = ""
-        student = ""
-        user = ""
-        product = ""
-        payment = ""
-        purchase_details = {}
+        verification_status = amount = product = grade = student = user = payment = created = tx_ref = flw_ref = payment_type = ""
+        purchase_details = meta = customer = {}
 
         if data:
             verification_status = data.get('status')
             created_at = data.get('created_at')
-            product_id = data.get('product_id')
             amount = data.get('amount')
+            tx_ref = data.get('tx_ref')
+            flw_ref = data.get('flw_ref')
+            payment_type = data.get('payment_type')
             meta = data.get('meta')
             customer = data.get('customer')
 
 
         if verification_status == 'successful':
             # ... process the payment ...
-
+            created = dateStrToDateTime(created_at)
             purchase_details = {
                 "name": "FlutterWave",
                 "environment": "",
-                "original_transaction_id": "",
+                "original_transaction_id": tx_ref,
                 "transaction_id": transaction_id,
                 "expires_date": "",
                 "product": None,
-                "auto_renew_status": "",
+                "auto_renew_status": flw_ref,
                 "expiration_intent": "",
-                "in_app_ownership_type": "",
-                "original_purchase_date": created_at
+                "in_app_ownership_type": payment_type,
+                "original_purchase_date": created
             }
 
         if amount and purchase_details:
             try:
                 product = Product.objects.get(amount=float(f"{amount:.2f}"))
+                expires_date = created + datetime.timedelta(days=product.duration)
                 payment_serializer = InAppPaymentSerializer(data=purchase_details)
                 payment_serializer.is_valid(raise_exception=True)
-                payment = payment_serializer.save(product=product)
+                payment = payment_serializer.save(product=product, expires_date=expires_date)
             except Exception as ex:
                 print(f"payment serializer error: {ex}")
         
@@ -543,47 +580,38 @@ def set_android_pay(data, packageName):
         purchaseToken = subscriptionNotification.get('purchaseToken')
         subscriptionId = subscriptionNotification.get('subscriptionId')
 
-        return androidPayment(subscriptionId, purchaseToken, packageName)
+        return verifyAndroidPayment(subscriptionId, purchaseToken, packageName)
     
     return {}
 
-def androidPayment(subscriptionId, purchase_token, packageName):
+def verifyAndroidPayment(subscriptionId, purchase_token, packageName):
     amount = 0
     currency = "₦"
-    response = status.HTTP_400_BAD_REQUEST
+    state = status.HTTP_400_BAD_REQUEST
     result = purchase_details = {}
     country_code = 'NG'
     purchaseState = 1
     paymentState = 0
     purchase_date = paymentState = acknowledgementState = consumptionState = start_time = expiry = transaction_id = regionCode = priceAmountMicros = ""
-    # client = secretmanager.SecretManagerServiceClient()
 
     service_acct = os.environ.get("SERVICE_ACCOUNT", "SERVICE_ACCOUNT")
-    credentials = build_service_credentials(service_acct)
-    service = build("androidpublisher", "v3", credentials=credentials)
-
-    try:
-        if packageName and subscriptionId and purchase_token:
-            result = service.purchases().products().get(packageName=packageName, productId=subscriptionId, token=purchase_token).execute()
-
-    except Exception as ex:
-        print('PACKAGE NAME: ', ex)
+    purchase = build_service_credentials(service_acct, packageName, subscriptionId,  purchase_token)
 
     try:
 
-        if result:
-            startTimeMillis = result.get("startTimeMillis", '')
-            expiryTimeMillis = result.get("expiryTimeMillis", '')
-            purchaseTimeMillis = result.get("purchaseTimeMillis", '')
-            currency = result.get("priceCurrencyCode", '')
-            priceAmountMicros = result.get("priceAmountMicros") 
-            country_code = result.get("countryCode", '')
-            regionCode = result.get("regionCode", '')
-            transaction_id = result.get("orderId")
-            purchaseState = result.get("purchaseState", 1)
-            acknowledgementState = result.get("acknowledgementState")
-            consumptionState = result.get("consumptionState", 0)
-            paymentState = result.get("paymentState", 0)
+        if purchase:
+            startTimeMillis = purchase.get("startTimeMillis", '')
+            expiryTimeMillis = purchase.get("expiryTimeMillis", '')
+            purchaseTimeMillis = purchase.get("purchaseTimeMillis", '')
+            currency = purchase.get("priceCurrencyCode", '')
+            priceAmountMicros = purchase.get("priceAmountMicros") 
+            country_code = purchase.get("countryCode", '')
+            regionCode = purchase.get("regionCode", '')
+            transaction_id = purchase.get("orderId")
+            purchaseState = purchase.get("purchaseState", 1)
+            acknowledgementState = purchase.get("acknowledgementState")
+            consumptionState = purchase.get("consumptionState", 0)
+            paymentState = purchase.get("paymentState", 0)
 
         if (purchaseState == 0 or paymentState == 1) and (acknowledgementState == 1 or consumptionState == 1):
             if startTimeMillis:
@@ -614,95 +642,90 @@ def androidPayment(subscriptionId, purchase_token, packageName):
             'currency': currency,
         }
     except Exception as ex:
-        print('RESULT: ', ex)
+        print('PURCHASE: ', ex)
+        printOutLogs('PURCHASE: ', ex)
 
     try:
         if purchase_details:
+            # resp = status.HTTP_201_CREATED
             android_notify = AndroidNotifySerializer(data=purchase_details)
             android_notify.is_valid(raise_exception=True)
             notify = android_notify.save()
-            if notify.transaction_id: 
-                response = status.HTTP_200_OK
+            # if notify.transaction_id: 
+            state = status.HTTP_201_CREATED
 
     except Exception as ex:
         print('NOTIFY: ', ex)
+        printOutLogs('NOTIFY: ', ex)
 
-    return response
+    result['status'] = 0
+    return {'result' : purchase, 'status': state}
 
 
 
 # Function to verify Android in-app subscriptions and purchases
-def verify_android_purchase(purchase_token, subscription_id, product_id, is_subscription):
+def verify_android_purchase(purchase_token: str, subscription_id: str, package_name: str, isSandBox: bool=True) -> dict:
+    purchase_details = {}
+    secret_name = os.environ.get('Google-Play-Android', 'Google-Play-Android')
     # Load the service account credentials
-    credentials = None
-    service = None
-    result = {}
-    purchase_state = 1
-    package_name = os.environ.get('PACKAGE_NAME')
-    secret_name = os.environ.get('Google-Play-Android', 'Google_Play_Android')
-    service_credentials = build_service_credentials(secret_name)
-    if service_credentials:
-        credentials = service_credentials.with_scopes(['https://www.googleapis.com/auth/androidpublisher'])
+    purchase = build_service_credentials(secret_name, package_name, subscription_id,  purchase_token)
+    # print('purchase: ', purchase)
+
     try:
-    # Check if the credentials have expired and refresh them if necessary
-        if credentials and credentials.expired and credentials.refresh_token:
-            credentials.refresh(Request())
-
-        # Build the Google Play Developer API client
-        if credentials:
-            service = build('androidpublisher', 'v3', credentials=credentials)
-
-    # Verify the purchase or subscription
-    
-        if is_subscription and service:
-            # Verify the subscription
-            
-            result = service.purchases().subscriptions().get(
-                packageName=package_name,
-                subscriptionId=subscription_id,
-                token=purchase_token
-            ).execute()
-            # purchase_state = result['paymentState']
-        elif not is_subscription and service:
-            # Verify the purchase
-            result = service.purchases().products().get(
-                packageName=package_name,
-                productId=product_id,
-                token=purchase_token
-            ).execute()
-        
-        if result:
-            purchase_state = result.get('purchaseState')
-
-        # Check the purchase state to confirm it's valid
-        if purchase_state == 0:
+        if purchase and (purchase.get("purchaseState", 1) == 0 or purchase.get("paymentState", 0) == 1) and (purchase.get("acknowledgementState", 0) == 1 or purchase.get("consumptionState", 0)) == 1:
             # Purchase or subscription is valid
-            return True
+            purchase_details = {
+                "name": "Android In-App",
+                "environment": str(isSandBox),
+                "original_transaction_id": purchase_token,
+                "transaction_id": purchase.get("orderId"),
+                "expires_date": convertDateFromMSToDateTime(purchase.get("expiryTimeMillis", datetime.datetime.now())),
+                "product": None,
+                "auto_renew_status": str(purchase.get("autoRenewing", 1)),
+                "expiration_intent": "",
+                "in_app_ownership_type": purchase.get("purchaseType"),
+                "original_purchase_date": convertDateFromMSToDateTime(purchase.get("purchaseTimeMillis", '')),
+                "status" : 0,
+                "created": convertDateFromMSToDateTime(purchase.get("startTimeMillis", datetime.datetime.now()))
+            }
+
+        elif purchase and (purchase.get("purchaseState", 1) == 0 or purchase.get("paymentState", 0) == 1) and (purchase.get("acknowledgementState", 0) == 0 or purchase.get("consumptionState", 0)) == 1:
+            purchase_details = {
+                "status": 0
+            }
         else:
             # Purchase or subscription is not valid
-            return False
+            pass
+
     except HttpError as error:
         # Error occurred while verifying the purchase or subscription
         print(f'An error occurred: {error}')
-        return False
-    except Exception as ex:
-        print(f'CREDENTIAL exception occurred: {ex}')
+        # return Response(result)
+    # except Exception as ex:
+    #     print(f'CREDENTIAL exception occurred: {ex}')
 
+    return purchase_details
 
-def build_service_credentials(secret_name):
-    service_credentials = None
+def build_service_credentials(secret_name, packageName, subscriptionId, purchase_token):
+    purchase = {}
     try:
-        client = secretmanager.SecretManagerServiceClient()
-        name = f"projects/{settings.PROJECT_ID}/secrets/{secret_name}/versions/latest"
-        payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
-        service_credentials_dict = json.loads(io.StringIO(payload))
-        service_credentials = ServiceCredentials.from_service_account_info(service_credentials_dict)
+        if secret_name and packageName and subscriptionId and purchase_token:
+            client = secretmanager.SecretManagerServiceClient()
+            name = f"projects/{settings.PROJECT_ID}/secrets/{secret_name}/versions/latest"
+            payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
+            # print('payload: ', type(payload))
+            service_credentials_dict = json.loads(payload)
+            service_credentials = ServiceCredentials.from_service_account_info(service_credentials_dict)
+            credentials = service_credentials.with_scopes(['https://www.googleapis.com/auth/androidpublisher'])
+            service = build("androidpublisher", "v3", credentials=credentials)
+        
+            purchase = service.purchases().subscriptions().get(packageName=packageName, subscriptionId=subscriptionId, token=purchase_token).execute()
+
     
     except Exception as ex:
         print(f'A BUILD_SERVICE_CREDENTIALS exception occurred: {ex}')
 
-    return service_credentials
-
+    return purchase
 
 def printOutLogs(tag='', param=''):
     logging_client = logging.Client()
@@ -714,8 +737,15 @@ def printOutLogs(tag='', param=''):
 def convertDateFromMSToDateTime(ms_date_time):
     transactionDate = None
     if ms_date_time:
-        transactionDate = datetime.datetime.fromtimestamp(float(ms_date_time)/1000.0)
+        transactionDate = datetime.datetime.fromtimestamp(float(ms_date_time)/1000.0)   
     return transactionDate
+
+def dateStrToDateTime(date_str, date_format="%d %m %Y %H:%M:%S"):
+    date_obj = ""
+    if date_str:
+        date_obj = datetime.strptime(date_str, date_format)
+
+    return date_obj
 
 # Define a function to verify the webhook signature
 def verify_webhook_signature(payload, signature, FLUTTERWAVE_SECRET_KEY):

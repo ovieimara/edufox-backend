@@ -35,7 +35,7 @@ for i in range(len(arr)):
     # if 'gha-creds' in arr[i] or 'creds.json' == arr[i]: #cloudbuild.yml
     if 'gha-creds' in arr[i]: #ci.yml
         FILE = arr[i]
-print('FILE::', FILE)
+# print('FILE::', FILE)
 if FILE:
     env_file = os.path.join(BASE_DIR, FILE)
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = env_file
@@ -324,8 +324,8 @@ if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
     # DATABASES["default"]["HOST"] = "127.0.0.1" #local
     DATABASES["default"]["PORT"] = 5432
 
-print('DATABASES3 : ', DATABASES["default"])
-print('USE_LOCAL_POSTGRESQL : ', os.environ.get('DB_PASSWORD'))
+# print('DATABASES3 : ', DATABASES["default"])
+# print('USE_LOCAL_POSTGRESQL : ', os.environ.get('DB_PASSWORD'))
 
 # Define static storage via django-storages[google]
 GS_BUCKET_NAME = env("GS_BUCKET_NAME")

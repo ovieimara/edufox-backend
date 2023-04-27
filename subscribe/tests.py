@@ -5,6 +5,9 @@ from rest_framework import status
 from django.urls import reverse
 from rest_framework.test import APIClient
 import os
+from course.models import Grade
+
+from subscribe.models import Product
 
 User = get_user_model()
 
@@ -56,3 +59,56 @@ class SignupTestCase(TestCase):
         print('GET PRODUCTS: ', response)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
     
+
+
+    def test_verifyPurchase(self):
+        purchase = {"autoRenewingAndroid": "true", "dataAndroid": "{\"orderId\":\"GPA.3339-5541-5514-80021\",\"packageName\":\"com.edufox\", \"productId\":\"com.edufox.sub.autorenew.monthly\",\"purchaseTime\":1682582797513,\"purchaseState\":0,\"purchaseToken\":\"mdkdphoffdgljgpnihkafaon.AO-J1OyK6BjhDdHIvHJMgq_spohu_Z0Tlkb8MaJmVsIrM2MazO6vfrXOV5z8G8C6FNmSdoNmi2c_xT6k9_DSQWq0e-VO8i8Ddg\",\"quantity\":1,\"autoRenewing\":true,\"acknowledged\":false}", "developerPayloadAndroid": "", "isAcknowledgedAndroid": "false", "obfuscatedAccountIdAndroid": "", "obfuscatedProfileIdAndroid": "", "packageNameAndroid": "com.edufox", "productId": "com.edufox.sub.autorenew.monthly", "purchaseStateAndroid": 1, "purchaseToken": "mdkdphoffdgljgpnihkafaon.AO-J1OyK6BjhDdHIvHJMgq_spohu_Z0Tlkb8MaJmVsIrM2MazO6vfrXOV5z8G8C6FNmSdoNmi2c_xT6k9_DSQWq0e-VO8i8Ddg", "signatureAndroid": "HB5uDR4cFJPQh68gIZznypP5ZA1m7EMkbYgjvf3hTMvB2disrBmPUl+WFReukoFR14N21POyr8jfxID0aH5skl4PUNF0sfIMS6Ng/OCV0Vj08uUWrBIRSK8MuiU+fGVCjLVqXb/+Tr96gUSQo++Nl/AUEPOLEBxcdrAIozUPh/9Lw8SalkSvW6jgrbUo5Ym5MS3WLFHUaujyMRqX2KXrfHAl7roijL/BxNG+fSUVNpxfJF9ugE96SYSKNfsVufH98O6LNiZqeeykh4/iu2g1B4wmt+voBeHZ/wP3BRccX2yS4Bell7sgSjG4u65x2NObvllIemNPj222arJc1nsP8w==", "transactionDate": "1682582797513", "transactionId": "GPA.3339-5541-5514-80021", "transactionReceipt": "{\"orderId\":\"GPA.3339-5541-5514-80021\",\"packageName\":\"com.edufox\",\"productId\":\"com.edufox.sub.autorenew.monthly\",\"purchaseTime\":1682582797513,\"purchaseState\":0,\"purchaseToken\":\"mdkdphoffdgljgpnihkafaon.AO-J1OyK6BjhDdHIvHJMgq_spohu_Z0Tlkb8MaJmVsIrM2MazO6vfrXOV5z8G8C6FNmSdoNmi2c_xT6k9_DSQWq0e-VO8i8Ddg\",\"quantity\":1,\"autoRenewing\":true,\"acknowledged\":false}"}
+
+        product = Product.objects.create(
+            name = 'Monthly',
+            product_id = 'com.edufox.sub.autorenew.monthly',
+            amount = '5500.00',
+            currency = "=N=",
+            duration = 30,
+            discount = None,
+            platform = "Android",
+        )
+
+        Product.objects.create(
+            name = 'Quarterly',
+            product_id = 'com.edufox.sub.autorenew.quarterly',
+            amount = '12000.00',
+            currency = "=N=",
+            duration = 90,
+            discount = None,
+            platform = "Android",
+        )
+
+        self.grade = Grade.objects.create(
+            code='grade1', 
+            name='Grade 1', 
+            description='Grade 1'
+        )
+
+        self.grade = Grade.objects.create(
+            code='grade2', 
+            name='Grade 2', 
+            description='Grade 2'
+        )
+
+        response = self.client.post(reverse('api:login'), data={
+            'username': '+23407048536974',
+            'password': 'password@123A',
+        })
+        token = response.json()['auth_token']
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token}")
+
+        data = {
+            "purchase-data": purchase, 
+            "is_sandbox" : True,
+            "grade" : 2,
+            "platform": "android"
+        }
+        response = self.client.post(reverse('subscribe:verifyReceipt-list'), data=data, format='json')
+        print('verify_purchase_response', response.json())
+
