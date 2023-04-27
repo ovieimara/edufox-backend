@@ -112,3 +112,16 @@ class SignupTestCase(TestCase):
         response = self.client.post(reverse('subscribe:verifyReceipt-list'), data=data, format='json')
         print('verify_purchase_response', response.json())
 
+
+    def test_playstore_notify(self):
+        data = {'message': {'data': 'eyJ2ZXJzaW9uIjoiMS4wIiwicGFja2FnZU5hbWUiOiJjb20uZWR1Zm94IiwiZXZlbnRUaW1lTWlsbGlzIjoiMTY4MjYwMTU5MjA3NiIsInN1YnNjcmlwdGlvbk5vdGlmaWNhdGlvbiI6eyJ2ZXJzaW9uIjoiMS4wIiwibm90aWZpY2F0aW9uVHlwZSI6MiwicHVyY2hhc2VUb2tlbiI6Im5tZWhpZGFnY2hrb2RrbmFiaHBpbmNrZC5BTy1KMU95RVZTXy1ac0xJNW9hUjFabGxEV2FqT3JpYTZZTWh2MTJYV3BBLThaX2tmVUNNa0ZNMUI0UTdrX0VUZTJ3WjgyNm1mekRQdS1zRlRraW94Qjd2ZjVxdW1TM2ktdyIsInN1YnNjcmlwdGlvbklkIjoiY29tLmVkdWZveC5zdWIuYXV0b3JlbmV3Lm1vbnRobHkifX0=', 'messageId': '7541642979606340', 'message_id': '7541642979606340', 'publishTime': '2023-04-27T13:19:52.269Z', 'publish_time': '2023-04-27T13:19:52.269Z'}, 'subscription': 'projects/edufox-services/subscriptions/eventarc-us-central1-trigger-2cpqm3oe-sub-255'}
+
+        response = self.client.post(reverse('api:login'), data={
+            'username': '+23407048536974',
+            'password': 'password@123A',
+        })
+        token = response.json()['auth_token']
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token}")
+
+        response = self.client.post(reverse('subscribe:playstorenotify-list'), data=data, format='json')
+        print('play_notify_response', response.json())

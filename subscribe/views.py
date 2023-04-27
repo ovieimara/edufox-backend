@@ -419,7 +419,7 @@ def PlayStoreNotificationHandler(request):
     if request.method == 'POST':
         msg = 'OK'
         envelope = request.data
-        printOutLogs('ENVELOPE: ', envelope)
+        # printOutLogs('ENVELOPE: ', envelope)
 
         if not envelope:
             msg = "no Pub/Sub message received"
@@ -434,10 +434,11 @@ def PlayStoreNotificationHandler(request):
         pubsub_message = envelope.get("message")
         if isinstance(pubsub_message, dict) and "data" in pubsub_message and pubsub_message.get("data"):
             data = base64.b64decode(pubsub_message.get("data")).decode("utf-8").strip()
-            printOutLogs('DATA: ', data)
+            # printOutLogs('DATA: ', data)
             data = json.loads(data)
             packageName = data.get('packageName')
             if packageName == os.environ.get('PACKAGE_NAME'):
+                print('ENVELOPE DATA: ', data)
                 set_android_pay(data, packageName)
             # if response and response.get('status') == status.HTTP_201_CREATED:
             state = status.HTTP_200_OK
@@ -592,10 +593,12 @@ def verifyAndroidPayment(subscriptionId, purchase_token, packageName):
     country_code = 'NG'
     purchaseState = 1
     paymentState = 0
-    purchase_date = paymentState = acknowledgementState = consumptionState = start_time = expiry = transaction_id = regionCode = priceAmountMicros = ""
+    purchase_date = expiry = start_time = datetime.datetime.now()
+    paymentState = acknowledgementState = consumptionState = transaction_id = regionCode = priceAmountMicros = ""
 
     service_acct = os.environ.get("SERVICE_ACCOUNT", "SERVICE_ACCOUNT")
     purchase = build_service_credentials(service_acct, packageName, subscriptionId,  purchase_token)
+    
 
     try:
 
@@ -625,28 +628,29 @@ def verifyAndroidPayment(subscriptionId, purchase_token, packageName):
             if not country_code:
                 country_code = regionCode
 
-        purchase_details = {
-            'subscription_Id': subscriptionId,
-            'purchase_token': purchase_token,
-            'transaction_id': transaction_id,
-            'expires_date': expiry,
-            'purchaseState': purchaseState,
-            'acknowledgementState': acknowledgementState,
-            'consumptionState': consumptionState,
-            'paymentState': paymentState,
-            'country_code': country_code,
-            'regionCode': regionCode,
-            'purchase_date': purchase_date,
-            'start_time': start_time,
-            'amount': amount,
-            'currency': currency,
-        }
+            purchase_details = {
+                'subscription_Id': subscriptionId,
+                'purchase_token': purchase_token,
+                'transaction_id': transaction_id,
+                'expires_date': expiry,
+                'purchaseState': purchaseState,
+                'acknowledgementState': acknowledgementState,
+                'consumptionState': consumptionState,
+                'paymentState': paymentState,
+                'country_code': country_code,
+                'regionCode': regionCode,
+                'purchase_date': purchase_date,
+                'start_time': start_time,
+                'amount': amount,
+                'currency': currency,
+            }
     except Exception as ex:
         print('PURCHASE: ', ex)
-        printOutLogs('PURCHASE: ', ex)
+        # printOutLogs('PURCHASE: ', ex)
 
     try:
         if purchase_details:
+            # print('purchase_details: ', purchase_details)
             # resp = status.HTTP_201_CREATED
             android_notify = AndroidNotifySerializer(data=purchase_details)
             android_notify.is_valid(raise_exception=True)
@@ -656,7 +660,7 @@ def verifyAndroidPayment(subscriptionId, purchase_token, packageName):
 
     except Exception as ex:
         print('NOTIFY: ', ex)
-        printOutLogs('NOTIFY: ', ex)
+        # printOutLogs('NOTIFY: ', ex)
 
     result['status'] = 0
     return {'result' : purchase, 'status': state}
