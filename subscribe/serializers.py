@@ -1,3 +1,5 @@
+import logging as log
+from google.cloud import logging
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from .models import (Discount, Plan, Subscribe, InAppPayment, Product, 
@@ -33,18 +35,21 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         payment_method = validated_data.get('payment_method')
-        user = validated_data.get('payment_method')
+        user = validated_data.get('user')
         grade = validated_data.get('grade')
         if payment_method:
             subscribe = Subscribe.objects.filter(payment_method=payment_method)
             if subscribe.exists():
                 subscriber = subscribe.first()
-                
-                if not user:
-                    validated_data['user'] = subscriber.user
+                subscribed_user = subscriber.user
+                subscribed_grade = subscriber.grade
+                # printOutLogs('PURCHASE7: ', subscribed_user)
+                # printOutLogs('PURCHASE8: ', subscribed_grade)
+                if not user and subscribed_user:
+                    validated_data['user'] = subscribed_user
 
-                if not grade:
-                    validated_data['grade'] = subscriber.grade
+                if not grade and subscribed_grade:
+                    validated_data['grade'] = subscribed_grade
                 
                 return super().update(subscriber, validated_data)
             
@@ -132,3 +137,8 @@ class AndroidNotifySerializer(serializers.ModelSerializer):
 
     
 
+def printOutLogs(tag='', param=''):
+    logging_client = logging.Client()
+    logging_client.get_default_handler()
+    logging_client.setup_logging()
+    log.info(f"Some log here: {tag} : {param}") 

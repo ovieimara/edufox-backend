@@ -1,10 +1,11 @@
+import datetime
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from rest_framework import status
 from django.urls import reverse
 from rest_framework.test import APIClient
-from course.models import Grade, Subject
+from course.models import Grade, Lesson, Subject, Topic
 from .models import Level, Test
 
 User = get_user_model()
@@ -34,20 +35,42 @@ class SignupTestCase(TestCase):
             name='Grade 1', 
             description='Grade 1'
         )
+
+        self.topic = Topic.objects.create(
+            chapter = 1,
+            title = "Elements",
+            subject = None,
+            # grade = None
+        )
+        self.topic.grade.set([self.grade.pk, self.grade.pk])
+
+        self.lesson = Lesson.objects.create(
+            num= 1,
+            title = "Elements 1",
+            topic = self.topic,
+            subject = self.subject,
+            # grade = None
+            # grades = [
+            #     "Grade 1"
+            # ]
+        )
+
+        self.lesson.grade.set([self.grade.pk])
+
         self.test = Test.objects.create(
             code = "question1",
             question = "why did the chicken try crossing d road?",
             options = {
-                "a": "cause he he wanted to get to the other side",
-                "b": "to dance",
-                "c": "to play",
-                "d": "to kiss",
-                "e": "to talk"
+                "A": "cause he he wanted to get to the other side",
+                "B": "to dance",
+                "C": "to play",
+                "D": "to kiss",
+                "E": "to talk"
             },
-            topic = "Tears of Steel",
-            lesson = 1,
-            created = "2023-03-03T17:06:45.188305",
-            updated = "2023-03-03T20:25:50.722117",
+            topic = self.topic,
+            lesson = self.lesson,
+            # created = datetime.datetime.now,
+            # updated = "2023-03-03T20:25:50.722117",
             subject = self.subject,
             grade = self.grade,
             level = self.level
@@ -57,15 +80,19 @@ class SignupTestCase(TestCase):
         data = {
             "code": "question2",
             "question": "why did the chicken cross d road?",
+            # "valid_answers": {
+            #     "B": "to dance"
+            # },
             "options": {
-                "a": "cause he he wanted to get to the other side",
-                "b": "to dance",
-                "c": "to play",
-                "d": "to kiss",
-                "e": "to talk"
+                "A": "cause he he wanted to get to the other side",
+                "B": "to dance",
+                "C": "to play",
+                "D": "to kiss",
+                "E": "to talk"
             },
-            "topic": "Tears of Steel",
-            "lesson": 1,
+            "answers": "a, b",
+            "topic": self.topic.pk,
+            "lesson": self.lesson.pk,
             "created": "2023-03-03T17:06:45.188305",
             "updated": "2023-03-03T20:25:50.722117",
             "subject": self.subject.pk,
@@ -83,14 +110,14 @@ class SignupTestCase(TestCase):
         list_response = self.client.get(reverse('assess:tests-list'))
         detail_response = self.client.get(reverse('assess:test-detail', kwargs={'pk': self.test.pk}))
 
-        # print('get_video_detail: ', (detail_response.json()))
+        # print('get_video_detail: ', (post_response.json()))
         self.assertEqual(post_response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(post_response.json().get('topic'), 'Tears of Steel')
+        self.assertEqual(post_response.json().get('topic'), self.topic.pk)
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
         self.assertGreater(len(list_response.json().get('results')), 0)
         self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
         self.assertGreater(len(detail_response.json()), 0)
-        self.assertEqual(detail_response.json().get('lesson'), 1)
+        self.assertEqual(detail_response.json().get('lesson'), self.lesson.pk)
 
 
     def test_ListCreateUpdateAPIAssessment(self):

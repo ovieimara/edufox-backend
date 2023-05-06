@@ -121,25 +121,26 @@ class ListCreateUpdateAPIBillingProduct(mixins.CreateModelMixin, mixins.ListMode
         return Response(status.HTTP_403_FORBIDDEN)
     
 @api_view(['POST'])
-@permission_classes([AllowAny])
+# @permission_classes([AllowAny])
 def VerifyPurchase(request, *args, **kwargs):
     resp = result = {}
     response = {}
     response_json = {}
-    user = None
     receipt_data = ''
-    payment = None
+    # payment = None
     state = status.HTTP_400_BAD_REQUEST
     # receipt_data = request.data.get('receipt-data')
     purchase_data = request.data.get('purchase-data')
     is_sandbox = request.data.get('is_sandbox')
     grade = request.data.get('grade')
     platform = request.data.get('platform')
-    # print('RECEIPT: ', receipt_data)
+    user = request.user
+    # printOutLogs('RECEIPT: ', purchase_data)
     # if platform == 'android':
     #     return verifyAndroidPurchase(purchase_data)
     if platform == 'ios':
         receipt_data = purchase_data.get('transactionReceipt')
+        # printOutLogs('receipt_data', receipt_data)
     """
     Verify the purchase receipt data with the app store server and return the
     purchase details if the receipt is valid.
@@ -176,19 +177,25 @@ def VerifyPurchase(request, *args, **kwargs):
 
     # Get the purchase details from the response JSON
     if platform == 'ios':
+        # printOutLogs('validate_in_app', 'here')
         result = validate_in_app(response_json)
     if platform == 'android':
         resp = verifyAndroidPurchase(purchase_data, is_sandbox)
         result = resp
+        printOutLogs('result: ', result)
         state = status.HTTP_200_OK
     
     if result and result.get('transaction_id'):
         # product_id = result.get('product_id')
         # try:
         product_id = purchase_data.get('productId')
-        if not request.user.is_anonymous:
-            user = request.user
-        resp, state = create_subscription(product_id, result, user, grade, platform, response_json)
+        # if not request.user.is_anonymous:
+            # user = request.user
+        printOutLogs('USER: ', user)
+        printOutLogs('GRADE: ', grade)
+        if user and not user.is_anonymous and grade:
+
+            resp, state = create_subscription(product_id, result, user, grade, platform, response_json)
     
     # print('RESPONSE: ', resp)
     return Response(resp, state)
@@ -262,6 +269,7 @@ def validate_in_app(receipt_json_data):
             'original_purchase_date': transactionDate
         }
         response = purchase_details
+        printOutLogs('Response: ', response)
 
     return response
 
@@ -278,6 +286,7 @@ def AppStoreNotificationHandler(request, *args, **kwargs):
 
 def apple_notify_iap(message):
     # response = {}
+    printOutLogs('APPLE MESSAGE: ', message)
     signed_transaction_info = signed_renewal_info = decoded_payload_transaction_info = decoded_payload_signed_renewal_info = None
     decoded_header, decoded_payload, decoded_signature = decode_transaction(message)
     
@@ -306,6 +315,7 @@ def apple_notify_iap(message):
             message = ''
 
         if decoded_payload_transaction_info and decoded_payload_signed_renewal_info:
+            printOutLogs('APPLE MESSAGE 2 : ', message)
             verify_apple_pay(notification_type, bundle_id, environment, decoded_payload_transaction_info, decoded_payload_signed_renewal_info, decoded_signature, message)
 
     # return response
@@ -373,6 +383,8 @@ def verify_apple_pay(notification_type, bundle_id, environment, jws_transaction_
         apple_notify = AppleNotifySerializer(data=purchase_details)
         apple_notify.is_valid(raise_exception=True)
         apple_notify.save()
+        printOutLogs('APPLE NOTIFY: ', apple_notify.data)
+
 
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
@@ -561,11 +573,11 @@ def verifyAndroidPayment(subscriptionId, purchase_token, packageName):
 
     service_acct = os.environ.get("SERVICE_ACCOUNT", "SERVICE_ACCOUNT")
     purchase = build_service_credentials(service_acct, packageName, subscriptionId,  purchase_token)
-    # print('purchase: ', purchase)
+    # printOutLogs('PURCHASE: ', purchase)
 
 
-    if purchase and (purchase.get("purchaseState", 1) == 0 or paymentState == 1) and (purchase.get("acknowledgementState", 0) == 1 or purchase.get("consumptionState", 0) == 1):
-
+    if purchase and (purchase.get("purchaseState", 1) == 0 or purchase.get('paymentState', 0) == 1) and (purchase.get("acknowledgementState", 0) == 1 or purchase.get("consumptionState", 0) == 1):
+        # printOutLogs('PURCHASE2: ', purchase)
         purchase_details = createNotifyDetails(purchase, subscriptionId, purchase_token)
         payment_data = createPurchase(purchase, purchase_token)
 
@@ -585,6 +597,7 @@ def verifyAndroidPayment(subscriptionId, purchase_token, packageName):
             notify = android_notify.save()
             # if notify.transaction_id: 
             state = status.HTTP_201_CREATED
+            # printOutLogs('DETAILS NOTIFY: ', notify.data)
 
     except Exception as ex:
         print('NOTIFY: ', ex)
@@ -592,7 +605,6 @@ def verifyAndroidPayment(subscriptionId, purchase_token, packageName):
 
     result['status'] = 0
     return {'result' : purchase, 'status': state}
-
 
 # Function to verify Android in-app subscriptions and purchases
 def verify_android_purchase(purchase_token: str, subscription_id: str, package_name: str, isSandBox: bool=True) -> dict:
@@ -603,14 +615,16 @@ def verify_android_purchase(purchase_token: str, subscription_id: str, package_n
     # print('purchase: ', purchase)
 
     try:
-        if purchase and (purchase.get("purchaseState", 1) == 0 or purchase.get("paymentState", 0) == 1) or (purchase.get("acknowledgementState", 0) == 1 or purchase.get("consumptionState", 0)) == 1:
+        if purchase and (purchase.get("purchaseState", 1) == 0 or purchase.get("paymentState", 0) == 1) and (purchase.get("acknowledgementState", 0) == 1 or purchase.get("consumptionState", 0)) == 1:
             # Purchase or subscription is valid
             purchase_details = createPurchase(purchase, purchase_token)
+            # print('purchase_details', purchase_details)
 
         elif purchase and (purchase.get("purchaseState", 1) == 0 or purchase.get("paymentState", 0) == 1) and (purchase.get("acknowledgementState", 0) == 0 or purchase.get("consumptionState", 0)) == 1:
-            purchase_details = {
-                "status": 0
-            }
+            purchase_details = createPurchase(purchase, purchase_token)
+            # purchase_details = {
+            #     "status": 0
+            # }
         else:
             # Purchase or subscription is not valid
             pass
@@ -660,10 +674,10 @@ def createPurchase(purchase, purchase_token):
             "product": None,
             "auto_renew_status": str(purchase.get("autoRenewing", 1)),
             "expiration_intent": "",
-            "in_app_ownership_type": "",
+            "in_app_ownership_type": str(purchase.get("acknowledgementState", 0)),
             "original_purchase_date": convertDateFromMSToDateTime(purchase.get("purchaseTimeMillis", '')),
             "status" : 0,
-            "created": convertDateFromMSToDateTime(purchase.get("startTimeMillis", datetime.datetime.now()))
+            # "created": convertDateFromMSToDateTime(purchase.get("startTimeMillis", datetime.datetime.now()))
         }
     return {}
 
@@ -681,6 +695,7 @@ def create_subscription(product_id, payment_data, user, grade, platform='android
         payment_serializer.is_valid(raise_exception=True)
         payment = payment_serializer.save(product=product)
         resp = payment_serializer.data
+        printOutLogs('PURCHASE3: ', resp)
 
     except Exception as ex:
             #  status.HTTP_409_CONFLICT
@@ -690,33 +705,46 @@ def create_subscription(product_id, payment_data, user, grade, platform='android
         resp['status'] = response_json.get('status')
         state = status.HTTP_200_OK
 
-    data = {
-        "user": None,
-        "product": None, 
-        "payment_method": None,
-        "grade": None
-    }
+    if platform == 'android':
+        resp['status'] = 0
+        state = status.HTTP_200_OK
 
     try:
+        # printOutLogs('PURCHASE4: ', resp)
         grade_obj = Grade.objects.filter(pk=grade)
         grade = None
         if grade_obj.exists():
             grade = grade_obj.first()
-
+        printOutLogs('PURCHASE5: ', grade)
     except Exception as ex:
         print(f'Grade exception occurred: {ex}')
+
+    data = {
+        "user": user.pk if user.pk else None,
+        "product": product.pk if product.pk else None, 
+        "payment_method": payment.pk if payment.pk else None,
+        "grade": grade.pk if grade.pk else None
+    }
         
     try:
         # print('DETAILS: ', payment, product, grade, user)
-        if payment and product and grade and user:
-            subscribe_serializer = SubscribeSerializer(data=data)
-            subscribe_serializer.is_valid(raise_exception=True)
-            subscribe_serializer.save(user = user, product=product, payment_method=payment, grade=grade)
-            state = status.HTTP_201_CREATED
-            print('DETAILS: ', subscribe_serializer.data)
+        printOutLogs('PURCHASE6: ', user)
+        # if payment and product:
+        subscribe_serializer = SubscribeSerializer(data=data)
+        subscribe_serializer.is_valid(raise_exception=True)
+        subscribe_serializer.save()
+            # if not user and not grade:
+            #     subscribe_serializer.save(product=product, payment_method=payment)
+            # else:
+            #     subscribe_serializer.save(product=product, payment_method=payment, grade=grade)
+
+        state = status.HTTP_201_CREATED
+            # print('DETAILS SUBSCRIBE: ', subscribe_serializer.data)
+        printOutLogs('DETAILS SUBSCRIBE: ', subscribe_serializer.data)
 
     except Exception as ex:
-        print(f'SubscribeSerializer exception occurred: {ex}')
+        # print(f'SubscribeSerializer exception occurred: {ex}')
+        printOutLogs('SubscribeSerializer exception occurred: ', ex)
 
     return resp, state
 

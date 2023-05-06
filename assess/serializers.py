@@ -8,10 +8,13 @@ from djoser.serializers import UserSerializer
 
 
 class TestSerializer(serializers.ModelSerializer):
-    options = serializers.SerializerMethodField()
+    options = serializers.JSONField(read_only=True)
+    answers = serializers.CharField(max_length=15, write_only=True)
+    valid_answers = serializers.JSONField(read_only=True)
     class Meta:
         model = Test
-        fields = ['pk', 'question', 'options', 'valid_options', 'topic', "lesson", "subject", "grade", "level"]
+        fields = ['pk', 'question', 'valid_answers', 'options', 'answers', 'topic', "lesson", "subject", "grade", "level", "option1", "option2", "option3", "option4", "option5", "option6"]
+        # depth = 2
 
     def get_options(self, obj):
         option1 = obj.option1
@@ -31,10 +34,36 @@ class TestSerializer(serializers.ModelSerializer):
         }
         return options
     
+    def capitalise(self, value):
+        return value.capitalize() if value else value
+    
     def create(self, validated_data):
         # print('validated_data: ', validated_data)
         request = self.context.get('request')
-        question = validated_data['question']
+        question = validated_data.get('question')
+        valid_answers = ''
+        options = ''
+        if validated_data:
+            valid_answers = validated_data.pop('answers')
+
+            options = {
+                "A" : self.capitalise(validated_data.get('option1')),
+                "B" : self.capitalise(validated_data.get('option2')),
+                "C" : self.capitalise(validated_data.get('option3')),
+                "D" : self.capitalise(validated_data.get('option4')),
+                "E" : self.capitalise(validated_data.get('option5')),
+                "F" : self.capitalise(validated_data.get('option6')),
+            }
+
+        valid_answers_arr = valid_answers.split(',')
+        valid_answers_arr_dict = {}
+        if options:
+            for option in valid_answers_arr:
+                if option:
+                    valid_answers_arr_dict[option.strip().upper()] = options.get(option.strip().upper())
+
+        validated_data['options'] = options
+        validated_data['valid_answers'] = valid_answers_arr_dict
         user = request.user
         if user.is_staff:
             instance = Test.objects.filter(question=question)
@@ -42,6 +71,37 @@ class TestSerializer(serializers.ModelSerializer):
                 return super().update(instance.first(), validated_data)
             
             return super().create(validated_data)
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+    
+    def update(self, instance, validated_data):
+        request = self.context.get('request')
+        valid_answers = ''
+        options = ''
+        if validated_data:
+            valid_answers = validated_data.pop('answers')
+
+            options = {
+                "A" : self.capitalise(validated_data.get('option1')),
+                "B" : self.capitalise(validated_data.get('option2')),
+                "C" : self.capitalise(validated_data.get('option3')),
+                "D" : self.capitalise(validated_data.get('option4')),
+                "E" : self.capitalise(validated_data.get('option5')),
+                "F" : self.capitalise(validated_data.get('option6')),
+            }
+
+        valid_answers_arr = valid_answers.split(',')
+        valid_answers_arr_dict = {}
+        if options:
+            for option in valid_answers_arr:
+                if option:
+                    valid_answers_arr_dict[option.strip().upper()] = options.get(option.strip().upper())
+
+        validated_data['options'] = options
+        validated_data['valid_answers'] = valid_answers_arr_dict
+        user = request.user
+        if user.is_staff:
+            return super().update(instance, validated_data)
+
         return Response(status=status.HTTP_401_UNAUTHORIZED)
     
 
@@ -64,7 +124,7 @@ class AssessmentSerializer(serializers.ModelSerializer):
     #         self.fields['answer'].choices = choices
 
     def get_status(self, obj):
-        valid_options = obj.test.valid_options
+        valid_options = obj.test.valid_answers
         answer = obj.answer
         result = [0] * len(valid_options)
 

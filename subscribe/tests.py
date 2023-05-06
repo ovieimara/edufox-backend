@@ -141,8 +141,8 @@ class SignupTestCase(TestCase):
         }
         response = self.client.post(reverse('subscribe:verifyReceipt-list'), data=data, format='json')
         print('verify_purchase_response1', response.json())
-        response = self.client.post(reverse('subscribe:verifyReceipt-list'), data=data, format='json')
-        print('verify_purchase_response2', response.json())
+        # response = self.client.post(reverse('subscribe:verifyReceipt-list'), data=data, format='json')
+        # print('verify_purchase_response2', response.json())
 
 
     def test_playstore_notify(self):

@@ -16,7 +16,7 @@ from student.models import Student
 
 # Create your views here.
 class ListCreateAPIGrades(generics.ListCreateAPIView):
-    queryset = Grade.objects.all()
+    queryset = Grade.objects.all().order_by('name')
     serializer_class = GradeSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     def perform_create(self, serializer):

@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from course.models import Subject, Grade
+from course.models import Lesson, Subject, Grade, Topic
 
 class Level(models.Model):
     code = models.CharField(max_length=127, null=True, default='')
@@ -22,7 +22,7 @@ class Test(models.Model):
         ('F', 'F'),
     )
     code = models.CharField(max_length=100, null=True, default='')
-    question = models.TextField(default='', unique=True)
+    question = models.TextField(default='')
     options = models.JSONField(default=dict)
     option1 = models.TextField(default='')
     option2 = models.TextField(default='')
@@ -32,11 +32,13 @@ class Test(models.Model):
     option6 = models.TextField(default='')
     # valid_options = models.CharField(max_length=2, choices=CHOICES, default=[])
 
-    valid_options = models.JSONField(null=True, default=dict)
+    valid_answers = models.JSONField(null=True, default=dict)
     subject = models.ForeignKey(Subject, related_name='test_subjects', null=True, on_delete=models.SET_NULL)
     grade = models.ForeignKey(Grade, related_name='test_grade', null=True, on_delete=models.SET_NULL)
-    topic = models.CharField(max_length=100, null=True, blank=True, default='')
-    lesson = models.SmallIntegerField(null=True, blank=True, default=0)
+    # topic = models.CharField(max_length=100, null=True, blank=True, default='')
+    topic = models.ForeignKey(Topic, related_name='topic_tests', null=True, on_delete=models.SET_NULL)
+    lesson = models.ForeignKey(Lesson, related_name='lesson_tests', null=True, on_delete=models.SET_NULL)
+    # lesson = models.SmallIntegerField(null=True, blank=True, default=0)
     level = models.ForeignKey(Level, related_name='difficulty_level', null=True, on_delete=models.SET_NULL, default=1)
     created = models.DateTimeField(null=True, auto_now_add=True)
     updated = models.DateTimeField( null=True, auto_now=True)

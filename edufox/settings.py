@@ -132,7 +132,7 @@ PROTOCOL = ""
 DOMAIN = ""
 # print('CLOUDRUN_SERVICE_URL: ', CLOUDRUN_SERVICE_URL)
 if CLOUDRUN_SERVICE_URL:
-    print('CLOUDRUN_SERVICE_URL: ', CLOUDRUN_SERVICE_URL)
+    # print('CLOUDRUN_SERVICE_URL: ', CLOUDRUN_SERVICE_URL)
     service_url = urlparse(CLOUDRUN_SERVICE_URL).netloc
     ALLOWED_HOSTS = [service_url, 'api-service-5wasy3cpxq-uc.a.run.app', 'localhost:3000', 'localhost', '127.0.0.1:3000', '127.0.0.1', '10.0.2.2', 'http://localhost:3000']
     CSRF_TRUSTED_ORIGINS = [CLOUDRUN_SERVICE_URL, 
@@ -156,7 +156,7 @@ else:
     'http://10.0.2.2',
     "http://CTOs-MacBook-Pro.local",
     ]
-    CORS_ORIGIN_ALLOW_ALL = False 
+    CORS_ORIGIN_ALLOW_ALL = True 
     CORS_ALLOW_CREDENTIALS = True 
 
 CORS_ALLOW_METHODS = [
@@ -188,20 +188,30 @@ CORS_ALLOW_METHODS = [
 #     'edufox-api-service-5wasy3cpxq-uc.a.run.app',
 # ]
 
-CORS_ALLOWED_ORIGINS = [
-    'https://api-service-5wasy3cpxq-uc.a.run.app',
-    'http://localhost:8000',
-    'https://edufox-api-service-5wasy3cpxq-uc.a.run.app',
-    'http://localhost:3000',
-]
-CORS_ORIGIN_WHITELIST = [
-    'https://api-service-5wasy3cpxq-uc.a.run.app',
-    'https://localhost:8000', 'https://127.0.0.1',
-    'http://localhost:8000', 'http://127.0.0.1',
-    'https://edufox-api-service-5wasy3cpxq-uc.a.run.app',
-    'edufox-api-service-5wasy3cpxq-uc.a.run.app',
-    'http://localhost:3000'
-]
+
+# CORS_ORIGIN_ALLOW_ALL = True 
+# CORS_ALLOW_CREDENTIALS = True 
+# ALLOWED_HOSTS = ['10.0.2.2', 'localhost', '*', ".localhost", "127.0.0.1", ".local", "CTOs-MacBook-Pro.local", "172.20.10.2"]
+# CORS_ALLOWED_ORIGINS = [
+#     "http://CTOs-MacBook-Pro.local",
+#     'https://api-service-5wasy3cpxq-uc.a.run.app',
+#     'http://localhost:8000',
+#     'https://edufox-api-service-5wasy3cpxq-uc.a.run.app',
+#     'http://localhost:3000',
+#     'http://172.20.10.2',
+#     'http://172.20.10.2:8000'
+# ]
+# CORS_ORIGIN_WHITELIST = [
+#     'https://api-service-5wasy3cpxq-uc.a.run.app',
+#     'https://localhost:8000', 'https://127.0.0.1',
+#     'http://localhost:8000', 'http://127.0.0.1',
+#     'https://edufox-api-service-5wasy3cpxq-uc.a.run.app',
+#     'edufox-api-service-5wasy3cpxq-uc.a.run.app',
+#     'http://localhost:3000',
+#     "http://CTOs-MacBook-Pro.local",
+#     'http://172.20.10.2',
+#     'http://172.20.10.2:8000'
+# ]
 
 
 
@@ -214,6 +224,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'student',
     'course',
     'notify',
@@ -225,7 +236,7 @@ INSTALLED_APPS = [
     'djoser',
     'rest_framework_swagger',
     'django_filters',
-    'corsheaders',
+    
 
     
 ]
@@ -261,6 +272,15 @@ TEMPLATES = [
         },
     },
 ]
+    
+
+ALLOWED_HOSTS = ['*', '10.0.2.2', 'localhost', ".localhost", "127.0.0.1", ".local", "CTOs-MacBook-Pro.local"]
+
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = False
+# CORS_ORIGIN_WHITELIST = [
+#     '*'
+# ]
 
 WSGI_APPLICATION = 'edufox.wsgi.application'
 # DB_NAME=env("DB_NAME")
