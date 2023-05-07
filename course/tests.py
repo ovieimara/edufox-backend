@@ -204,7 +204,7 @@ class SignupTestCase(TestCase):
         list_response = self.client.get(reverse('course:videos-list'))
         detail_response = self.client.get(reverse('course:video-detail', kwargs={'pk': post_response.json().get('id')}))
 
-        print('post_video1: ', post_response.json(), self.grade.pk)
+        # print('post_video1: ', post_response.json(), self.grade.pk)
         self.assertEqual(post_response.status_code, status.HTTP_201_CREATED)
         # self.assertEqual(post_response.json().get('topic'), 'Tears of Steel')
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
@@ -220,7 +220,7 @@ class SignupTestCase(TestCase):
         # print('FILTER', (response.request))
 
         response = self.client.get(reverse('course:dashboard-list'))
-        print('post_video: ', response.json(), self.grade.pk, self.grade1.pk)
+        # print('post_video: ', response.json(), self.grade.pk, self.grade1.pk)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertGreater(len(response.json()), 0)

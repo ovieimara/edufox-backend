@@ -175,10 +175,26 @@ class ListCreateAPIAssessment(generics.ListCreateAPIView):
 
         return assessments
     
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        if user and not user.is_anonymous:
+            data = request.data
+            # updated_data = [ques.update([("user", user)]) for ques in data]
+            serializer = self.get_serializer(data=data, many=True, context={'request': request})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+            return Response(serializer.data, status.HTTP_201_CREATED)
+            # return super().create(request, *args, **kwargs)
+        return Response('not authenticated', status.HTTP_401_UNAUTHORIZED)
+    
     # def perform_create(self, serializer):
     #     user = self.request.user
-    #     if user:
+    #     if user and not user.is_anonymous:
     #         serializer.save(user=user)
+
+    #     data = self.request.data
+        
 
         # return Response(status.HTTP_401_UNAUTHORIZED)
         # return super().perform_create(serializer)

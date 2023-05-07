@@ -182,7 +182,7 @@ def VerifyPurchase(request, *args, **kwargs):
     if platform == 'android':
         resp = verifyAndroidPurchase(purchase_data, is_sandbox)
         result = resp
-        printOutLogs('result: ', result)
+        # printOutLogs('result: ', result)
         state = status.HTTP_200_OK
     
     if result and result.get('transaction_id'):
@@ -191,8 +191,8 @@ def VerifyPurchase(request, *args, **kwargs):
         product_id = purchase_data.get('productId')
         # if not request.user.is_anonymous:
             # user = request.user
-        printOutLogs('USER: ', user)
-        printOutLogs('GRADE: ', grade)
+        # printOutLogs('USER: ', user)
+        # printOutLogs('GRADE: ', grade)
         if user and not user.is_anonymous and grade:
 
             resp, state = create_subscription(product_id, result, user, grade, platform, response_json)
@@ -269,7 +269,7 @@ def validate_in_app(receipt_json_data):
             'original_purchase_date': transactionDate
         }
         response = purchase_details
-        printOutLogs('Response: ', response)
+        # printOutLogs('Response: ', response)
 
     return response
 
@@ -286,7 +286,7 @@ def AppStoreNotificationHandler(request, *args, **kwargs):
 
 def apple_notify_iap(message):
     # response = {}
-    printOutLogs('APPLE MESSAGE: ', message)
+    # printOutLogs('APPLE MESSAGE: ', message)
     signed_transaction_info = signed_renewal_info = decoded_payload_transaction_info = decoded_payload_signed_renewal_info = None
     decoded_header, decoded_payload, decoded_signature = decode_transaction(message)
     
@@ -315,7 +315,7 @@ def apple_notify_iap(message):
             message = ''
 
         if decoded_payload_transaction_info and decoded_payload_signed_renewal_info:
-            printOutLogs('APPLE MESSAGE 2 : ', message)
+            # printOutLogs('APPLE MESSAGE 2 : ', message)
             verify_apple_pay(notification_type, bundle_id, environment, decoded_payload_transaction_info, decoded_payload_signed_renewal_info, decoded_signature, message)
 
     # return response
@@ -383,7 +383,7 @@ def verify_apple_pay(notification_type, bundle_id, environment, jws_transaction_
         apple_notify = AppleNotifySerializer(data=purchase_details)
         apple_notify.is_valid(raise_exception=True)
         apple_notify.save()
-        printOutLogs('APPLE NOTIFY: ', apple_notify.data)
+        # printOutLogs('APPLE NOTIFY: ', apple_notify.data)
 
 
 @api_view(['GET', 'POST'])
@@ -695,7 +695,7 @@ def create_subscription(product_id, payment_data, user, grade, platform='android
         payment_serializer.is_valid(raise_exception=True)
         payment = payment_serializer.save(product=product)
         resp = payment_serializer.data
-        printOutLogs('PURCHASE3: ', resp)
+        # printOutLogs('PURCHASE3: ', resp)
 
     except Exception as ex:
             #  status.HTTP_409_CONFLICT
@@ -715,7 +715,7 @@ def create_subscription(product_id, payment_data, user, grade, platform='android
         grade = None
         if grade_obj.exists():
             grade = grade_obj.first()
-        printOutLogs('PURCHASE5: ', grade)
+        # printOutLogs('PURCHASE5: ', grade)
     except Exception as ex:
         print(f'Grade exception occurred: {ex}')
 
@@ -728,7 +728,7 @@ def create_subscription(product_id, payment_data, user, grade, platform='android
         
     try:
         # print('DETAILS: ', payment, product, grade, user)
-        printOutLogs('PURCHASE6: ', user)
+        # printOutLogs('PURCHASE6: ', user)
         # if payment and product:
         subscribe_serializer = SubscribeSerializer(data=data)
         subscribe_serializer.is_valid(raise_exception=True)
@@ -740,11 +740,11 @@ def create_subscription(product_id, payment_data, user, grade, platform='android
 
         state = status.HTTP_201_CREATED
             # print('DETAILS SUBSCRIBE: ', subscribe_serializer.data)
-        printOutLogs('DETAILS SUBSCRIBE: ', subscribe_serializer.data)
+        # printOutLogs('DETAILS SUBSCRIBE: ', subscribe_serializer.data)
 
     except Exception as ex:
-        # print(f'SubscribeSerializer exception occurred: {ex}')
-        printOutLogs('SubscribeSerializer exception occurred: ', ex)
+        print(f'SubscribeSerializer exception occurred: {ex}')
+        # printOutLogs('SubscribeSerializer exception occurred: ', ex)
 
     return resp, state
 
