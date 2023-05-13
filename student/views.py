@@ -28,7 +28,8 @@ from .constants import country_codes
 address = ["127.0.0.1:8000", "0.0.0.1:8000"]
 # HOST = config('HOST')
 client = APIClient()
-    
+
+
 class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin):
     """
     Signup a new student, with a POST request. user receives a verification otp via email and sms, after verification they are activated.
@@ -40,7 +41,7 @@ class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.RetrieveModelM
     permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):
-        email = password = phone_number = user = None
+        email = password = phone_number = student = None
         data = {}
         try:
             email = request.data.pop('email', None)
@@ -53,20 +54,21 @@ class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.RetrieveModelM
 
         if email and password and phone_number:
             data = {
-                    "username" : phone_number,
-                    "email" : email,
-                    "password" : password,
-                }
+                "username": phone_number,
+                "email": email,
+                "password": password,
+            }
             # print('DATA1: ', data)
         try:
-            user = Student.objects.get(phone_number=phone_number)
+            student = Student.objects.get(phone_number=phone_number)
         except Student.DoesNotExist as ex:
-             print('student object error: ', ex)
-        
-        if user:
-            return Response({"message" : "User already exists"}, status.HTTP_409_CONFLICT)
-        
-        # print('DATA1: ', data)
+            print('student object error: ', ex)
+
+        if student:
+            message = {"is_active": student.user.is_active,
+                       "message": "mobile already exists"}
+            return Response(message, status.HTTP_409_CONFLICT)
+
         if data:
             resp = {}
             response = {}
@@ -78,11 +80,11 @@ class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.RetrieveModelM
                         return Response(response)
                 else:
                     resp = requests.post(getUrl('user-list', "api"), data=data)
-                    
+
                 if resp and resp.status_code == status.HTTP_400_BAD_REQUEST:
                     return Response(resp.json())
 
-                #if django_settings.DOMAIN not in address :
+                # if django_settings.DOMAIN not in address :
                 # print('RESP: ', resp)
                 if resp and resp.status_code == status.HTTP_201_CREATED:
                     response = resp.json()
@@ -91,15 +93,15 @@ class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.RetrieveModelM
                     if not django_settings.FILE:
                         pass
                         # createOTP(phone_number)
-                        #emailOTP(email)
+                        # emailOTP(email)
                     return super().create(request, *args, **kwargs)
-                
+
                 return Response(response)
             except Exception as exception:
                 print('exception: ', exception)
 
         return Response(status.HTTP_400_BAD_REQUEST)
-    
+
     def get_object(self):
         student = None
         try:
@@ -109,9 +111,9 @@ class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.RetrieveModelM
                 student = user.profile
         except Student.DoesNotExist as ex:
             print("Student Object Error: ", ex)
-        
+
         return student
-    
+
     def put(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         return self.update(request, *args, partial=partial, **kwargs)
@@ -133,14 +135,15 @@ class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.RetrieveModelM
                 except Grade.DoesNotExist as ex:
                     grade = None
                     print('grade error: ', Http404, ex)
-    
-            serializer = self.get_serializer(instance, data=data, partial=partial)
+
+            serializer = self.get_serializer(
+                instance, data=data, partial=partial)
             serializer.is_valid(raise_exception=True)
             serializer.save(grade=grade)
 
             return Response(serializer.data)
-        
-        return Response({"message" : 'anonymous user'}, status.HTTP_403_FORBIDDEN)
+
+        return Response({"message": 'anonymous user'}, status.HTTP_403_FORBIDDEN)
 
     def delete(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -150,23 +153,26 @@ class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.RetrieveModelM
             if current_password:
                 response = {}
                 data = {
-                        'current_password': current_password
-                        }
+                    'current_password': current_password
+                }
                 if django_settings.DOMAIN == "127.0.0.1:8000":
-                    client.credentials(HTTP_AUTHORIZATION=f"Token {auth_token}")
+                    client.credentials(
+                        HTTP_AUTHORIZATION=f"Token {auth_token}")
                     response = client.delete(reverse('api:user-me'), data=data)
                 else:
                     headers = {'Authorization': f"Token {auth_token}"}
-                    response = requests.delete(getUrl('user-me', "api"), data=data, headers=headers)
-                
+                    response = requests.delete(
+                        getUrl('user-me', "api"), data=data, headers=headers)
+
                 # print('delete: ', response.json())
                 if response and response.status_code == status.HTTP_204_NO_CONTENT:
                     self.perform_destroy(instance)
                     return Response(status=status.HTTP_204_NO_CONTENT)
-            
+
         return Response(status.HTTP_400_BAD_REQUEST)
-            
+
         # return Response({"message": "NoneType object - user likely anonymous"}, status.HTTP_404_NOT_FOUND)
+
 
 class RetrieveUpdateAPIViewStudent(generics.RetrieveUpdateDestroyAPIView):
     queryset = Student.objects.all().order_by('pk')
@@ -199,7 +205,7 @@ def verifyOTPCode(request, *args, **kwargs):
     email = query.get('email')
     print(username, email)
     data = {
-       'username': username
+        'username': username
     }
     response = {}
     sms_resp = {}
@@ -218,7 +224,7 @@ def verifyOTPCode(request, *args, **kwargs):
 
         if email_response and email_response.status == OTP_APPROVED:
             response = email_response
-        
+
         if sms_resp and sms_resp.status == OTP_APPROVED:
             response = sms_resp
 
@@ -234,7 +240,7 @@ def verifyOTPCode(request, *args, **kwargs):
             print(result.json())
             return Response(result.json())
         # return Response(response, status.HTTP_400_BAD_REQUEST)
-    
+
     return Response(response, status.HTTP_400_BAD_REQUEST)
 
 
@@ -263,7 +269,7 @@ class ActivatePhoneNumberAPIView(generics.RetrieveUpdateAPIView):
         #     instance = client.patch(url)
         # else:
         #     instance = requests.put(url)
-        
+
         # print('UPDATED USER: ', instance.json())
         if settings.SEND_CONFIRMATION_EMAIL:
             context = {"user": user}
@@ -274,8 +280,9 @@ class ActivatePhoneNumberAPIView(generics.RetrieveUpdateAPIView):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # forcibly invalidate the prefetch cache on the instance.
             user._prefetched_objects_cache = {}
-        
+
         return Response(serializer.data)
+
 
 class ActivateUser(UserViewSet):
     def activation(self, request, *args, **kwargs):
@@ -297,7 +304,7 @@ class ActivateUser(UserViewSet):
         signals.user_activated.send(
             sender=self.__class__, user=user, request=self.request
         )
-        serialized = updateActivatedUser(user)  
+        serialized = updateActivatedUser(user)
         if settings.SEND_CONFIRMATION_EMAIL and serialized:
             context = {"user": user}
             to = [get_user_email(user)]
@@ -305,26 +312,30 @@ class ActivateUser(UserViewSet):
 
         return Response(serialized, status=status.HTTP_204_NO_CONTENT)
 
+
 class ActivationEmail(email.ActivationEmail):
     template_name = 'activation.html'
+
 
 class ConfirmationEmail(email.ConfirmationEmail):
     template_name = 'confirmation.html'
 
+
 def updateActivatedUser(temp_user):
-    
+
     email = get_user_email(temp_user)
     # print('TOKEN', email)
-    temp_student = TempStudent.objects.filter(email=email, username=temp_user.username).first()
+    temp_student = TempStudent.objects.filter(
+        email=email, username=temp_user.username).first()
     user = User.objects.get(username=temp_user.username, email=email)
     if temp_student:
         data = {
             "phone_number": temp_student.phone_number,
-            "gender" : temp_student.gender,
-            "age" : temp_student.age,
-            "image_url" : temp_student.image_url,
-            "registration_date" : temp_student.registration_date,
-            "last_updated" : datetime.utcnow()
+            "gender": temp_student.gender,
+            "age": temp_student.age,
+            "image_url": temp_student.image_url,
+            "registration_date": temp_student.registration_date,
+            "last_updated": datetime.utcnow()
         }
         user.first_name = temp_student.first_name
         user.last_name = temp_student.last_name
@@ -337,6 +348,7 @@ def updateActivatedUser(temp_user):
 
     return dict
 
+
 class CreateAPIUser(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -345,12 +357,14 @@ class CreateAPIUser(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(is_active=False)
 
+
 @api_view(['GET'])
 @permission_classes([IsStaffEditorPermission, IsAdminUser])
 def apiViewManager(request, *args, **kwargs):
     if not request.user:
         return HttpResponsePermanentRedirect('/token/login')
     return HttpResponsePermanentRedirect('/')
+
 
 class ListCreateAPICountry(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = Country.objects.all()

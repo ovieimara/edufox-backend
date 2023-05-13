@@ -88,7 +88,7 @@ class TestSerializer(serializers.ModelSerializer):
     
 
 class AssessmentSerializer(serializers.ModelSerializer):
-    # status = serializers.SerializerMethodField(read_only=True)
+    status = serializers.SerializerMethodField(read_only=True)
     user = UserSerializer(read_only=True, default=None)
     # answer = serializers.MultipleChoiceField(choices=[])
 
@@ -96,25 +96,31 @@ class AssessmentSerializer(serializers.ModelSerializer):
         model = Assessment
         fields = "__all__"
 
-    def compareAnswers(valid_answers=None, answers=None):
-        if not valid_answers or not answers:
-            return False
-        # valid_answers_dict = {}
-        if len(valid_answers) == len(answers):
-            valid_answers_dict = Counter(valid_answers)
-            for ans in answers:
-                if valid_answers_dict.get(ans):
-                    valid_answers_dict[ans] -= 1
-                    if valid_answers_dict[ans] <= 0:
-                        valid_answers_dict.pop(ans)
-                else:
-                    return False
+    def get_status(self, obj):
+        valid_answers = obj.test.valid_answers
+        answers = obj.answer
+        # print('OBJ: ', obj.test.valid_answers, answers)
 
-            if len(valid_answers_dict) == 0:
-                return True
-        return False
+        return self.compareAnswers(valid_answers, answers)
 
+    def compareAnswers(self, valid_answers=None, answers=None):
+        if not valid_answers:
+            valid_answers = []
+        if not answers:
+            answers = []
 
+        if not valid_answers and not answers:
+            return []
+
+        result = [False] * len(answers)
+        valid_answers_dict = Counter(valid_answers)
+        for index, answer in enumerate(answers):
+            if valid_answers_dict.get(answer):
+                valid_answers_dict[answer] -= 1
+                result[index] = True
+
+        return result
+    
     # def __init__(self, *args, **kwargs):
     #     super().__init__(*args, **kwargs)
     #     print(kwargs)
