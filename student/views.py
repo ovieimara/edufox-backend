@@ -30,6 +30,14 @@ address = ["127.0.0.1:8000", "0.0.0.1:8000"]
 client = APIClient()
 
 
+def createPhoneNumber(countryCode, phoneNumber):
+    number_size = len(phoneNumber)
+    if countryCode and number_size:
+        return f"{countryCode}{phoneNumber[1:]}" if int(phoneNumber[:1]) == 0 else f"{countryCode}{phoneNumber}"
+
+    return phoneNumber if number_size and phoneNumber[:1] == '+' else None
+
+
 class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin):
     """
     Signup a new student, with a POST request. user receives a verification otp via email and sms, after verification they are activated.
@@ -46,8 +54,11 @@ class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.RetrieveModelM
         try:
             email = request.data.pop('email', None)
             password = request.data.pop('password', None)
+            country_code = request.data.get('country_code')
             phone_number = request.data.get('phone_number')
+            phone_number = createPhoneNumber(country_code, phone_number)
             # print('email: ', email, password, phone_number)
+
             response = {}
         except Exception as ex:
             print('request.data error', ex)
