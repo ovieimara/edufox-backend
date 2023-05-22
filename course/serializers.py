@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from rest_framework import serializers
-from .models import (Grade, Comment, Rate, Subject, Lecturer, Video, Interaction, Resolution, Topic, Lesson)
+from .models import (Grade, Comment, Rate, Subject, Lecturer,
+                     Video, Interaction, Resolution, Topic, Lesson)
 # from assess.models import  Test, Assessment
 from subscribe.models import Subscribe
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
@@ -12,25 +13,30 @@ class GradeSerializer(serializers.ModelSerializer):
         model = Grade
         fields = "__all__"
 
+
 class RateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rate
         fields = "__all__"
+
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = "__all__"
 
+
 class SubjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subject
         fields = "__all__"
 
+
 class LecturerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lecturer
         fields = '__all__'
+
 
 class VideoSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField(read_only=True)
@@ -43,9 +49,9 @@ class VideoSerializer(serializers.ModelSerializer):
         fields = '__all__'
         # exclude = ['grade', 'subject', 'topic', 'lesson']
         extra_kwargs = {'topics': {'write_only': True},
-                'topic': {'read_only' : True},
-                'lesson': {'read_only' : True},
-                }
+                        'topic': {'read_only': True},
+                        'lesson': {'read_only': True},
+                        }
         # validators = [
         #     serializers.UniqueTogetherValidator(
         #         queryset=Video.objects.all(),
@@ -55,7 +61,6 @@ class VideoSerializer(serializers.ModelSerializer):
         # ]
         # depth = 1
 
-    
     def __init__(self, *args, my_choices=None, lesson_choices=None, **kwargs):
         if not my_choices:
             my_choices = []
@@ -65,7 +70,8 @@ class VideoSerializer(serializers.ModelSerializer):
         super().__init__(*args, **kwargs)
         # print('kwargs: ', kwargs.get('context').get("request").GET)
         view = self.context.get('view')
-        topics_queryset = Topic.objects.all().order_by('chapter').values('title', 'chapter')
+        topics_queryset = Topic.objects.all().order_by(
+            'chapter').values('title', 'chapter')
         lessons_queryset = Lesson.objects.all().order_by('num').values('title', 'num')
 
         subject = None
@@ -73,22 +79,26 @@ class VideoSerializer(serializers.ModelSerializer):
             subject = view.kwargs.get('subject')
             # print(view.kwargs)
         if subject:
-            topics = topics_queryset.filter(subject__pk=subject).values('title', 'chapter')
-            lessons = lessons_queryset.filter(subject__pk=subject).values('title', 'num')
+            topics = topics_queryset.filter(
+                subject__pk=subject).values('title', 'chapter')
+            lessons = lessons_queryset.filter(
+                subject__pk=subject).values('title', 'num')
 
             # print(topics)
             # subject_obj = Subject.objects.get(pk=subject)
-            my_choices = [(topic.get('title'), f"{topic.get('chapter')}. {topic.get('title')}") for topic in topics]
-            lesson_choices = [(lesson.get('title'), f"{lesson.get('num')}. {lesson.get('title')}") for lesson in lessons]
+            my_choices = [(topic.get(
+                'title'), f"{topic.get('chapter')}. {topic.get('title')}") for topic in topics]
+            lesson_choices = [(lesson.get(
+                'title'), f"{lesson.get('num')}. {lesson.get('title')}") for lesson in lessons]
 
             self.fields['subject'].initial = subject
 
         if not subject:
-            my_choices = [(topic.get('title'), f"{topic.get('chapter')}. {topic.get('title')}") for topic in topics_queryset]
-            lesson_choices = [(lesson.get('title'), f"{lesson.get('chapter')}. {lesson.get('title')}") for lesson in lessons_queryset]
-            
+            my_choices = [(topic.get(
+                'title'), f"{topic.get('chapter')}. {topic.get('title')}") for topic in topics_queryset]
+            lesson_choices = [(lesson.get(
+                'title'), f"{lesson.get('chapter')}. {lesson.get('title')}") for lesson in lessons_queryset]
 
-        
         self.fields['topics'].choices = my_choices
         self.fields['lessons'].choices = lesson_choices
 
@@ -96,18 +106,56 @@ class VideoSerializer(serializers.ModelSerializer):
     #     return obj.lesson.num
 
     def get_is_subscribed(self, obj):
+        subscribed = ''
         request = self.context.get('request')
+        print('request: ', request)
         if request and request.user and not request.user.is_anonymous:
-            subscriptions = request.user.subscriptions_user.all()
-            if subscriptions.exists():
+            subscriptions = request.user.subscriptions_user.all().order_by(
+                "payment_method__original_purchase_date")
+            grades = obj.grade.all()
+            grades = [grade.name for grade in grades]
+            subscription = subscriptions[0]
+            # for sub in subscriptions:
+            # print('subscriptions:', subscriptions)
+            grade = subscription.grade
+            extras_grades = [grade.pk - 1, grade.pk + 1, grade.pk + 2]
+
+            subscription_grades = [grade.name]
+            print(extras_grades)
+            grades_set = set(grades)
+            for pk in extras_grades:
+                try:
+                    g = Grade.objects.get(pk=pk)
+
+                    if g.name in grades:
+                        print("G: ", g.name, grades[0])
+                        subscribed = subscription
+                    subscription_grades.append(g)
+
+                except Grade.DoesNotExist as ex:
+                    print('grade object error: ', ex)
+
+                print("subscription: ", subscribed)
+            # for grade in subscription_grades:
+            #     if grade in grades_set:
+            #         print('NAME: ', grade.name)
+            #         subscribed = subscription
+
+            # if subscriptions.exists():
+            #     print(subscriptions[0])
                 # for g in obj.grade:
-                subscribed = subscriptions.filter(grade__in=obj.grade.all()).first()
-                if subscribed:
-                    return subscribed.is_valid(datetime.now())
-                return False
+                # subscription = subscriptions.first()
+                # grade = subscription.grade
+
+                # subscribed = subscriptions.filter(
+                #     grade__in=obj.grade.all()).first()
+            # print('grade: ', grades_set, subscription_grades)
+            if subscribed:
+                print('PAY: ', subscribed.payment_method.expires_date)
+                return subscribed.is_valid(datetime.now())
             return False
         return False
-    
+
     def get_topics(self, obj):
         view = self.context.get('view')
         subject = None
@@ -118,9 +166,9 @@ class VideoSerializer(serializers.ModelSerializer):
             topics = Topic.objects.filter(subject__pk=subject).values('title')
             print(topics)
             return [topic.get('title') for topic in topics]
-        
+
         return []
-    
+
     def validate(self, attrs):
         title = attrs.get('topics')
         value = attrs.get('lessons')
@@ -142,8 +190,11 @@ class VideoSerializer(serializers.ModelSerializer):
 #         model = InteractionType
 #         fields = "__all__"
 
+
 class InteractionSerializer(serializers.ModelSerializer):
-    type = serializers.ChoiceField(choices=['END', 'EXIT', 'PAUSE','PLAY', 'START', 'STOP'])
+    type = serializers.ChoiceField(
+        choices=['END', 'EXIT', 'PAUSE', 'PLAY', 'START', 'STOP'])
+
     class Meta:
         model = Interaction
         fields = "__all__"
@@ -174,8 +225,10 @@ class ResolutionSerializer(serializers.ModelSerializer):
         model = Resolution
         fields = "__all__"
 
+
 class TopicSerializer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=255)
+
     class Meta:
         model = Topic
         exclude = ('created', 'updated')
@@ -188,15 +241,15 @@ class TopicSerializer(serializers.ModelSerializer):
         #             ]
         #         }
         #     }
+
     def validate_title(self, value):
         if Topic.objects.filter(title=value).exists():
             raise serializers.ValidationError('This field must be unique.')
         return value
-    
+
     def get_grade(self, obj):
         # return GradeSerializer(obj.grade.all(), many=True).data
         return [grade.name for grade in obj.grade.all()]
-    
 
 
 # class ChapterSerializer(serializers.ModelSerializer):
@@ -210,14 +263,16 @@ class LessonSerializer(serializers.ModelSerializer):
     topic = serializers.StringRelatedField()
     grades = serializers.SerializerMethodField()
     title = serializers.CharField(max_length=255)
-    
+
     class Meta:
         model = Lesson
-        fields = ['num', 'title', 'topic', 'subject', 'grade', 'grades', 'topics']
+        fields = ['num', 'title', 'topic',
+                  'subject', 'grade', 'grades', 'topics']
         # exclude = ('created', 'updated')
         extra_kwargs = {'topics': {'write_only': True},
-                        'topic': {'read_only' : True}
+                        'topic': {'read_only': True}
                         }
+
     def validate_title(self, value):
         if Topic.objects.filter(title=value).exists():
             raise serializers.ValidationError('This field must be unique.')
@@ -229,33 +284,37 @@ class LessonSerializer(serializers.ModelSerializer):
         super().__init__(*args, **kwargs)
         # print('kwargs: ', kwargs.get('context').get("request").GET)
         view = self.context.get('view')
-        topics_queryset = Topic.objects.all().order_by('chapter').values('title', 'chapter')
+        topics_queryset = Topic.objects.all().order_by(
+            'chapter').values('title', 'chapter')
         subject = None
         if view:
             subject = view.kwargs.get('subject')
             # print(view.kwargs)
         if subject:
             grades = []
-            topics = topics_queryset.filter(subject__pk=subject).values('title', 'chapter')
+            topics = topics_queryset.filter(
+                subject__pk=subject).values('title', 'chapter')
             subject_obj = Subject.objects.get(pk=subject)
             if subject_obj:
                 grades = subject_obj.grade.all()
-            
-            my_choices = [(topic.get('title'), f"{topic.get('chapter')}. {topic.get('title')}")for topic in topics]
+
+            my_choices = [(topic.get(
+                'title'), f"{topic.get('chapter')}. {topic.get('title')}")for topic in topics]
             self.fields['subject'].initial = subject
             self.fields['topic'].initial = 1
-            self.fields['grade'].initial = grades[0].name if len(grades) > 0 else ''
+            self.fields['grade'].initial = grades[0].name if len(
+                grades) > 0 else ''
 
         if not subject:
-            my_choices = [(topic.get('title'), f"{topic.get('chapter')}. {topic.get('title')}")for topic in topics_queryset]
-        
+            my_choices = [(topic.get(
+                'title'), f"{topic.get('chapter')}. {topic.get('title')}")for topic in topics_queryset]
+
         self.fields['topics'].choices = my_choices
         # self.fields['grade'].initial = [grade.name for grade in grades.grade.all()]
-    
+
     def get_grades(self, obj):
         return [grade.name for grade in obj.grade.all()]
-    
-    
+
     def get_topics(self, obj):
         view = self.context.get('view')
         subject = None
@@ -266,35 +325,33 @@ class LessonSerializer(serializers.ModelSerializer):
             topics = Topic.objects.filter(subject__pk=subject).values('title')
             print(topics)
             return [topic.get('title') for topic in topics]
-        
+
         return []
-    
+
     # def create(self, validated_data):
     #     print('validated_data: ', validated_data)
     #     return super().create(validated_data)
-    
-    
+
     def validate(self, attrs):
         title = attrs.get('topics')
         topic = Topic.objects.filter(title=title).first()
         attrs['topic'] = topic
 
         return super().validate(attrs)
-    
+
+
 class TopicSubjectSerializer(serializers.ModelSerializer):
     topic = serializers.SerializerMethodField()
+
     class Meta:
         model = Topic
         fields = "__all__"
-    
+
     def get_topic(self, obj):
         request = self.context.get('request')
         subject = request.kwargs.get('subject')
         if subject:
             topics = Topic.objects.filter(subject__pk=subject).values('title')
             return topics
-        
+
         return obj.topic
-
-
-        

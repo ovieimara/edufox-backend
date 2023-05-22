@@ -33,7 +33,7 @@ arr = os.listdir('.')
 FILE = ''
 for i in range(len(arr)):
     # if 'gha-creds' in arr[i] or 'creds.json' == arr[i]: #cloudbuild.yml
-    if 'gha-creds' in arr[i]: #ci.yml
+    if 'gha-creds' in arr[i]:  # ci.yml
         FILE = arr[i]
 # print('FILE::', FILE)
 if FILE:
@@ -69,7 +69,6 @@ if FILE:
 # # os.environ['EMAIL_HOST_USER'] = ''
 # # os.environ['EMAIL_HOST_PASSWORD'] = ''
 # # os.environ['DB_ENGINE'] = ''
-
 
 
 # if os.path.isfile(env_file):
@@ -134,9 +133,10 @@ DOMAIN = ""
 if CLOUDRUN_SERVICE_URL:
     # print('CLOUDRUN_SERVICE_URL: ', CLOUDRUN_SERVICE_URL)
     service_url = urlparse(CLOUDRUN_SERVICE_URL).netloc
-    ALLOWED_HOSTS = [service_url, 'api-service-5wasy3cpxq-uc.a.run.app', 'localhost:3000', 'localhost', '127.0.0.1:3000', '127.0.0.1', '10.0.2.2', 'http://localhost:3000']
-    CSRF_TRUSTED_ORIGINS = [CLOUDRUN_SERVICE_URL, 
-    'https://api-service-5wasy3cpxq-uc.a.run.app', 'http://localhost:3000', 'http://localhost', 'http://127.0.0.1:3000', 'http://127.0.0.1', 'http://10.0.2.2']
+    ALLOWED_HOSTS = [service_url, 'api-service-5wasy3cpxq-uc.a.run.app', 'localhost:3000',
+                     'localhost', '127.0.0.1:3000', '127.0.0.1', '10.0.2.2', 'http://localhost:3000']
+    CSRF_TRUSTED_ORIGINS = [CLOUDRUN_SERVICE_URL,
+                            'https://api-service-5wasy3cpxq-uc.a.run.app', 'http://localhost:3000', 'http://localhost', 'http://127.0.0.1:3000', 'http://127.0.0.1', 'http://10.0.2.2']
     # SECURE_SSL_REDIRECT = True
     # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     PROTOCOL = "https"
@@ -147,17 +147,18 @@ else:
     # ALLOWED_HOSTS = ["*"]
     PROTOCOL = "http"
     DOMAIN = "127.0.0.1:8000"
-    ALLOWED_HOSTS = ['10.0.2.2', 'localhost', '*', ".localhost", "127.0.0.1", ".local", "CTOs-MacBook-Pro.local"]
+    ALLOWED_HOSTS = ['10.0.2.2', 'localhost', '*', ".localhost",
+                     "127.0.0.1", ".local", "CTOs-MacBook-Pro.local"]
     CORS_ALLOWED_ORIGINS = [
-    'http://localhost:8000',
-    'http://192.168.0.100',
-    'http://192.168.0.100:8000',
-    'http://*:8000',
-    'http://10.0.2.2',
-    "http://CTOs-MacBook-Pro.local",
+        'http://localhost:8000',
+        'http://192.168.0.100',
+        'http://192.168.0.100:8000',
+        'http://*:8000',
+        'http://10.0.2.2',
+        "http://CTOs-MacBook-Pro.local",
     ]
-    CORS_ORIGIN_ALLOW_ALL = True 
-    CORS_ALLOW_CREDENTIALS = True 
+    CORS_ORIGIN_ALLOW_ALL = True
+    CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -181,7 +182,7 @@ CORS_ALLOW_METHODS = [
 #     'http://localhost:8000', 'https://127.0.0.1',
 #  ]
 # ALLOWED_HOSTS = [
-#     'https://api-service-5wasy3cpxq-uc.a.run.app', 
+#     'https://api-service-5wasy3cpxq-uc.a.run.app',
 #     'api-service-5wasy3cpxq-uc.a.run.app', '127.0.0.1',
 #     'localhost:8000', 'localhost',
 #     'https://edufox-api-service-5wasy3cpxq-uc.a.run.app',
@@ -189,8 +190,8 @@ CORS_ALLOW_METHODS = [
 # ]
 
 
-# CORS_ORIGIN_ALLOW_ALL = True 
-# CORS_ALLOW_CREDENTIALS = True 
+# CORS_ORIGIN_ALLOW_ALL = True
+# CORS_ALLOW_CREDENTIALS = True
 # ALLOWED_HOSTS = ['10.0.2.2', 'localhost', '*', ".localhost", "127.0.0.1", ".local", "CTOs-MacBook-Pro.local", "172.20.10.2"]
 # CORS_ALLOWED_ORIGINS = [
 #     "http://CTOs-MacBook-Pro.local",
@@ -214,7 +215,6 @@ CORS_ALLOW_METHODS = [
 # ]
 
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -236,9 +236,9 @@ INSTALLED_APPS = [
     'djoser',
     'rest_framework_swagger',
     'django_filters',
-    
 
-    
+
+
 ]
 
 MIDDLEWARE = [
@@ -257,7 +257,7 @@ ROOT_URLCONF = 'edufox.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['student/templates' ],
+        'DIRS': ['student/templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -267,14 +267,15 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
             ],
             'libraries': {
-                    'staticfiles': 'django.templatetags.static',
-                }
+                'staticfiles': 'django.templatetags.static',
+            }
         },
     },
 ]
-    
 
-ALLOWED_HOSTS = ['*', '10.0.2.2', 'localhost', ".localhost", "127.0.0.1", ".local", "CTOs-MacBook-Pro.local"]
+
+ALLOWED_HOSTS = ['*', '10.0.2.2', 'localhost', ".localhost",
+                 "127.0.0.1", ".local", "CTOs-MacBook-Pro.local"]
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = False
@@ -340,7 +341,7 @@ if CLOUDRUN_SERVICE_URL or env('USE_CLOUD_BUILD') and not os.environ.get('USE_LO
 
 # # If the flag as been set, configure to use proxy
 if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
-    DATABASES["default"]["HOST"] = "cloudsql-proxy" #CI.yml
+    DATABASES["default"]["HOST"] = "cloudsql-proxy"  # CI.yml
     # DATABASES["default"]["HOST"] = "127.0.0.1" #local
     DATABASES["default"]["PORT"] = 5432
 
@@ -372,26 +373,26 @@ STATICFILES_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
 #     },
 # ]
 
-REST_FRAMEWORK =  {
+REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         # 'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
 
-    "DEFAULT_PERMISSION_CLASSES" : [
-    'rest_framework.permissions.IsAuthenticatedOrReadOnly'
-   ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly'
+    ],
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
         'rest_framework.filters.OrderingFilter',
         'rest_framework.filters.SearchFilter',
     ],
-    'DEFAULT_PAGINATION_CLASS' : 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
 
     # 'DEFAULT_PAGINATION_CLASS' : 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE' : 10,
+    'PAGE_SIZE': 10,
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle'
@@ -402,6 +403,16 @@ REST_FRAMEWORK =  {
     # }
 
 }
+CACHE_MIDDLEWARE_ANONYMOUS_ONLY = True
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        "TIMEOUT": 300,
+        "OPTIONS": {"MAX_ENTRIES": 100, "CULL_FREQUENCY": 3},
+    }
+}
+
 
 DJOSER = {
     'SET_PASSWORD_RETRIES': 5,
@@ -411,7 +422,7 @@ DJOSER = {
         {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
         {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
     ],
-    "USER_ID_FIELD" : "username",
+    "USER_ID_FIELD": "username",
     'PASSWORD_RESET_CONFIRM_URL': 'password/reset/confirm/{uid}/{token}',
     'USERNAME_RESET_CONFIRM_URL': 'username/reset/confirm/{uid}/{token}',
     'ACTIVATION_URL': 'api/v1/auth/activate/{uid}/{token}',
@@ -420,8 +431,8 @@ DJOSER = {
     # 'SEND_CONFIRMATION_EMAIL': True,
     'PASSWORD_RESET_CONFIRM_EMAIL_SUBJECT_TEMPLATE': 'TESTING',
     'EMAIL': {
-            'activation': 'student.views.ActivationEmail',
-            'confirmation': 'student.views.ConfirmationEmail',
+        'activation': 'student.views.ActivationEmail',
+        'confirmation': 'student.views.ConfirmationEmail',
 
     },
     # 'SERIALIZERS': { 'user': 'student.serializers.StudentSerializer',},

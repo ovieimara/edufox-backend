@@ -3,6 +3,8 @@ from django.shortcuts import render
 from rest_framework import generics, status, mixins
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly, AllowAny
+
+from edufox.views import update_user_data
 from .models import (Grade, Lesson, Subject, Lecturer, Video,
                      Rate, Comment, Interaction, Resolution, Topic)
 # from assess.models import  Test, Assessment
@@ -69,7 +71,10 @@ class ListCreateAPIVideo(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         # print('USER: ', self.request.user, self.request.user.is_staff)
         if self.request.user.is_staff:
-            return super().perform_create(serializer)
+            response = super().perform_create(serializer)
+            if response and response.status == status.HTTP_201_CREATED:
+                update_user_data()  # update cache
+            return response
         return status.HTTP_403_FORBIDDEN
 
 
@@ -238,25 +243,43 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
 
         subject = kwargs.get('subject')
         grade = kwargs.get('grade')
+        if grade is not None:
+            grade = int(grade)
 
         user = request.user if request.user else None
         try:
             if user and not user.is_anonymous:
                 student = Student.objects.get(phone_number=user.username)
 
-                if student and not grade:
+            if student and not grade:
+                try:
                     grade = Grade.objects.get(name=student.grade)
                     grade = grade.pk
+                except Grade.DoesNotExist as ex:
+                    print('grade object error: ', ex)
 
-            if subject and grade:
+            # when a subject is selected
+            if subject:
                 topics_queryset = None
-                subject_instance = Subject.objects.get(pk=subject)
+                subject_instance = None
+                try:
+                    subject_instance = Subject.objects.get(pk=subject)
+                except Subject.DoesNotExist as ex:
+                    print('subject object error: ', ex)
+
                 if subject_instance:
-                    topics_queryset = subject_instance.subject_topics.all().filter(grade__pk=grade)
+                    topics_queryset = subject_instance.subject_topics.all()
+                    if grade:
+                        topics_queryset = topics_queryset.filter(
+                            grade__pk=grade)
 
                 if topics_queryset:
+                    # lessons_queryset = None
                     for topic in topics_queryset.all():
-                        lessons_queryset = topic.topic_lessons.all().filter(grade__pk=grade)
+                        lessons_queryset = topic.topic_lessons.all()
+                        if grade:
+                            lessons_queryset = lessons_queryset.filter(
+                                grade__pk=grade)
                         serialized_lessons = LessonSerializer(
                             lessons_queryset, many=True).data
                         serialized_topic = TopicSerializer(topic).data
@@ -267,12 +290,16 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
 
                 return Response(result)
 
+        except Student.DoesNotExist as ex:
+            print('student object error: ', ex)
         except Subject.DoesNotExist as ex:
             print('subject object error: ', ex)
         except Exception as ex:
             print("dashboard Error: ", ex)
 
+        # main dashboard
         try:
+            # recent interactions section
             if user:
                 user_interactions = user.interactions
 
@@ -285,7 +312,12 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
             print("Recent Error: ", ex)
 
         try:
+            # subjects section
             subjects_queryset = self.get_queryset()
+            if grade:
+                subjects_queryset = subjects_queryset.filter(
+                    grade__in=[grade])
+                # print('subjects_queryset', subjects_queryset.all())
             serialized_subjects = self.serializer_class(
                 subjects_queryset, many=True).data
 
@@ -293,18 +325,16 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
             print("Subjects Error: ", ex)
 
         try:
+            # recommendations section
             recommend_queryset = []
+            recommend_queryset = Video.objects.select_related(
+                'subject').filter(tags__icontains='recommend')
             if grade:
-
-                # print('STUDENT: ', grade.pk)
                 recommend_queryset = Video.objects.select_related(
                     'subject').filter(tags__icontains='recommend', grade__pk=grade)
-            else:
-                recommend_queryset = Video.objects.select_related(
-                    'subject').filter(tags__icontains='recommend')
 
             serialized_recommend = VideoSerializer(
-                recommend_queryset, many=True).data
+                recommend_queryset, many=True, context={'request': request}).data
 
         except Exception as ex:
             print("Recommend Objects Error: ", ex)
@@ -318,6 +348,7 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
                 "title": 'Subjects',
                 "data": serialized_subjects,
                 "columns": 2,
+                "grade": grade,
 
             },
 
@@ -362,9 +393,11 @@ class ListDashboardLessonsAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  m
                     grade = Grade.objects.get(name=student.grade)
                     grade = grade.pk
 
-            if topic and grade:
+            if topic:
                 topic_obj = Topic.objects.get(pk=topic)
-                lessons_queryset = topic_obj.topic_lessons.all().filter(grade__pk=grade)
+                lessons_queryset = topic_obj.topic_lessons.all()
+                if grade:
+                    lessons_queryset = lessons_queryset.filter(grade__pk=grade)
 
                 serialized_lessons = self.get_serializer(
                     lessons_queryset, many=True).data
@@ -375,11 +408,15 @@ class ListDashboardLessonsAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  m
                     }
                 ]
 
-            if lesson and grade:
+            if lesson:
                 lesson_obj = Lesson.objects.get(pk=lesson)
-                videos_queryset = lesson_obj.lesson_videos.all().filter(grade__pk=grade).first()
+                videos_queryset = lesson_obj.lesson_videos.all()
+                if grade:
+                    videos_queryset = videos_queryset.filter(
+                        grade__pk=grade).first()
                 # print('videos_queryset: ', videos_queryset)
-                serialized_videos = VideoSerializer(videos_queryset).data
+                serialized_videos = VideoSerializer(
+                    videos_queryset, context={'request': request}).data
                 # result = {
                 #         "title": 'Lesson',
                 #         "data" : serialized_videos,

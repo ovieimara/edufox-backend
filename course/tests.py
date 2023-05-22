@@ -9,28 +9,29 @@ import json
 
 User = get_user_model()
 
+
 class SignupTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
 
         self.grade = Grade.objects.create(
-            code='grade2', 
-            name='Grade 2', 
+            code='grade2',
+            name='Grade 2',
             description='Grade 2'
         )
         self.grade1 = Grade.objects.create(
-            code='grade1', 
-            name='Grade 1', 
+            code='grade1',
+            name='Grade 1',
             description='Grade 1'
         )
         self.user = User.objects.create_user(
             is_staff=True,
-            username='testuser', 
-            email='testuser@example.com', 
+            username='testuser',
+            email='testuser@example.com',
             password='password@123A',
             # grade = self.grade.pk
         )
-        self.user.is_staff=True
+        self.user.is_staff = True
         self.user.save()
 
         self.resolution = Resolution.objects.create(
@@ -40,18 +41,18 @@ class SignupTestCase(TestCase):
             media="HLS",
         )
         self.subject = Subject.objects.create(
-            code='maths241', 
-            name='Maths', 
+            code='maths241',
+            name='Maths',
             description='Mathematics',
         )
 
-        self.discount = {            
+        self.discount = {
             "name": "0%",
             "value": "0.00",
             "symbol": "%"
         }
 
-        self.plan =  {
+        self.plan = {
             "name": "monthly",
             "amount": 5000,
             "currency": "=N=",
@@ -59,46 +60,46 @@ class SignupTestCase(TestCase):
             "duration": 30,
             "discount": 1
         },
-        
+
         self.subscribe = {
             "user": 1,
             "plan": 1,
             "grade": 1,
         }
 
-        self.video = Video.objects.create (
-            title = "Tears of Steel",
-            description = "Tears of Steel",
-            duration = "2:00",
-            thumbnail = "https://picsum.photos/200/300",
-            topic = None,
-            lesson = None,
-            url = "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8",
-            tags = "recommend",
-            resolution = self.resolution,
-            subject = self.subject,
+        self.video = Video.objects.create(
+            title="Tears of Steel",
+            description="Tears of Steel",
+            duration="2:00",
+            thumbnail="https://picsum.photos/200/300",
+            topic=None,
+            lesson=None,
+            url="https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8",
+            tags="recommend",
+            resolution=self.resolution,
+            subject=self.subject,
             # grade = [self.grade.pk] ,
         )
         self.video.grade.set([self.grade.pk])
         self.data = {
-                'email': 'imaraovie@gmail.com',
-                'password': 'password@123A',
-                'phone_number' : '+23407048536974',
+            'email': 'imaraovie@gmail.com',
+            'password': 'password@123A',
+            'phone_number': '+23407048536974',
         }
 
         self.topic = Topic.objects.create(
-            chapter = 1,
-            title = "Elements",
-            subject = None,
+            chapter=1,
+            title="Elements",
+            subject=None,
             # grade = None
         )
         self.topic.grade.set([self.grade.pk, self.grade1.pk])
 
         self.lesson = Lesson.objects.create(
-            num= 1,
-            title = "Elements 1",
-            topic = self.topic,
-            subject = self.subject,
+            num=1,
+            title="Elements 1",
+            topic=self.topic,
+            subject=self.subject,
             # grade = None
             # grades = [
             #     "Grade 1"
@@ -109,19 +110,18 @@ class SignupTestCase(TestCase):
 
     def test_create_grade(self):
         Grade.objects.create(
-            code='grade3', 
-            name='Grade 3', 
+            code='grade3',
+            name='Grade 3',
             description='Grade 3'
         )
         grade = Grade.objects.get(name='Grade 3')
         self.assertEqual(grade.name, 'Grade 3')
         self.assertEqual(grade.code, 'grade3')
 
-
     def test_create_subject(self):
         Subject.objects.create(
-            code='che141', 
-            name='Chemistry', 
+            code='che141',
+            name='Chemistry',
             description='Chemistry',
         )
         grade = Subject.objects.get(name='Chemistry')
@@ -130,15 +130,14 @@ class SignupTestCase(TestCase):
 
     def test_create_lecturer(self):
         Lecturer.objects.create(
-            first_name='ovie', 
-            last_name='imara', 
+            first_name='ovie',
+            last_name='imara',
         )
         lecturer = Lecturer.objects.get(first_name='ovie')
         self.assertEqual(lecturer.first_name, 'ovie')
         self.assertEqual(lecturer.last_name, 'imara')
 
     # def test_create_lessons(self):
-
 
     # def test_seek(self):
     #     obj = {
@@ -147,7 +146,7 @@ class SignupTestCase(TestCase):
     #         "to_duration" : "3:00",
     #         "from_duration" : "5:00",
     #         "video" : self.video.pk
-    #     } 
+    #     }
     #     response = self.client.post(reverse('students-list'), data=self.data, format='json')
     #     # data = {
     #     #         "otp" : '1234',
@@ -163,7 +162,7 @@ class SignupTestCase(TestCase):
     #     # print('GRADE: ', response.json())
     #     token = response.json()['auth_token']
     #     self.client.credentials(HTTP_AUTHORIZATION=f"Token {token}")
-        
+
     #     response = self.client.post(reverse('course:seeks-list'), data=obj)
     #     response_json = response.json()
     #     # print('RESP: ', response_json)
@@ -173,8 +172,6 @@ class SignupTestCase(TestCase):
     #     response = self.client.get(reverse('course:seek-detail', kwargs={'pk': response_json.get('id')}))
     #     self.assertEqual(response.status_code, status.HTTP_200_OK)
     #     self.assertGreater(len(response.json()), 0)
-
-        
 
     def test_ListCreateAPIVideo(self):
         video = {
@@ -200,9 +197,11 @@ class SignupTestCase(TestCase):
         })
         token = response.json()['auth_token']
         self.client.credentials(HTTP_AUTHORIZATION=f"Token {token}")
-        post_response = self.client.post(reverse('course:videos-list'), data=video, format='json')
+        post_response = self.client.post(
+            reverse('course:videos-list'), data=video, format='json')
         list_response = self.client.get(reverse('course:videos-list'))
-        detail_response = self.client.get(reverse('course:video-detail', kwargs={'pk': post_response.json().get('id')}))
+        detail_response = self.client.get(
+            reverse('course:video-detail', kwargs={'pk': post_response.json().get('id')}))
 
         # print('post_video1: ', post_response.json(), self.grade.pk)
         self.assertEqual(post_response.status_code, status.HTTP_201_CREATED)
@@ -211,20 +210,30 @@ class SignupTestCase(TestCase):
         self.assertGreater(len(list_response.json().get('results')), 0)
         self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
         self.assertGreater(len(detail_response.json()), 0)
-        self.assertEqual(detail_response.json().get('title'), video.get('title'))
+        self.assertEqual(detail_response.json().get(
+            'title'), video.get('title'))
 
         url = f"{reverse('course:videos-list')}?subject={self.subject.pk}"
         response = self.client.get(url)
 
-        response = self.client.get(reverse('course:videos-list'), params={'subject' : {self.subject.pk}})
+        response = self.client.get(
+            reverse('course:videos-list'), params={'subject': {self.subject.pk}})
         # print('FILTER', (response.request))
 
         response = self.client.get(reverse('course:dashboard-list'))
-        # print('post_video: ', response.json(), self.grade.pk, self.grade1.pk)
+        # print('RESPONSE', (response.json()))
 
+        dashboard_response = self.client.get(
+            reverse('course:dashboard-detail', kwargs={'subject': 0, 'grade': 3}))
+        dashboard_response2 = self.client.get(
+            reverse('course:dashboard-detail', kwargs={'subject': '0', 'grade': 1}))
+
+        # print('dashboard_response: ', dashboard_response.json())
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertGreater(len(response.json()), 0)
-
+        self.assertEqual(dashboard_response.status_code, status.HTTP_200_OK)
+        self.assertGreater(len(dashboard_response.json()), 0)
+        self.assertEqual(len(dashboard_response2.json()[1].get('data')), 0)
 
     # def test_ListDashboardAPI(self):
     #     response = self.client.get(reverse('course:dashboard-list'))

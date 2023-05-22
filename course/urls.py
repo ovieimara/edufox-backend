@@ -1,10 +1,12 @@
 from django.urls import path, include
 from .views import (ListCreateAPIGrades, UpdateAPIGrades, ListCreateAPISubject, ListCreateAPIComment, UpdateAPIComment,
-UpdateAPISubject, ListCreateAPILecturer, UpdateAPILecturer, ListCreateAPIRate, 
-UpdateAPIRate, ListCreateAPIInteraction, UpdateAPIInteraction, 
-ListCreateAPIVideo, UpdateAPIVideo, ListCreateAPIResolution, 
-ListDashboardAPI, ListCreateUpdateAPILesson, ListCreateUpdateAPITopic, ListDashboardLessonsAPI)
+                    UpdateAPISubject, ListCreateAPILecturer, UpdateAPILecturer, ListCreateAPIRate,
+                    UpdateAPIRate, ListCreateAPIInteraction, UpdateAPIInteraction,
+                    ListCreateAPIVideo, UpdateAPIVideo, ListCreateAPIResolution,
+                    ListDashboardAPI, ListCreateUpdateAPILesson, ListCreateUpdateAPITopic, ListDashboardLessonsAPI)
 from djoser.views import UserViewSet
+from django.views.decorators.cache import cache_page
+
 
 app_name = 'course'
 
@@ -21,24 +23,33 @@ urlpatterns = [
     path('comments/<pk>', UpdateAPIComment.as_view(), name='comment-detail'),
     # path('interaction_types', ListCreateAPIInteractionType.as_view(), name='interaction_types-list'),
     # path('interaction_types/<pk>', UpdateAPIInteractionType.as_view(), name='interaction_type-detail'),
-    path('interactions', ListCreateAPIInteraction.as_view(), name='interactions-list'),
-    path('interactions/<pk>', UpdateAPIInteraction.as_view(), name='interaction-detail'),
+    path('interactions', ListCreateAPIInteraction.as_view(),
+         name='interactions-list'),
+    path('interactions/<pk>', UpdateAPIInteraction.as_view(),
+         name='interaction-detail'),
     # path('seeks', ListCreateAPISeek.as_view(), name='seeks-list'),
     # path('seeks/<pk>', ListCreateAPISeek.as_view(), name='seek-detail'),
     # path('assessments', ListCreateAPIComment.as_view(), name='assessments-list'),
     # path('assessments/<pk>', UpdateAPIComment.as_view(), name='assessment-detail'),
     path('videos', ListCreateAPIVideo.as_view(), name='videos-list'),
     path('videos/<pk>', UpdateAPIVideo.as_view(), name='video-detail'),
-    path('videos/topics/<int:subject>', ListCreateAPIVideo.as_view(), name='videos-list'),
+    path('videos/topics/<int:subject>',
+         ListCreateAPIVideo.as_view(), name='videos-list'),
     path('resolutions', ListCreateAPIResolution.as_view(), name='resolutions-list'),
-    path('resolutions/<pk>', ListCreateAPIResolution.as_view(), name='resolution-detail'),
-    path('dashboard', ListDashboardAPI.as_view(), name='dashboard-list'),
-    path('dashboard/<int:subject>/<int:grade>', ListDashboardAPI.as_view(), name='dashboard-detail'),
-    path('dashboard/topics/<int:pk>/<int:grade>', ListDashboardLessonsAPI.as_view(), name='dashboard-topics-list'),
-    path('dashboard/lessons/<int:lesson>/<int:grade>', ListDashboardLessonsAPI.as_view(), name='dashboard-lessons-list'),
+    path('resolutions/<pk>', ListCreateAPIResolution.as_view(),
+         name='resolution-detail'),
+    path('dashboard', cache_page(60 * 15)
+         (ListDashboardAPI.as_view()), name='dashboard-list'),
+    path('dashboard/<int:subject>/<int:grade>',
+         cache_page(60 * 15)(ListDashboardAPI.as_view()), name='dashboard-detail'),
+    path('dashboard/topics/<int:pk>/<int:grade>',
+         cache_page(60 * 15)(ListDashboardLessonsAPI.as_view()), name='dashboard-topics-list'),
+    path('dashboard/lessons/<int:lesson>/<int:grade>',
+         cache_page(60 * 15)(ListDashboardLessonsAPI.as_view()), name='dashboard-lessons-list'),
     path('lessons', ListCreateUpdateAPILesson.as_view(), name='lessons-list'),
     path('lessons/<pk>', ListCreateUpdateAPILesson.as_view(), name='lessons-detail'),
-    path('lessons/topics/<int:subject>', ListCreateUpdateAPILesson.as_view(), name='lesson-subject-detail'),
+    path('lessons/topics/<int:subject>',
+         ListCreateUpdateAPILesson.as_view(), name='lesson-subject-detail'),
     path('topics', ListCreateUpdateAPITopic.as_view(), name='topics-list'),
     path('topics/<pk>', ListCreateUpdateAPITopic.as_view(), name='topic-detail'),
 

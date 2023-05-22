@@ -9,7 +9,7 @@ from student.views import StudentListCreateAPIView
 urlpatterns = [
     path('v1/courses/', include('course.urls')),
     path('users', CreateAPIUser.as_view(), name="api-user"),
-    path('v1/auth/', include('api.urls')),
+    path('v1/auth/', include('api.urls'), name='students-auth'),
     path('v1/subscribe/', include('subscribe.urls')),
     path('students', StudentListCreateAPIView.as_view(), name="students-list"),
     path('v1/students/', include('student.urls')),

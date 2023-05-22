@@ -30,6 +30,30 @@ address = ["127.0.0.1:8000", "0.0.0.1:8000"]
 client = APIClient()
 
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def StudentLogin(request, *args, **kwargs):
+    '''
+    This API is for OTP verification, it supports GET and POST methods. e.g 
+    '/api/v1/student/activate/<otp>/<username>/<email>'
+    '''
+    query = request.data
+    country_code = query.get('country_code')
+    password = query.get('password')
+    username = query.get('username')
+
+    username = createPhoneNumber(country_code, username)
+
+    data = {
+        'username': username,
+        'password': password
+    }
+    login_url = "api/v1/auth/token/login"
+    response = requests.post(createUrl(login_url), data=data)
+    response = response.json() if response.json() else response
+    return Response(response)
+
+
 def createPhoneNumber(countryCode, phoneNumber):
     number_size = len(phoneNumber)
     if countryCode and number_size:
@@ -431,8 +455,15 @@ def getUrl(url, app, data=None):
         data = {}
     host = django_settings.DOMAIN
     protocol = django_settings.PROTOCOL
-    name = f"{app}:{url}"
+    name = f"{app}:{url}" if app else url
     return f"{protocol}://{host}{reverse(name, kwargs=data)}"
+
+
+def createUrl(url):
+    host = django_settings.DOMAIN
+    protocol = django_settings.PROTOCOL
+
+    return f"{protocol}://{host}/{url}"
 
 # @api_view(['GET'])
 # @permission_classes([AllowAny])

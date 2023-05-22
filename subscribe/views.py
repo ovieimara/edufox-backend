@@ -19,18 +19,22 @@ from googleapiclient.discovery import build
 import json
 import hmac
 import hashlib
+from django.core.cache import cache
 from rest_framework import mixins, generics, status
 from rest_framework.decorators import api_view, permission_classes
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.contrib.auth.models import User
+from edufox.views import update_user_data
 from student.models import Student
 from .models import Subscribe, Plan, Discount, Product, AppleNotify, Grade
-from .serializers import (SubscribeSerializer, PlanSerializer, 
+from .serializers import (SubscribeSerializer, PlanSerializer,
                           DiscountSerializer, ProductSerializer, InAppPaymentSerializer, AppleNotifySerializer, AndroidNotifySerializer)
 
 # Create your views here.
+
+
 class ListCreateUpdateAPISubscribe(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = Subscribe.objects.all().order_by('user')
     serializer_class = SubscribeSerializer
@@ -52,6 +56,7 @@ class ListCreateUpdateAPISubscribe(mixins.CreateModelMixin, mixins.ListModelMixi
         if kwargs.get('pk') and request.user.is_staff:
             return self.update(request, *args, **kwargs)
         return Response(status.HTTP_403_FORBIDDEN)
+
 
 class ListCreateUpdateAPIPlan(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = Plan.objects.all().order_by('amount')
@@ -75,6 +80,7 @@ class ListCreateUpdateAPIPlan(mixins.CreateModelMixin, mixins.ListModelMixin,  m
             return self.update(request, *args, **kwargs)
         return Response(status.HTTP_403_FORBIDDEN)
 
+
 class ListCreateUpdateAPIDiscount(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = Discount.objects.all().order_by('name')
     serializer_class = DiscountSerializer
@@ -96,7 +102,7 @@ class ListCreateUpdateAPIDiscount(mixins.CreateModelMixin, mixins.ListModelMixin
         if kwargs.get('pk') and request.user.is_staff:
             return self.update(request, *args, **kwargs)
         return Response(status.HTTP_403_FORBIDDEN)
-    
+
 
 class ListCreateUpdateAPIBillingProduct(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = Product.objects.all().order_by('pk')
@@ -119,7 +125,8 @@ class ListCreateUpdateAPIBillingProduct(mixins.CreateModelMixin, mixins.ListMode
         if kwargs.get('pk') and request.user.is_staff:
             return self.update(request, *args, **kwargs)
         return Response(status.HTTP_403_FORBIDDEN)
-    
+
+
 @api_view(['POST'])
 # @permission_classes([AllowAny])
 def VerifyPurchase(request, *args, **kwargs):
@@ -158,8 +165,9 @@ def VerifyPurchase(request, *args, **kwargs):
 
     # Send a POST request to the app store server with the receipt data
     if platform == 'ios' and receipt_data:
-        data = {"receipt-data": receipt_data, "password": '7f64d85b4b2046e6b0e2499e512d6c31'}
-        headers={'Content-Type': 'application/x-www-form-urlencoded'}
+        data = {"receipt-data": receipt_data,
+                "password": '7f64d85b4b2046e6b0e2499e512d6c31'}
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
         response = requests.post(endpoint_url, json=data, headers=headers)
         # print('RECEIPT: ', response.json())
 
@@ -184,31 +192,34 @@ def VerifyPurchase(request, *args, **kwargs):
         result = resp
         # printOutLogs('result: ', result)
         state = status.HTTP_200_OK
-    
+
     if result and result.get('transaction_id'):
         # product_id = result.get('product_id')
         # try:
         product_id = purchase_data.get('productId')
         # if not request.user.is_anonymous:
-            # user = request.user
+        # user = request.user
         # printOutLogs('USER: ', user)
         # printOutLogs('GRADE: ', grade)
         if user and not user.is_anonymous and grade:
 
-            resp, state = create_subscription(product_id, result, user, grade, platform, response_json)
-    
+            resp, state = create_subscription(
+                product_id, result, user, grade, platform, response_json)
+
     # print('RESPONSE: ', resp)
     return Response(resp, state)
+
 
 def verifyAndroidPurchase(purchase, isSandBox):
     subscription_id = purchase.get('productId')
     purchase_token = purchase.get('purchaseToken')
     package_name = purchase.get('packageNameAndroid')
     # response = verifyAndroidPayment(subscription_id, purchase_token, package_name, isSandBox)
-    
+
     # return Response(response)
-    
+
     return verify_android_purchase(purchase_token, subscription_id, package_name, isSandBox)
+
 
 def validate_in_app(receipt_json_data):
     response = {}
@@ -226,11 +237,12 @@ def validate_in_app(receipt_json_data):
     if receipt_json_data:
         environment = receipt_json_data.get('environment')
         latest_receipt_info = receipt_json_data.get('latest_receipt_info', {})
-        pending_renewal_info = receipt_json_data.get('pending_renewal_info', {})
-
+        pending_renewal_info = receipt_json_data.get(
+            'pending_renewal_info', {})
 
         if len(latest_receipt_info) > 0:
-            original_transaction_id = latest_receipt_info[0].get('original_transaction_id')
+            original_transaction_id = latest_receipt_info[0].get(
+                'original_transaction_id')
             transaction_id = latest_receipt_info[0].get('transaction_id')
             posix_date_time = latest_receipt_info[0].get('purchase_date_ms')
             expires_date = latest_receipt_info[0].get('expires_date_ms')
@@ -242,19 +254,24 @@ def validate_in_app(receipt_json_data):
                 transaction_id = inapp[0].get('transaction_id')
                 posix_date_time = inapp[0].get('purchase_date_ms')
                 product_id = inapp[0].get('product_id')
-                original_transaction_id = inapp[0].get('original_transaction_id')
+                original_transaction_id = inapp[0].get(
+                    'original_transaction_id')
                 in_app_ownership_type = inapp[0].get('in_app_ownership_type')
 
         if pending_renewal_info:
-            original_transaction_id2 = pending_renewal_info[0].get('original_transaction_id')
-            auto_renew_status = pending_renewal_info[0].get('auto_renew_status')
-            expiration_intent = pending_renewal_info[0].get('expiration_intent')
+            original_transaction_id2 = pending_renewal_info[0].get(
+                'original_transaction_id')
+            auto_renew_status = pending_renewal_info[0].get(
+                'auto_renew_status')
+            expiration_intent = pending_renewal_info[0].get(
+                'expiration_intent')
 
         if not original_transaction_id and original_transaction_id2:
-                original_transaction_id = original_transaction_id2
+            original_transaction_id = original_transaction_id2
 
         if posix_date_time:
-            transactionDate = datetime.datetime.fromtimestamp(float(posix_date_time)/1000.0)
+            transactionDate = datetime.datetime.fromtimestamp(
+                float(posix_date_time)/1000.0)
 
         purchase_details = {
             'name': gateway,
@@ -284,12 +301,14 @@ def AppStoreNotificationHandler(request, *args, **kwargs):
 
     return Response(status.HTTP_200_OK)
 
+
 def apple_notify_iap(message):
     # response = {}
     # printOutLogs('APPLE MESSAGE: ', message)
     signed_transaction_info = signed_renewal_info = decoded_payload_transaction_info = decoded_payload_signed_renewal_info = None
-    decoded_header, decoded_payload, decoded_signature = decode_transaction(message)
-    
+    decoded_header, decoded_payload, decoded_signature = decode_transaction(
+        message)
+
     if decoded_payload:
         decoded_payload = json.loads(decoded_payload)
         # print('decoded_payload: ', decoded_payload)
@@ -298,63 +317,74 @@ def apple_notify_iap(message):
         if decoded_payload_data:
             bundle_id = decoded_payload_data.get("bundleId")
             environment = decoded_payload_data.get("environment")
-            signed_transaction_info = decoded_payload_data.get("signedTransactionInfo")
+            signed_transaction_info = decoded_payload_data.get(
+                "signedTransactionInfo")
             signed_renewal_info = decoded_payload_data.get("signedRenewalInfo")
 
         if signed_transaction_info:
-            decoded_header_transaction_info, decoded_payload_transaction_info, decoded_signature_transaction_info = decode_transaction(signed_transaction_info)
+            decoded_header_transaction_info, decoded_payload_transaction_info, decoded_signature_transaction_info = decode_transaction(
+                signed_transaction_info)
 
         if signed_renewal_info:
-            decoded_header_signed_renewal_info, decoded_payload_signed_renewal_info, decoded_signature_signed_renewal_info = decode_transaction(signed_renewal_info)
+            decoded_header_signed_renewal_info, decoded_payload_signed_renewal_info, decoded_signature_signed_renewal_info = decode_transaction(
+                signed_renewal_info)
 
         if decoded_payload_transaction_info:
-            decoded_payload_transaction_info = json.loads(decoded_payload_transaction_info)
+            decoded_payload_transaction_info = json.loads(
+                decoded_payload_transaction_info)
 
         if decoded_payload_signed_renewal_info:
-            decoded_payload_signed_renewal_info = json.loads(decoded_payload_signed_renewal_info)
+            decoded_payload_signed_renewal_info = json.loads(
+                decoded_payload_signed_renewal_info)
             message = ''
 
         if decoded_payload_transaction_info and decoded_payload_signed_renewal_info:
             # printOutLogs('APPLE MESSAGE 2 : ', message)
-            verify_apple_pay(notification_type, bundle_id, environment, decoded_payload_transaction_info, decoded_payload_signed_renewal_info, decoded_signature, message)
+            verify_apple_pay(notification_type, bundle_id, environment, decoded_payload_transaction_info,
+                             decoded_payload_signed_renewal_info, decoded_signature, message)
 
     # return response
+
 
 def decode_transaction(signed_info):
     header, payload, signature = "", "", ""
     decoded_header, decoded_payload, decoded_signature = "", "", ""
     signedInfo = signed_info.split(".")
     if len(signedInfo) > 2:
-            for i in range(len(signedInfo)):
-                if i == 0:
-                    header = signedInfo[i]
-                elif i == 1:
-                    payload = signedInfo[i]
-                elif i == 2:
-                    signature = signedInfo[i]
+        for i in range(len(signedInfo)):
+            if i == 0:
+                header = signedInfo[i]
+            elif i == 1:
+                payload = signedInfo[i]
+            elif i == 2:
+                signature = signedInfo[i]
     if header:
         decoded_header = pad_encoded_data(header)
     if payload:
         decoded_payload = pad_encoded_data(payload)
-    #if signature:
-        #decoded_signature = pad_encoded_data(signature)
+    # if signature:
+        # decoded_signature = pad_encoded_data(signature)
 
     return decoded_header, decoded_payload, decoded_signature
 
+
 def pad_encoded_data(data):
-    padded = data + "="*divmod(len(data),4)[1]
+    padded = data + "="*divmod(len(data), 4)[1]
     return base64.b64decode(padded)
 
-def verify_apple_pay(notification_type, bundle_id, environment, jws_transaction_decodedPayload , jws_renewal_info_decodedPayload, decoded_signature, signedPayload):
+
+def verify_apple_pay(notification_type, bundle_id, environment, jws_transaction_decodedPayload, jws_renewal_info_decodedPayload, decoded_signature, signedPayload):
     gateway = 'Apple In-App'
     expiration_intent = ""
 
-    original_transaction_id = jws_transaction_decodedPayload.get('originalTransactionId')
+    original_transaction_id = jws_transaction_decodedPayload.get(
+        'originalTransactionId')
     transaction_id = jws_transaction_decodedPayload.get('transactionId')
     posix_date_time = jws_transaction_decodedPayload.get('purchaseDate')
     expires_date = jws_transaction_decodedPayload.get('expiresDate')
     product_id = jws_transaction_decodedPayload.get('productId')
-    original_transaction_id2 = jws_renewal_info_decodedPayload.get('originalTransactionId')
+    original_transaction_id2 = jws_renewal_info_decodedPayload.get(
+        'originalTransactionId')
     auto_renew_status = jws_renewal_info_decodedPayload.get('autoRenewStatus')
     try:
         expiration_intent = jws_renewal_info_decodedPayload('expirationIntent')
@@ -365,7 +395,8 @@ def verify_apple_pay(notification_type, bundle_id, environment, jws_transaction_
         original_transaction_id = original_transaction_id2
 
     if original_transaction_id:
-        transactionDate = datetime.datetime.fromtimestamp(float(posix_date_time)/1000.0)
+        transactionDate = datetime.datetime.fromtimestamp(
+            float(posix_date_time)/1000.0)
 
         purchase_details = {
             'name': gateway,
@@ -378,7 +409,6 @@ def verify_apple_pay(notification_type, bundle_id, environment, jws_transaction_
             'auto_renew_status': auto_renew_status,
             'original_purchase_date': transactionDate
         }
-
 
         apple_notify = AppleNotifySerializer(data=purchase_details)
         apple_notify.is_valid(raise_exception=True)
@@ -398,17 +428,18 @@ def PlayStoreNotificationHandler(request):
 
         if not envelope:
             msg = "no Pub/Sub message received"
-            #printOutLogs(msg)
+            # printOutLogs(msg)
             return Response(data=f"Bad Request: {msg}", status=state)
 
         if not isinstance(envelope, dict) or "message" not in envelope:
             msg = "invalid Pub/Sub message format"
-            #printOutLogs(msg)
+            # printOutLogs(msg)
             return Response(data=f"Bad Request: {msg}", status=state)
 
         pubsub_message = envelope.get("message")
         if isinstance(pubsub_message, dict) and "data" in pubsub_message and pubsub_message.get("data"):
-            data = base64.b64decode(pubsub_message.get("data")).decode("utf-8").strip()
+            data = base64.b64decode(pubsub_message.get(
+                "data")).decode("utf-8").strip()
             # printOutLogs('DATA: ', data)
             data = json.loads(data)
             packageName = data.get('packageName')
@@ -417,7 +448,7 @@ def PlayStoreNotificationHandler(request):
                 set_android_pay(data, packageName)
             # if response and response.get('status') == status.HTTP_201_CREATED:
             state = status.HTTP_200_OK
-        
+
     return Response(state)
 
 
@@ -452,7 +483,7 @@ def FlutterWaveWebhook(request):
         # Handle the completed payment event
         transaction_id = payload.get('id')
         transaction_verification_uri = f'https://api.flutterwave.com/v3/transactions/{transaction_id}/verify'
-    
+
     # Send a GET request to the transaction verification URI with your Flutterwave API keys
         response = requests.get(transaction_verification_uri, headers={
             'Authorization': f"Bearer {secret_key}",
@@ -474,7 +505,6 @@ def FlutterWaveWebhook(request):
             meta = data.get('meta')
             customer = data.get('customer')
 
-
         if verification_status == 'successful':
             # ... process the payment ...
             created = dateStrToDateTime(created_at)
@@ -494,13 +524,16 @@ def FlutterWaveWebhook(request):
         if amount and purchase_details:
             try:
                 product = Product.objects.get(amount=float(f"{amount:.2f}"))
-                expires_date = created + datetime.timedelta(days=product.duration)
-                payment_serializer = InAppPaymentSerializer(data=purchase_details)
+                expires_date = created + \
+                    datetime.timedelta(days=product.duration)
+                payment_serializer = InAppPaymentSerializer(
+                    data=purchase_details)
                 payment_serializer.is_valid(raise_exception=True)
-                payment = payment_serializer.save(product=product, expires_date=expires_date)
+                payment = payment_serializer.save(
+                    product=product, expires_date=expires_date)
             except Exception as ex:
                 print(f"payment serializer error: {ex}")
-        
+
         if meta:
             try:
                 grade_val = meta.get(grade)
@@ -517,7 +550,7 @@ def FlutterWaveWebhook(request):
                 user = User.objects.get(email=email)
             except Student.DoesNotExist:
                 raise Http404
-            
+
             if not user:
                 phone_number = customer.get('phone_number')
                 try:
@@ -529,26 +562,27 @@ def FlutterWaveWebhook(request):
         if user and product and payment and grade:
             data = {
                 "user": None,
-                "product": None, 
+                "product": None,
                 "payment_method": None,
                 "grade": None
             }
             try:
                 subscribe_serializer = SubscribeSerializer(data=data)
                 subscribe_serializer.is_valid(raise_exception=True)
-                subscribe_serializer.save(user = student.user, product=product, payment_method=payment, grade=grade)
+                subscribe_serializer.save(
+                    user=student.user, product=product, payment_method=payment, grade=grade)
+                update_user_data()  # update cache
             except Exception as ex:
                 print(f"subscribe serializer error: {ex}")
-
 
     elif event == 'charge.failed':
         # Handle the payment failed event
         payment_id = payload.get('id')
         # TODO: handle the failed payment and update your database
 
-
     # Respond with a 200 status code to acknowledge receipt of the webhook
     return Response({'success': True}, status.HTTP_200_OK)
+
 
 def set_android_pay(data, packageName):
     subscriptionNotification = data.get('subscriptionNotification')
@@ -557,8 +591,9 @@ def set_android_pay(data, packageName):
         subscriptionId = subscriptionNotification.get('subscriptionId')
 
         return verifyAndroidPayment(subscriptionId, purchaseToken, packageName)
-    
+
     return {}
+
 
 def verifyAndroidPayment(subscriptionId, purchase_token, packageName):
     # amount = 0
@@ -572,13 +607,14 @@ def verifyAndroidPayment(subscriptionId, purchase_token, packageName):
     # paymentState = acknowledgementState = consumptionState = transaction_id = regionCode = priceAmountMicros = ""
 
     service_acct = os.environ.get("SERVICE_ACCOUNT", "SERVICE_ACCOUNT")
-    purchase = build_service_credentials(service_acct, packageName, subscriptionId,  purchase_token)
+    purchase = build_service_credentials(
+        service_acct, packageName, subscriptionId,  purchase_token)
     # printOutLogs('PURCHASE: ', purchase)
-
 
     if purchase and (purchase.get("purchaseState", 1) == 0 or purchase.get('paymentState', 0) == 1) and (purchase.get("acknowledgementState", 0) == 1 or purchase.get("consumptionState", 0) == 1):
         # printOutLogs('PURCHASE2: ', purchase)
-        purchase_details = createNotifyDetails(purchase, subscriptionId, purchase_token)
+        purchase_details = createNotifyDetails(
+            purchase, subscriptionId, purchase_token)
         payment_data = createPurchase(purchase, purchase_token)
 
     try:
@@ -586,7 +622,8 @@ def verifyAndroidPayment(subscriptionId, purchase_token, packageName):
         if payment_data:
             user = grade = None
             platform = 'android'
-            create_subscription(subscriptionId, payment_data, user, grade, platform)
+            create_subscription(subscriptionId, payment_data,
+                                user, grade, platform)
 
         if purchase_details:
             # printOutLogs('purchase_details: ', purchase_details)
@@ -595,7 +632,7 @@ def verifyAndroidPayment(subscriptionId, purchase_token, packageName):
             android_notify = AndroidNotifySerializer(data=purchase_details)
             android_notify.is_valid(raise_exception=True)
             notify = android_notify.save()
-            # if notify.transaction_id: 
+            # if notify.transaction_id:
             state = status.HTTP_201_CREATED
             # printOutLogs('DETAILS NOTIFY: ', notify.data)
 
@@ -604,14 +641,17 @@ def verifyAndroidPayment(subscriptionId, purchase_token, packageName):
         # printOutLogs('NOTIFY: ', ex)
 
     result['status'] = 0
-    return {'result' : purchase, 'status': state}
+    return {'result': purchase, 'status': state}
 
 # Function to verify Android in-app subscriptions and purchases
-def verify_android_purchase(purchase_token: str, subscription_id: str, package_name: str, isSandBox: bool=True) -> dict:
+
+
+def verify_android_purchase(purchase_token: str, subscription_id: str, package_name: str, isSandBox: bool = True) -> dict:
     purchase_details = {}
     secret_name = os.environ.get('Google-Play-Android', 'Google-Play-Android')
     # Load the service account credentials
-    purchase = build_service_credentials(secret_name, package_name, subscription_id,  purchase_token)
+    purchase = build_service_credentials(
+        secret_name, package_name, subscription_id,  purchase_token)
     # print('purchase: ', purchase)
 
     try:
@@ -637,6 +677,7 @@ def verify_android_purchase(purchase_token: str, subscription_id: str, package_n
     #     print(f'CREDENTIAL exception occurred: {ex}')
 
     return purchase_details
+
 
 def createNotifyDetails(purchase, subscriptionId, purchase_token):
     try:
@@ -665,7 +706,7 @@ def createNotifyDetails(purchase, subscriptionId, purchase_token):
 
 def createPurchase(purchase, purchase_token):
     if purchase and purchase_token:
-        return  {
+        return {
             "name": "Android In-App",
             "environment": str(purchase.get("purchaseType")),
             "original_transaction_id": purchase_token,
@@ -676,17 +717,18 @@ def createPurchase(purchase, purchase_token):
             "expiration_intent": "",
             "in_app_ownership_type": str(purchase.get("acknowledgementState", 0)),
             "original_purchase_date": convertDateFromMSToDateTime(purchase.get("purchaseTimeMillis", '')),
-            "status" : 0,
+            "status": 0,
             # "created": convertDateFromMSToDateTime(purchase.get("startTimeMillis", datetime.datetime.now()))
         }
     return {}
+
 
 def create_subscription(product_id, payment_data, user, grade, platform='android', response_json=None):
     state = status.HTTP_400_BAD_REQUEST
     resp = {}
     payment = product = None
     try:
-            
+
         product = Product.objects.filter(product_id=product_id)
         if product.exists():
             product = product.first()
@@ -698,9 +740,9 @@ def create_subscription(product_id, payment_data, user, grade, platform='android
         # printOutLogs('PURCHASE3: ', resp)
 
     except Exception as ex:
-            #  status.HTTP_409_CONFLICT
+        #  status.HTTP_409_CONFLICT
         print(f'payment_serializer exception occurred: {ex}')
-        
+
     if platform == 'ios':
         resp['status'] = response_json.get('status')
         state = status.HTTP_200_OK
@@ -721,11 +763,11 @@ def create_subscription(product_id, payment_data, user, grade, platform='android
 
     data = {
         "user": user.pk if user.pk else None,
-        "product": product.pk if product.pk else None, 
+        "product": product.pk if product.pk else None,
         "payment_method": payment.pk if payment.pk else None,
         "grade": grade.pk if grade.pk else None
     }
-        
+
     try:
         # print('DETAILS: ', payment, product, grade, user)
         # printOutLogs('PURCHASE6: ', user)
@@ -733,13 +775,14 @@ def create_subscription(product_id, payment_data, user, grade, platform='android
         subscribe_serializer = SubscribeSerializer(data=data)
         subscribe_serializer.is_valid(raise_exception=True)
         subscribe_serializer.save()
-            # if not user and not grade:
-            #     subscribe_serializer.save(product=product, payment_method=payment)
-            # else:
-            #     subscribe_serializer.save(product=product, payment_method=payment, grade=grade)
+        update_user_data()  # update cache
+        # if not user and not grade:
+        #     subscribe_serializer.save(product=product, payment_method=payment)
+        # else:
+        #     subscribe_serializer.save(product=product, payment_method=payment, grade=grade)
 
         state = status.HTTP_201_CREATED
-            # print('DETAILS SUBSCRIBE: ', subscribe_serializer.data)
+        # print('DETAILS SUBSCRIBE: ', subscribe_serializer.data)
         # printOutLogs('DETAILS SUBSCRIBE: ', subscribe_serializer.data)
 
     except Exception as ex:
@@ -748,39 +791,46 @@ def create_subscription(product_id, payment_data, user, grade, platform='android
 
     return resp, state
 
+
 def build_service_credentials(secret_name, packageName, subscriptionId, purchase_token):
     purchase = {}
     try:
         if secret_name and packageName and subscriptionId and purchase_token:
             client = secretmanager.SecretManagerServiceClient()
             name = f"projects/{settings.PROJECT_ID}/secrets/{secret_name}/versions/latest"
-            payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
+            payload = client.access_secret_version(
+                name=name).payload.data.decode("UTF-8")
             # print('payload: ', type(payload))
             service_credentials_dict = json.loads(payload)
-            service_credentials = ServiceCredentials.from_service_account_info(service_credentials_dict)
-            credentials = service_credentials.with_scopes(['https://www.googleapis.com/auth/androidpublisher'])
+            service_credentials = ServiceCredentials.from_service_account_info(
+                service_credentials_dict)
+            credentials = service_credentials.with_scopes(
+                ['https://www.googleapis.com/auth/androidpublisher'])
             service = build("androidpublisher", "v3", credentials=credentials)
-        
-            purchase = service.purchases().subscriptions().get(packageName=packageName, subscriptionId=subscriptionId, token=purchase_token).execute()
 
-    
+            purchase = service.purchases().subscriptions().get(packageName=packageName,
+                                                               subscriptionId=subscriptionId, token=purchase_token).execute()
+
     except Exception as ex:
         print(f'A BUILD_SERVICE_CREDENTIALS exception occurred: {ex}')
 
     return purchase
 
+
 def printOutLogs(tag='', param=''):
     logging_client = logging.Client()
     logging_client.get_default_handler()
     logging_client.setup_logging()
-    log.info(f"Some log here: {tag} : {param}") 
+    log.info(f"Some log here: {tag} : {param}")
 
 
 def convertDateFromMSToDateTime(ms_date_time):
     transactionDate = None
     if ms_date_time:
-        transactionDate = datetime.datetime.fromtimestamp(float(ms_date_time)/1000.0)   
+        transactionDate = datetime.datetime.fromtimestamp(
+            float(ms_date_time)/1000.0)
     return transactionDate
+
 
 def dateStrToDateTime(date_str, date_format="%d %m %Y %H:%M:%S"):
     date_obj = ""
@@ -790,12 +840,13 @@ def dateStrToDateTime(date_str, date_format="%d %m %Y %H:%M:%S"):
     return date_obj
 
 # Define a function to verify the webhook signature
+
+
 def verify_webhook_signature(payload, signature, FLUTTERWAVE_SECRET_KEY):
     # Convert the secret key to bytes
     secret_key = bytes(FLUTTERWAVE_SECRET_KEY, 'utf-8')
     # Compute the HMAC-SHA256 hash of the payload using the secret key
-    computed_signature = hmac.new(secret_key, payload, hashlib.sha256).hexdigest()
+    computed_signature = hmac.new(
+        secret_key, payload, hashlib.sha256).hexdigest()
     # Compare the computed signature to the signature from the webhook header
     return hmac.compare_digest(computed_signature, signature)
-
-
