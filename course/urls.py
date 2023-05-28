@@ -45,7 +45,7 @@ urlpatterns = [
     path('dashboard/topics/<int:pk>/<int:grade>',
          cache_page(60 * 15)(ListDashboardLessonsAPI.as_view()), name='dashboard-topics-list'),
     path('dashboard/lessons/<int:lesson>/<int:grade>',
-         cache_page(60 * 15)(ListDashboardLessonsAPI.as_view()), name='dashboard-lessons-list'),
+         (ListDashboardLessonsAPI.as_view()), name='dashboard-lessons-list'),
     path('lessons', ListCreateUpdateAPILesson.as_view(), name='lessons-list'),
     path('lessons/<pk>', ListCreateUpdateAPILesson.as_view(), name='lessons-detail'),
     path('lessons/topics/<int:subject>',

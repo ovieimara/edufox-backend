@@ -18,7 +18,7 @@ from student.models import Student
 
 # Create your views here.
 class ListCreateAPIGrades(generics.ListCreateAPIView):
-    queryset = Grade.objects.all().order_by('name')
+    queryset = Grade.objects.all().order_by('pk')
     serializer_class = GradeSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -383,6 +383,8 @@ class ListDashboardLessonsAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  m
         topic = kwargs.get('pk')
         grade = kwargs.get('grade')
         lesson = kwargs.get('lesson')
+        if grade is not None:
+            grade = int(grade)
 
         user = request.user if request.user else None
         try:
@@ -390,13 +392,24 @@ class ListDashboardLessonsAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  m
                 student = Student.objects.get(phone_number=user.username)
 
                 if student and not grade:
-                    grade = Grade.objects.get(name=student.grade)
-                    grade = grade.pk
+
+                    try:
+                        grade = Grade.objects.get(name=student.grade)
+                        grade = grade.pk
+                    except Grade.DoesNotExist as ex:
+                        print('grade object error: ', ex)
 
             if topic:
-                topic_obj = Topic.objects.get(pk=topic)
-                lessons_queryset = topic_obj.topic_lessons.all()
-                if grade:
+                lessons_queryset = []
+                try:
+                    topic_obj = Topic.objects.get(pk=topic)
+                    if topic_obj:
+                        lessons_queryset = topic_obj.topic_lessons.all()
+
+                except Topic.DoesNotExist as ex:
+                    print('topic object error: ', ex)
+
+                if grade and lessons_queryset:
                     lessons_queryset = lessons_queryset.filter(grade__pk=grade)
 
                 serialized_lessons = self.get_serializer(
@@ -409,18 +422,27 @@ class ListDashboardLessonsAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  m
                 ]
 
             if lesson:
-                lesson_obj = Lesson.objects.get(pk=lesson)
-                videos_queryset = lesson_obj.lesson_videos.all()
-                if grade:
+                videos_queryset = []
+                try:
+                    lesson_obj = Lesson.objects.get(pk=lesson)
+                    if lesson_obj:
+                        videos_queryset = lesson_obj.lesson_videos.all()
+                except Lesson.DoesNotExist as ex:
+                    print('lesson object error: ', ex)
+                # print('videos_queryset1: ', videos_queryset[0].grade)
+                if grade and videos_queryset:
                     videos_queryset = videos_queryset.filter(
-                        grade__pk=grade).first()
-                # print('videos_queryset: ', videos_queryset)
-                serialized_videos = VideoSerializer(
-                    videos_queryset, context={'request': request}).data
+                        grade__pk=grade)
+
+                # print('videos_queryset2: ', videos_queryset.grade.all())
+                if videos_queryset.exists():
+                    serialized_videos = VideoSerializer(
+                        videos_queryset.first(), context={'request': request}).data
                 # result = {
                 #         "title": 'Lesson',
                 #         "data" : serialized_videos,
                 #     }
+                # print('videos_queryset3: ', (serialized_videos))
                 result = serialized_videos
 
         except Exception as ex:

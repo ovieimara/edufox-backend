@@ -5,6 +5,7 @@ from .models import (Grade, Comment, Rate, Subject, Lecturer,
 # from assess.models import  Test, Assessment
 from subscribe.models import Subscribe
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
+from django.db.models import Q
 
 
 class GradeSerializer(serializers.ModelSerializer):
@@ -87,17 +88,17 @@ class VideoSerializer(serializers.ModelSerializer):
             # print(topics)
             # subject_obj = Subject.objects.get(pk=subject)
             my_choices = [(topic.get(
-                'title'), f"{topic.get('chapter')}. {topic.get('title')}") for topic in topics]
+                'title'), f"{topic.get('chapter')}. {topic.get('title')}") for topic in topics if topic]
             lesson_choices = [(lesson.get(
-                'title'), f"{lesson.get('num')}. {lesson.get('title')}") for lesson in lessons]
+                'title'), f"{lesson.get('num')}. {lesson.get('title')}") for lesson in lessons if lesson]
 
             self.fields['subject'].initial = subject
 
         if not subject:
             my_choices = [(topic.get(
-                'title'), f"{topic.get('chapter')}. {topic.get('title')}") for topic in topics_queryset]
+                'title'), f"{topic.get('chapter')}. {topic.get('title')}") for topic in topics_queryset if topic]
             lesson_choices = [(lesson.get(
-                'title'), f"{lesson.get('chapter')}. {lesson.get('title')}") for lesson in lessons_queryset]
+                'title'), f"{lesson.get('chapter')}. {lesson.get('title')}") for lesson in lessons_queryset if lesson]
 
         self.fields['topics'].choices = my_choices
         self.fields['lessons'].choices = lesson_choices
@@ -108,34 +109,34 @@ class VideoSerializer(serializers.ModelSerializer):
     def get_is_subscribed(self, obj):
         subscribed = ''
         request = self.context.get('request')
-        print('request: ', request)
+        # print('request: ', request)
         if request and request.user and not request.user.is_anonymous:
             subscriptions = request.user.subscriptions_user.all().order_by(
                 "payment_method__original_purchase_date")
             grades = obj.grade.all()
-            grades = [grade.name for grade in grades]
-            subscription = subscriptions[0]
+            lesson_grades = [grade.pk for grade in grades]
+            # subscription = subscriptions[0]
             # for sub in subscriptions:
             # print('subscriptions:', subscriptions)
-            grade = subscription.grade
-            extras_grades = [grade.pk - 1, grade.pk + 1, grade.pk + 2]
+            # grade_pack = subscription.grade
+            # subscription_grades = grade_pack.grades
 
-            subscription_grades = [grade.name]
-            print(extras_grades)
-            grades_set = set(grades)
-            for pk in extras_grades:
-                try:
-                    g = Grade.objects.get(pk=pk)
+            # extras_grades = [grade.pk - 1, grade.pk + 1, grade.pk + 2]
 
-                    if g.name in grades:
-                        print("G: ", g.name, grades[0])
-                        subscribed = subscription
-                    subscription_grades.append(g)
+            # grades_set = set(grades)
+            # for pk in subscription_grades:
+            #     try:
+            #         g = Grade.objects.get(pk=pk)
 
-                except Grade.DoesNotExist as ex:
-                    print('grade object error: ', ex)
+            #         if g.name in grades:
+            #             print("G: ", g.name, grades[0])
+            #             subscribed = subscription
+            #         subscription_grades.append(g)
 
-                print("subscription: ", subscribed)
+            #     except Grade.DoesNotExist as ex:
+            #         print('grade object error: ', ex)
+
+            #     print("subscription: ", subscribed)
             # for grade in subscription_grades:
             #     if grade in grades_set:
             #         print('NAME: ', grade.name)
@@ -143,16 +144,27 @@ class VideoSerializer(serializers.ModelSerializer):
 
             # if subscriptions.exists():
             #     print(subscriptions[0])
-                # for g in obj.grade:
-                # subscription = subscriptions.first()
-                # grade = subscription.grade
+            # for g in obj.grade:
+            # subscription = subscriptions.first()
+            # grade = subscription.grade
 
-                # subscribed = subscriptions.filter(
-                #     grade__in=obj.grade.all()).first()
-            # print('grade: ', grades_set, subscription_grades)
-            if subscribed:
-                print('PAY: ', subscribed.payment_method.expires_date)
-                return subscribed.is_valid(datetime.now())
+            # subscribed = subscriptions.filter(
+            #     grade__in=obj.grade.all()).first()
+            # print('subscriptions: ', list(subscriptions))
+
+            # subscription_obj = subscriptions.filter(
+            #     Q(grade__grades__overlap=lesson_grades)
+            # )
+            subscription_obj = subscriptions.filter(
+                Q(grade__grades__overlap=lesson_grades) & Q(
+                    payment_method__expires_date__gt=datetime.now())
+            )
+            # print('grade: ', lesson_grades, list(subscription_obj))
+            if subscription_obj.exists():
+                return True
+                # subscribed = subscription_obj.first()
+                # print('PAY: ', subscribed.payment_method.expires_date)
+                # return subscribed.is_valid(datetime.now())
             return False
         return False
 

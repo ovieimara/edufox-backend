@@ -341,8 +341,8 @@ if CLOUDRUN_SERVICE_URL or env('USE_CLOUD_BUILD') and not os.environ.get('USE_LO
 
 # # If the flag as been set, configure to use proxy
 if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
-    DATABASES["default"]["HOST"] = "cloudsql-proxy"  # CI.yml
-    # DATABASES["default"]["HOST"] = "127.0.0.1" #local
+    # DATABASES["default"]["HOST"] = "cloudsql-proxy"  # CI.yml
+    DATABASES["default"]["HOST"] = "127.0.0.1"  # local
     DATABASES["default"]["PORT"] = 5432
 
 # print('DATABASES3 : ', DATABASES["default"])
@@ -392,7 +392,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
 
     # 'DEFAULT_PAGINATION_CLASS' : 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 10,
+    'PAGE_SIZE': 15,
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle'

@@ -34,11 +34,24 @@ class Plan(models.Model):
         return f"{self.name}-{self.amount}"
 
 
+class GradePack(models.Model):
+    label = models.CharField(max_length=255, null=True,
+                             blank=True, default='')
+    range = models.CharField(max_length=255, null=True,
+                             blank=True, default='')
+    category = models.CharField(max_length=255, null=True,
+                                blank=True, default='')
+    description = models.TextField(null=True, blank=True, default='')
+    grades = models.JSONField(default=list)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+
 class Product(models.Model):
     name = models.CharField(max_length=255, null=True,
-                            blank=True, unique=True, default='')
+                            blank=True, default='')
     product_id = models.CharField(
-        max_length=255, null=True, unique=True, blank=True, default='')
+        max_length=255, null=True, blank=True, default='')
     amount = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
     currency = models.CharField(
         max_length=15, null=True,  blank=True, default='=N=')
@@ -93,26 +106,25 @@ class Subscribe(models.Model):
     payment_method = models.ForeignKey(
         InAppPayment, related_name='payment_method_subscriptions', null=True, on_delete=models.SET_NULL)
     grade = models.ForeignKey(
-        Grade, related_name='subscription_grade', null=True, on_delete=models.SET_NULL)
+        GradePack, related_name='subscription_grade_pack', null=True, on_delete=models.SET_NULL)
     # grade = models.JSONField(default=list)
 
     created = models.DateTimeField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
 
-    @property
-    def expiry_date(self):
-        # print(self.created , self.created + timedelta(days=self.product.duration))
-        # return self.created + timedelta(days=self.product.duration)
-        # print(self.payment_method.expires_date)
-        return self.payment_method.expires_date
+    # @property
+    # def expiry_date(self):
+    #     # print(self.created , self.created + timedelta(days=self.product.duration))
+    #     # return self.created + timedelta(days=self.product.duration)
+    #     # print(self.payment_method.expires_date)
+    #     return self.payment_method.expires_date
 
-    def is_valid(self, now):
-        expiry_date = self.expiry_date
-        # isGrade = self.grade == grade
-        if expiry_date and expiry_date > now:
-            return True
+    # def is_valid(self):
+    #     expiry_date = self.expiry_date
+    #     if expiry_date and expiry_date > datetime.now():
+    #         return True
 
-        return False
+    #     return False
 
     def __str__(self) -> str:
         return self.product.name

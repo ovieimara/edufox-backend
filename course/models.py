@@ -1,9 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
 class Grade(models.Model):
-    code = models.CharField(max_length=100, null=False, default='', unique=True)
-    name = models.CharField(max_length=255, null=False, default='', unique=True)
+    code = models.CharField(max_length=100, null=False,
+                            default='', unique=True)
+    name = models.CharField(max_length=255, null=False,
+                            default='', unique=True)
     description = models.TextField(null=True, default=True)
     created = models.DateTimeField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
@@ -13,24 +16,28 @@ class Grade(models.Model):
 
 
 class View(models.Model):
-    user = models.ForeignKey(User, related_name='user_view', on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        User, related_name='user_view', on_delete=models.CASCADE)
     start_time = models.TextField(null=True, blank=True, default='')
     stop_time = models.CharField(max_length=127, null=True, default='')
     created = models.DateTimeField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
     # interaction_type = models.CharField(max_length=127, null=True, default='')
 
+
 class Subject(models.Model):
     code = models.CharField(db_index=True, max_length=127)
-    name = models.CharField(db_index=True, null=False, unique=True, max_length=255)
+    name = models.CharField(db_index=True, null=False,
+                            unique=True, max_length=255)
     grade = models.ManyToManyField(Grade, related_name="grade_subjects")
     description = models.TextField(null=True, blank=True, default='')
     credits = models.SmallIntegerField(default=0)
     created = models.DateTimeField(null=True, auto_now_add=True)
-    updated = models.DateTimeField( null=True, auto_now=True)
+    updated = models.DateTimeField(null=True, auto_now=True)
 
     def __str__(self) -> str:
         return self.name
+
 
 class Lecturer(models.Model):
     first_name = models.CharField(db_index=True, null=False, max_length=255)
@@ -40,22 +47,26 @@ class Lecturer(models.Model):
     def __str__(self) -> str:
         return self.first_name
 
+
 class Resolution(models.Model):
     name = models.CharField(null=True, max_length=100, default='')
     size = models.CharField(null=True, max_length=100, default='')
     aspect_ratio = models.CharField(null=True, max_length=100, default='')
     media = models.CharField(null=True, max_length=100, default='')
     created = models.DateTimeField(null=True, auto_now_add=True)
-    updated = models.DateTimeField( null=True, auto_now=True)
+    updated = models.DateTimeField(null=True, auto_now=True)
 
     def __str__(self) -> str:
         return self.name
 
+
 class Topic(models.Model):
     chapter = models.SmallIntegerField(null=True, blank=True, default=0)
-    subject = models.ForeignKey(Subject, related_name='subject_topics', null=True, on_delete=models.SET_NULL)
+    subject = models.ForeignKey(
+        Subject, related_name='subject_topics', null=True, on_delete=models.SET_NULL)
 
-    title = models.CharField(db_index=True, max_length=255, null=True, default='')
+    title = models.CharField(
+        db_index=True, max_length=255, null=True, default='')
     grade = models.ManyToManyField(Grade, related_name='grade_topics')
     created = models.DateField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
@@ -80,13 +91,17 @@ class Topic(models.Model):
 #     created = models.DateField(db_index=True, null=True, auto_now_add=True)
 #     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
 
+
 class Lesson(models.Model):
     LEVEL_CHOICES = ()
     num = models.SmallIntegerField(null=True, blank=True, default=0)
     title = models.CharField(db_index=True, max_length=255)
-    topic = models.ForeignKey(Topic, related_name='topic_lessons', on_delete=models.CASCADE)
-    topics = models.CharField(max_length=255, choices=LEVEL_CHOICES, null=True, default=[])
-    subject = models.ForeignKey(Subject, related_name='subject_lessons', null=True, on_delete=models.SET_NULL)
+    topic = models.ForeignKey(
+        Topic, related_name='topic_lessons', on_delete=models.CASCADE)
+    topics = models.CharField(
+        max_length=255, choices=LEVEL_CHOICES, null=True, default=[])
+    subject = models.ForeignKey(
+        Subject, related_name='subject_lessons', null=True, on_delete=models.SET_NULL)
     grade = models.ManyToManyField(Grade, related_name='grade_lessons')
     created = models.DateField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
@@ -94,56 +109,73 @@ class Lesson(models.Model):
     # @property
     # def topics(self):
     #     return []
-        # view = self.context.get('view')
-        # subject = None
-        # if view:
-        #     subject = view.kwargs.get('subject')
-        #     print(view.kwargs)
-        # if subject:
-        #     topics = Topic.objects.filter(subject__pk=subject).values('title')
-        #     print(topics)
-        #     return [topic.get('title') for topic in topics]
+    # view = self.context.get('view')
+    # subject = None
+    # if view:
+    #     subject = view.kwargs.get('subject')
+    #     print(view.kwargs)
+    # if subject:
+    #     topics = Topic.objects.filter(subject__pk=subject).values('title')
+    #     print(topics)
+    #     return [topic.get('title') for topic in topics]
 
     def __str__(self) -> str:
         return f"{self.num}. {self.title}"
-    
+
+
 class Video(models.Model):
-    lesson = models.ForeignKey(Lesson, related_name='lesson_videos', null=True, on_delete=models.SET_NULL)
-    lessons = models.CharField(max_length=255, choices=(), null=True, default=[])
+    lesson = models.ForeignKey(
+        Lesson, related_name='lesson_videos', null=True, on_delete=models.SET_NULL)
+    lessons = models.CharField(
+        max_length=255, choices=(), null=True, default=[])
     title = models.CharField(db_index=True, max_length=255)
     description = models.TextField(null=True, blank=True, default='')
-    duration = models.CharField(db_index = True, max_length=50, null=True, blank=True, default='')
-    resolution = models.ForeignKey(Resolution, related_name='resolutions', null=True, on_delete=models.SET_NULL)
-    thumbnail =  models.URLField(null=True)
+    duration = models.CharField(
+        db_index=True, max_length=50, null=True, blank=True, default='')
+    resolution = models.ForeignKey(
+        Resolution, related_name='resolutions', null=True, on_delete=models.SET_NULL)
+    thumbnail = models.URLField(null=True)
     # topic = models.CharField(db_index = True, max_length=255, null=True, blank=True, default='')
-    topic = models.ForeignKey(Topic, related_name='topics', null=True, on_delete=models.SET_NULL)
-    topics = models.CharField(max_length=255, choices=(), null=True, default=[])
+    topic = models.ForeignKey(
+        Topic, related_name='topics', null=True, on_delete=models.SET_NULL)
+    topics = models.CharField(
+        max_length=255, choices=(), null=True, default=[])
 
-    url =  models.URLField(null=True, blank=True, default='')
-    tags =  models.TextField(null=True, blank=True, default=dict)
-    subject = models.ForeignKey(Subject, related_name='subject_videos', null=True, on_delete=models.SET_NULL)
-    grade = models.ManyToManyField(Grade, default=[], related_name='grade_videos')
-    end_start_credits =  models.CharField(max_length=50, null=True, blank=True, default='')
-    start_end_credits =  models.CharField(max_length=50, null=True, blank=True, default='')
+    url = models.URLField(null=True, blank=True, default='')
+    tags = models.TextField(null=True, blank=True, default=dict)
+    subject = models.ForeignKey(
+        Subject, related_name='subject_videos', null=True, on_delete=models.SET_NULL)
+    grade = models.ManyToManyField(
+        Grade, default=[], related_name='grade_videos')
+    end_start_credits = models.CharField(
+        max_length=50, null=True, blank=True, default='')
+    start_end_credits = models.CharField(
+        max_length=50, null=True, blank=True, default='')
     created = models.DateField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
 
     def __str__(self) -> str:
         return self.title
 
+
 class Rate(models.Model):
-    user = models.ForeignKey(User, related_name='user_ratings', on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        User, related_name='user_ratings', on_delete=models.CASCADE)
     rating = models.SmallIntegerField()
     created = models.DateTimeField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
-    video = models.ForeignKey(Video, related_name='ratings', null=True, on_delete=models.SET_NULL)
+    video = models.ForeignKey(
+        Video, related_name='ratings', null=True, on_delete=models.SET_NULL)
+
 
 class Comment(models.Model):
-    user = models.ForeignKey(User, related_name='user_comments', on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        User, related_name='user_comments', on_delete=models.CASCADE)
     text = models.TextField(null=True, blank=True, default='')
     created = models.DateTimeField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
-    video = models.ForeignKey(Video, related_name='video_comments', null=True, on_delete=models.SET_NULL)
+    video = models.ForeignKey(
+        Video, related_name='video_comments', null=True, on_delete=models.SET_NULL)
 
 # class Seek(models.Model):
 #     user = models.ForeignKey(User, related_name='seeks', null=True, default=1, on_delete=models.CASCADE)
@@ -163,17 +195,16 @@ class Comment(models.Model):
 
 
 # class Pause(models.Model):
-#     duration = models.CharField(null=True, max_length=10, default='') 
+#     duration = models.CharField(null=True, max_length=10, default='')
 #     video = models.ForeignKey(Video, related_name='video_comments', null=True, on_delete=models.SET_NULL)
 #     created = models.DateField(db_index=True, null=True, auto_now_add=True)
 #     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
 
 # class Stop(models.Model):
-#     duration = models.CharField(null=True, max_length=10, default='') 
+#     duration = models.CharField(null=True, max_length=10, default='')
 #     video = models.ForeignKey(Video, related_name='video_comments', null=True, on_delete=models.SET_NULL)
 #     created = models.DateField(db_index=True, null=True, auto_now_add=True)
 #     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
-
 
 
 # class InteractionType(models.Model):
@@ -185,10 +216,14 @@ class Comment(models.Model):
 #         return self.name
 
 class Interaction(models.Model):
-    user = models.ForeignKey(User, related_name='interactions', on_delete=models.CASCADE)
-    type = models.CharField(db_index=True, null=True, max_length=50, default='')
-    video = models.ForeignKey(Video, related_name='videos', null=True, on_delete=models.SET_NULL)
-    duration = models.CharField(db_index=True, null=True, max_length=50, default='')
+    user = models.ForeignKey(
+        User, related_name='interactions', on_delete=models.CASCADE)
+    type = models.CharField(db_index=True, null=True,
+                            max_length=50, default='')
+    video = models.ForeignKey(
+        Video, related_name='videos', null=True, on_delete=models.SET_NULL)
+    duration = models.CharField(
+        db_index=True, null=True, max_length=50, default='')
     created = models.DateField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
 
@@ -212,4 +247,3 @@ class Interaction(models.Model):
 #     test = models.ManyToManyField(Test, related_name='tests')
 #     answer = models.JSONField(default=dict)
 #     result = models.SmallIntegerField(default=0)
-

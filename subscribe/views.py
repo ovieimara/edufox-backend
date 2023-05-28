@@ -16,9 +16,11 @@ from google.auth.transport.requests import Request
 from google.oauth2.service_account import Credentials as ServiceCredentials
 from googleapiclient.errors import HttpError
 from googleapiclient.discovery import build
+from django.utils import timezone
 import json
 import hmac
 import hashlib
+from django.db.models import Q
 from django.core.cache import cache
 from rest_framework import mixins, generics, status
 from rest_framework.decorators import api_view, permission_classes
@@ -26,13 +28,15 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.contrib.auth.models import User
-from edufox.views import update_user_data
+from edufox.views import printOutLogs, update_user_data
 from student.models import Student
-from .models import Subscribe, Plan, Discount, Product, AppleNotify, Grade
+from .models import Subscribe, Plan, Discount, Product, AppleNotify, Grade, GradePack
 from .serializers import (SubscribeSerializer, PlanSerializer,
-                          DiscountSerializer, ProductSerializer, InAppPaymentSerializer, AppleNotifySerializer, AndroidNotifySerializer)
+                          DiscountSerializer, ProductSerializer, InAppPaymentSerializer, AppleNotifySerializer, AndroidNotifySerializer, GradePackSerializer)
 
 # Create your views here.
+IOS = 'ios'
+ANDROID = 'android'
 
 
 class ListCreateUpdateAPISubscribe(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
@@ -42,10 +46,18 @@ class ListCreateUpdateAPISubscribe(mixins.CreateModelMixin, mixins.ListModelMixi
     # permission_classes = [IsStaffEditorPermission]
 
     def get(self, request, *args, **kwargs):
-        if kwargs.get('pk') is not None:
+        user = request.user
+        if user and kwargs.get('pk') and user.is_staff:
             return self.retrieve(request, *args, **kwargs)
 
-        return self.list(request, *args, **kwargs)
+        if user and user.is_staff:
+            return self.list(request, *args, **kwargs)
+
+        if user and not user.is_anonymous:
+            subscriptions = user.subscriptions_user.all()
+            subscribe_serializer = self.get_serializer(
+                subscriptions, many=True)
+            return Response(subscribe_serializer.data)
 
     def post(self, request, *args, **kwargs):
         if not kwargs.get('pk') and request.user.is_staff:
@@ -56,6 +68,30 @@ class ListCreateUpdateAPISubscribe(mixins.CreateModelMixin, mixins.ListModelMixi
         if kwargs.get('pk') and request.user.is_staff:
             return self.update(request, *args, **kwargs)
         return Response(status.HTTP_403_FORBIDDEN)
+
+
+class FetchSubscribe(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
+    queryset = Subscribe.objects.all().order_by('user')
+    serializer_class = SubscribeSerializer
+    lookup_field = 'pk'
+    # permission_classes = [IsStaffEditorPermission]
+
+    def get(self, request, *args, **kwargs):
+        # print("REQUEST: ", request)
+
+        user = request.user
+        if user:
+            subscriptions = user.subscriptions_user.all()
+            # print('subscriptions_obj', list(subscriptions))
+            # printOutLogs('subscriptions_obj', list(subscriptions))
+
+            subscriptions_obj = subscriptions.filter(
+                Q(payment_method__expires_date__gt=timezone.now()))
+            subscribe_serializer = self.get_serializer(
+                subscriptions_obj, many=True)
+            return Response(subscribe_serializer.data)
+
+        return Response(status.HTTP_401_UNAUTHORIZED)
 
 
 class ListCreateUpdateAPIPlan(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
@@ -127,6 +163,29 @@ class ListCreateUpdateAPIBillingProduct(mixins.CreateModelMixin, mixins.ListMode
         return Response(status.HTTP_403_FORBIDDEN)
 
 
+class ListCreateUpdateAPIGradePack(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
+    queryset = GradePack.objects.all().order_by('pk')
+    serializer_class = GradePackSerializer
+    # lookup_field = 'pk'
+    # permission_classes = [IsStaffEditorPermission]
+
+    def get(self, request, *args, **kwargs):
+        if kwargs.get('pk') is not None:
+            return self.retrieve(request, *args, **kwargs)
+
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        if not kwargs.get('pk') and request.user.is_staff:
+            return self.create(request, *args, **kwargs)
+        return Response(status.HTTP_403_FORBIDDEN)
+
+    def put(self, request, *args, **kwargs):
+        if kwargs.get('pk') and request.user.is_staff:
+            return self.update(request, *args, **kwargs)
+        return Response(status.HTTP_403_FORBIDDEN)
+
+
 @api_view(['POST'])
 # @permission_classes([AllowAny])
 def VerifyPurchase(request, *args, **kwargs):
@@ -142,12 +201,14 @@ def VerifyPurchase(request, *args, **kwargs):
     grade = request.data.get('grade')
     platform = request.data.get('platform')
     user = request.user
-    # printOutLogs('RECEIPT: ', purchase_data)
+    # printOutLogs('RECEIPT2: ', purchase_data)
     # if platform == 'android':
     #     return verifyAndroidPurchase(purchase_data)
-    if platform == 'ios':
+    if platform == IOS:
         receipt_data = purchase_data.get('transactionReceipt')
         # printOutLogs('receipt_data', receipt_data)
+        # print('RECEIPT: ', receipt_data)
+
     """
     Verify the purchase receipt data with the app store server and return the
     purchase details if the receipt is valid.
@@ -164,30 +225,30 @@ def VerifyPurchase(request, *args, **kwargs):
     endpoint_url = 'https://buy.itunes.apple.com/verifyReceipt' if not is_sandbox else 'https://sandbox.itunes.apple.com/verifyReceipt'
 
     # Send a POST request to the app store server with the receipt data
-    if platform == 'ios' and receipt_data:
+    if platform == IOS and receipt_data:
         data = {"receipt-data": receipt_data,
                 "password": '7f64d85b4b2046e6b0e2499e512d6c31'}
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
         response = requests.post(endpoint_url, json=data, headers=headers)
-        # print('RECEIPT: ', response.json())
+        # print('RECEIPT3: ', response.json())
 
     # If the status code is not 200, the receipt is invalid
-    if platform == 'ios' and response and response.status_code != 200:
+    if platform == IOS and response and response.status_code != 200:
         return Response(response.json(), status=response.status_code)
 
     # Parse the response JSON
-    if platform == 'ios' and response:
+    if platform == IOS and response:
         response_json = response.json()
 
     # If the response status is not 0, the receipt is invalid
-    if platform == 'ios' and response_json and response_json.get('status') != 0:
+    if platform == IOS and response_json and response_json.get('status') != 0:
         return Response(response_json, status.HTTP_400_BAD_REQUEST)
 
     # Get the purchase details from the response JSON
-    if platform == 'ios':
+    if platform == IOS:
         # printOutLogs('validate_in_app', 'here')
         result = validate_in_app(response_json)
-    if platform == 'android':
+    if platform == ANDROID:
         resp = verifyAndroidPurchase(purchase_data, is_sandbox)
         result = resp
         # printOutLogs('result: ', result)
@@ -202,7 +263,6 @@ def VerifyPurchase(request, *args, **kwargs):
         # printOutLogs('USER: ', user)
         # printOutLogs('GRADE: ', grade)
         if user and not user.is_anonymous and grade:
-
             resp, state = create_subscription(
                 product_id, result, user, grade, platform, response_json)
 
@@ -513,7 +573,7 @@ def FlutterWaveWebhook(request):
                 "environment": "",
                 "original_transaction_id": tx_ref,
                 "transaction_id": transaction_id,
-                "expires_date": "",
+                "expires_date": datetime.datetime.now(),
                 "product": None,
                 "auto_renew_status": flw_ref,
                 "expiration_intent": "",
@@ -521,28 +581,45 @@ def FlutterWaveWebhook(request):
                 "original_purchase_date": created
             }
 
-        if amount and purchase_details:
-            try:
-                product = Product.objects.get(amount=float(f"{amount:.2f}"))
-                expires_date = created + \
-                    datetime.timedelta(days=product.duration)
-                payment_serializer = InAppPaymentSerializer(
-                    data=purchase_details)
-                payment_serializer.is_valid(raise_exception=True)
-                payment = payment_serializer.save(
-                    product=product, expires_date=expires_date)
-            except Exception as ex:
-                print(f"payment serializer error: {ex}")
-
         if meta:
             try:
-                grade_val = meta.get(grade)
+                grade_val = meta.get('grade')
                 if isinstance(grade_val, int):
-                    grade = Grade.objects.get(pk=grade)
+                    grade = GradePack.objects.get(pk=grade)
                 if isinstance(grade_val, str):
-                    grade = Grade.objects.get(name=grade)
+                    grade = GradePack.objects.get(name=grade)
             except Exception as ex:
                 print(f"grade error: {ex}")
+
+            try:
+                product_id = meta.get('product_id')
+            except Exception as ex:
+                print(f"product_id error: {ex}")
+
+            try:
+                platform = meta.get('platform')
+            except Exception as ex:
+                print(f"platform error: {ex}")
+
+        if product_id and purchase_details:
+            _, product, payment = createProduct(
+                product_id, platform, purchase_details, created)
+
+            # try:
+            # product = Product.objects.get(amount=float(f"{amount:.2f}"))
+            # product = Product.objects.filter(
+            #     product_id=product_id, platform=platform)
+            # if product.exists():
+            #     product = product.first()
+            #     expires_date = created + \
+            #         datetime.timedelta(days=product.duration)
+            #     payment_serializer = InAppPaymentSerializer(
+            #         data=purchase_details)
+            #     payment_serializer.is_valid(raise_exception=True)
+            #     payment = payment_serializer.save(
+            #         product=product, expires_date=expires_date)
+            # except Exception as ex:
+            #     print(f"payment serializer error: {ex}")
 
         if customer:
             email = customer.get('email')
@@ -559,21 +636,22 @@ def FlutterWaveWebhook(request):
                 except Student.DoesNotExist:
                     raise Http404
 
-        if user and product and payment and grade:
-            data = {
-                "user": None,
-                "product": None,
-                "payment_method": None,
-                "grade": None
-            }
-            try:
-                subscribe_serializer = SubscribeSerializer(data=data)
-                subscribe_serializer.is_valid(raise_exception=True)
-                subscribe_serializer.save(
-                    user=student.user, product=product, payment_method=payment, grade=grade)
-                update_user_data()  # update cache
-            except Exception as ex:
-                print(f"subscribe serializer error: {ex}")
+        # if user and product and payment and grade:
+            # data = {
+            #     "user": None,
+            #     "product": None,
+            #     "payment_method": None,
+            #     "grade": None
+            # }
+            # try:
+            #     subscribe_serializer = SubscribeSerializer(data=data)
+            #     subscribe_serializer.is_valid(raise_exception=True)
+            #     subscribe_serializer.save(
+            #         user=student.user, product=product, payment_method=payment, grade=grade.pk)
+            #     update_user_data()  # update cache
+            # except Exception as ex:
+            #     print(f"subscribe serializer error: {ex}")
+            createProductSubscription(user, product, payment, grade)
 
     elif event == 'charge.failed':
         # Handle the payment failed event
@@ -621,7 +699,7 @@ def verifyAndroidPayment(subscriptionId, purchase_token, packageName):
 
         if payment_data:
             user = grade = None
-            platform = 'android'
+            platform = ANDROID
             create_subscription(subscriptionId, payment_data,
                                 user, grade, platform)
 
@@ -723,37 +801,80 @@ def createPurchase(purchase, purchase_token):
     return {}
 
 
-def create_subscription(product_id, payment_data, user, grade, platform='android', response_json=None):
-    state = status.HTTP_400_BAD_REQUEST
+def createProduct(product_id, platform, payment_data, created=None):
+
     resp = {}
-    payment = product = None
+    payment_serializer = payment = None
     try:
 
-        product = Product.objects.filter(product_id=product_id)
+        product = Product.objects.filter(
+            product_id=product_id, platform=platform)
+        # print('product: ', product)
         if product.exists():
             product = product.first()
-        # print('purchase: ', result)
-        payment_serializer = InAppPaymentSerializer(data=payment_data)
-        payment_serializer.is_valid(raise_exception=True)
-        payment = payment_serializer.save(product=product)
-        resp = payment_serializer.data
-        # printOutLogs('PURCHASE3: ', resp)
+            payment_serializer = InAppPaymentSerializer(
+                data=payment_data)
+            payment_serializer.is_valid(raise_exception=True)
 
+            if created:
+                expires_date = created + \
+                    datetime.timedelta(days=product.duration)
+                payment = payment_serializer.save(
+                    product=product, expires_date=expires_date)
+            else:
+                payment = payment_serializer.save(product=product)
+
+        if payment_serializer:
+            resp = payment_serializer.data
+
+        # print('createProduct: ', resp)
     except Exception as ex:
         #  status.HTTP_409_CONFLICT
         print(f'payment_serializer exception occurred: {ex}')
 
-    if platform == 'ios':
+    return resp, product, payment
+
+
+def createProductSubscription(user, product, payment, grade):
+    data = {
+        "user": user.pk if user.pk else None,
+        "product": product.pk if product.pk else None,
+        "payment_method": payment.pk if payment.pk else None,
+        "grade": grade.pk if grade.pk else None
+    }
+    # print('createProductSubscription: ', user.pk,
+    #       product.pk, payment.expires_date, payment.original_purchase_date)
+
+    # print('data: ', data)
+
+    subscribe_serializer = SubscribeSerializer(data=data)
+    subscribe_serializer.is_valid(raise_exception=True)
+    subscribe_serializer.save()
+    print('DETAILS SUBSCRIBE: ', subscribe_serializer.data)
+    if subscribe_serializer:
+        return subscribe_serializer.data
+
+    return {}
+
+
+def create_subscription(product_id, payment_data, user, grade, platform='', response_json=None):
+    state = status.HTTP_400_BAD_REQUEST
+    resp = {}
+    payment = product = None
+    resp, product, payment = createProduct(product_id, platform, payment_data)
+
+    if platform == IOS:
         resp['status'] = response_json.get('status')
         state = status.HTTP_200_OK
 
-    if platform == 'android':
+    if platform == ANDROID:
         resp['status'] = 0
         state = status.HTTP_200_OK
 
     try:
-        # printOutLogs('PURCHASE4: ', resp)
-        grade_obj = Grade.objects.filter(pk=grade)
+        # print('PURCHASE4: ', grade)
+        grade_obj = GradePack.objects.all().filter(pk=grade)
+        # print('PURCHASE6: ', list(grade_obj))
         grade = None
         if grade_obj.exists():
             grade = grade_obj.first()
@@ -761,33 +882,32 @@ def create_subscription(product_id, payment_data, user, grade, platform='android
     except Exception as ex:
         print(f'Grade exception occurred: {ex}')
 
-    data = {
-        "user": user.pk if user.pk else None,
-        "product": product.pk if product.pk else None,
-        "payment_method": payment.pk if payment.pk else None,
-        "grade": grade.pk if grade.pk else None
-    }
+    # data = {
+    #     "user": user.pk if user.pk else None,
+    #     "product": product.pk if product.pk else None,
+    #     "payment_method": payment.pk if payment.pk else None,
+    #     "grade": grade.pk if grade.pk else None
+    # }
 
     try:
         # print('DETAILS: ', payment, product, grade, user)
-        # printOutLogs('PURCHASE6: ', user)
         # if payment and product:
-        subscribe_serializer = SubscribeSerializer(data=data)
-        subscribe_serializer.is_valid(raise_exception=True)
-        subscribe_serializer.save()
+        # subscribe_serializer = SubscribeSerializer(data=data)
+        # subscribe_serializer.is_valid(raise_exception=True)
+        # subscribe_serializer.save()
+        serializer_data = createProductSubscription(
+            user, product, payment, grade)
         update_user_data()  # update cache
         # if not user and not grade:
         #     subscribe_serializer.save(product=product, payment_method=payment)
         # else:
         #     subscribe_serializer.save(product=product, payment_method=payment, grade=grade)
-
-        state = status.HTTP_201_CREATED
-        # print('DETAILS SUBSCRIBE: ', subscribe_serializer.data)
-        # printOutLogs('DETAILS SUBSCRIBE: ', subscribe_serializer.data)
+        if serializer_data:
+            state = status.HTTP_201_CREATED
 
     except Exception as ex:
-        print(f'SubscribeSerializer exception occurred: {ex}')
-        # printOutLogs('SubscribeSerializer exception occurred: ', ex)
+        # print(f'SubscribeSerializer exception occurred: {ex}')
+        printOutLogs('SubscribeSerializer exception occurred: ', ex)
 
     return resp, state
 
@@ -817,11 +937,11 @@ def build_service_credentials(secret_name, packageName, subscriptionId, purchase
     return purchase
 
 
-def printOutLogs(tag='', param=''):
-    logging_client = logging.Client()
-    logging_client.get_default_handler()
-    logging_client.setup_logging()
-    log.info(f"Some log here: {tag} : {param}")
+# def printOutLogs(tag='', param=''):
+#     logging_client = logging.Client()
+#     logging_client.get_default_handler()
+#     logging_client.setup_logging()
+#     log.info(f"Some log here: {tag} : {param}")
 
 
 def convertDateFromMSToDateTime(ms_date_time):
