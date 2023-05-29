@@ -313,7 +313,7 @@ WSGI_APPLICATION = 'edufox.wsgi.application'
 # }
 # DATABASES = {"default": env.db()}
 if os.environ.get('USE_LOCAL_POSTGRESQL'):
-    # print('USE_LOCAL_POSTGRESQL: ', os.environ.get('USE_LOCAL_POSTGRESQL'))
+    print('USE_LOCAL_POSTGRESQL: ', os.environ.get('USE_LOCAL_POSTGRESQL'))
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
