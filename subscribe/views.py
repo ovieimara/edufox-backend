@@ -86,7 +86,7 @@ class FetchSubscribe(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.Ret
             # printOutLogs('subscriptions_obj', list(subscriptions))
 
             subscriptions_obj = subscriptions.filter(
-                Q(payment_method__expires_date__gt=timezone.now()))
+                Q(payment_method__expires_date__lt=timezone.now()))
             subscribe_serializer = self.get_serializer(
                 subscriptions_obj, many=True)
             return Response(subscribe_serializer.data)
