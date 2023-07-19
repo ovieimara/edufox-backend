@@ -17,3 +17,5 @@ twilio==7.16.3
 django-filter
 google-api-python-client==2.85.0
 google-cloud-logging==3.5.0
+django-bleach==3.0.1
+

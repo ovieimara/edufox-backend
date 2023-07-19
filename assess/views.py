@@ -9,12 +9,14 @@ from django.shortcuts import get_object_or_404
 from .permissions import IsStaffEditorPermission
 # Create your views here.
 
+
 class ListCreateAPITest(generics.ListCreateAPIView):
     '''
     Retrieve Test questions for the subject, the grade, under a topic and lesson
     example request url '/tests?grade=grade&subject=subject&topic=topic&lesson=lesson'
     '''
-    queryset = Test.objects.select_related('subject', 'grade').all().order_by('subject__name', 'topic')
+    queryset = Test.objects.select_related(
+        'subject', 'grade').all().order_by('subject__name', 'topic')
     serializer_class = TestSerializer
     # filterset_fields = ['grade', 'subject', 'topic', 'lesson']
     # ordering_fields = ['title', 'topic']
@@ -22,12 +24,13 @@ class ListCreateAPITest(generics.ListCreateAPIView):
 
     def get_queryset(self):
         grade = self.request.query_params.get('grade')
-        
+
         subject = self.request.query_params.get('subject')
         topic = self.request.query_params.get('topic')
         level = self.request.query_params.get('level')
         lesson = self.request.query_params.get('lesson')
-        tests = Test.objects.select_related('subject', 'grade', 'topic', 'lesson').order_by('subject', 'topic')
+        tests = Test.objects.select_related(
+            'subject', 'grade', 'topic', 'lesson').order_by('subject', 'topic')
         if grade:
             # print("grade:", type(grade))
             grade_instance = ''
@@ -63,7 +66,7 @@ class ListCreateAPITest(generics.ListCreateAPIView):
                 lesson_instance = get_object_or_404(Lesson, name=lesson)
             if lesson.isnumeric():
                 lesson_instance = get_object_or_404(Lesson, pk=lesson)
-                
+
             tests = tests.filter(lesson=lesson_instance)
 
         if level:
@@ -75,15 +78,14 @@ class ListCreateAPITest(generics.ListCreateAPIView):
 
             tests = tests.filter(level=level_instance)
 
-
         return tests
-    
+
     def perform_create(self, serializer):
         user = self.request.user
         if user.is_staff:
             return super().perform_create(serializer)
         return Response(status=status.HTTP_403_FORBIDDEN)
-        
+
     # permission_classes = [AllowAny]
     # permission_classes = [IsAdminUser, IsStaffEditorPermission]
     # def get(self, request, *args, **kwargs):
@@ -131,10 +133,12 @@ class UpdateAPITest(generics.RetrieveUpdateDestroyAPIView):
 #             return self.update(request, *args, **kwargs)
 #         return Response(status=status.HTTP_403_FORBIDDEN)
 
+
 class UpdateAPIAssessment(generics.RetrieveUpdateDestroyAPIView):
     queryset = Assessment.objects.select_related('user').all()
     serializer_class = AssessmentSerializer
     permission_classes = [IsAuthenticated]
+
 
 class ListCreateAPIAssessment(generics.ListCreateAPIView):
     '''
@@ -172,32 +176,32 @@ class ListCreateAPIAssessment(generics.ListCreateAPIView):
         if level:
             assessments = assessments.filter(test__level=level)
 
-
         return assessments
-    
+
     def create(self, request, *args, **kwargs):
         user = request.user
         if user and not user.is_anonymous:
             data = request.data
             # updated_data = [ques.update([("user", user)]) for ques in data]
-            serializer = self.get_serializer(data=data, many=True, context={'request': request})
+            serializer = self.get_serializer(
+                data=data, many=True, context={'request': request})
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
             return Response(serializer.data, status.HTTP_201_CREATED)
             # return super().create(request, *args, **kwargs)
         return Response('not authenticated', status.HTTP_401_UNAUTHORIZED)
-    
+
     # def perform_create(self, serializer):
     #     user = self.request.user
     #     if user and not user.is_anonymous:
     #         serializer.save(user=user)
 
     #     data = self.request.data
-        
 
         # return Response(status.HTTP_401_UNAUTHORIZED)
         # return super().perform_create(serializer)
+
 
 class ListCreateUpdateAPILevel(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = Level.objects.all()
@@ -220,5 +224,3 @@ class ListCreateUpdateAPILevel(mixins.CreateModelMixin, mixins.ListModelMixin,  
         if kwargs.get('pk') and request.user.is_staff:
             return self.update(request, *args, **kwargs)
         return Response(status=status.HTTP_403_FORBIDDEN)
-
-    

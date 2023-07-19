@@ -27,6 +27,7 @@ class Plan(models.Model):
     discount = models.ForeignKey(
         Discount, related_name='discount_plans', null=True, on_delete=models.SET_NULL)
     status = models.BooleanField(default=1)
+    platform = models.CharField(max_length=100, null=True, default='')
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -51,6 +52,8 @@ class Product(models.Model):
     name = models.CharField(max_length=255, null=True,
                             blank=True, default='')
     product_id = models.CharField(
+        max_length=255, null=True, blank=True, default='')
+    plan = models.CharField(
         max_length=255, null=True, blank=True, default='')
     amount = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
     currency = models.CharField(

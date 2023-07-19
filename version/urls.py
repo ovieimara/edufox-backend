@@ -14,4 +14,6 @@ urlpatterns = [
     path('students', StudentListCreateAPIView.as_view(), name="students-list"),
     path('v1/students/', include('student.urls')),
     path('v1/assess/', include('assess.urls')),
+    path('v1/contacts/', include('contact.urls')),
+    path('v1/banners/', include('banner.urls')),
 ]

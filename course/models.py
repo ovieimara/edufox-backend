@@ -95,11 +95,12 @@ class Topic(models.Model):
 class Lesson(models.Model):
     LEVEL_CHOICES = ()
     num = models.SmallIntegerField(null=True, blank=True, default=0)
-    title = models.CharField(db_index=True, max_length=255)
+    # title = models.CharField(db_index=True, max_length=255, default='')
+    title = models.TextField(null=True, blank=True, default='')
     topic = models.ForeignKey(
         Topic, related_name='topic_lessons', on_delete=models.CASCADE)
     topics = models.CharField(
-        max_length=255, choices=LEVEL_CHOICES, null=True, default=[])
+        max_length=255, choices=LEVEL_CHOICES, null=True, blank=True, default=[])
     subject = models.ForeignKey(
         Subject, related_name='subject_lessons', null=True, on_delete=models.SET_NULL)
     grade = models.ManyToManyField(Grade, related_name='grade_lessons')
@@ -124,6 +125,8 @@ class Lesson(models.Model):
 
 
 class Video(models.Model):
+    video_id = models.CharField(
+        max_length=255, default='000')
     lesson = models.ForeignKey(
         Lesson, related_name='lesson_videos', null=True, on_delete=models.SET_NULL)
     lessons = models.CharField(
@@ -160,8 +163,8 @@ class Video(models.Model):
 
 class Rate(models.Model):
     user = models.ForeignKey(
-        User, related_name='user_ratings', on_delete=models.CASCADE)
-    rating = models.SmallIntegerField()
+        User, related_name='user_ratings', null=True, blank=True, on_delete=models.CASCADE)
+    rating = models.SmallIntegerField(default=-1)
     created = models.DateTimeField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
     video = models.ForeignKey(
@@ -207,23 +210,29 @@ class Comment(models.Model):
 #     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
 
 
-# class InteractionType(models.Model):
-#     code = models.CharField(max_length=127, null=True, default='')
-#     name = models.CharField(db_index=True, max_length=127, default='')
-#     description = models.TextField(blank=True, default='')
+class Event(models.Model):
+    name = models.CharField(db_index=True, max_length=127, default='')
+    description = models.TextField(blank=True, default='')
 
-#     def __str__(self) -> str:
-#         return self.name
+    def __str__(self) -> str:
+        return self.name
+
 
 class Interaction(models.Model):
     user = models.ForeignKey(
         User, related_name='interactions', on_delete=models.CASCADE)
-    type = models.CharField(db_index=True, null=True,
-                            max_length=50, default='')
+    # type = models.CharField(db_index=True, null=True,
+    #                         max_length=50, default='')
+    event = models.ForeignKey(
+        Event, related_name='event', null=True, on_delete=models.SET_NULL)
     video = models.ForeignKey(
         Video, related_name='videos', null=True, on_delete=models.SET_NULL)
-    duration = models.CharField(
-        db_index=True, null=True, max_length=50, default='')
+    begin_duration = models.CharField(null=True, max_length=100, default='')
+    end_duration = models.CharField(null=True, max_length=100, default='')
+    # begin_duration = models.DecimalField(
+    #     max_digits=10, decimal_places=4, default=0.0000)
+    # end_duration = models.DecimalField(
+    #     max_digits=10, decimal_places=4, null=True, blank=True, default=0.0000)
     created = models.DateField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
 

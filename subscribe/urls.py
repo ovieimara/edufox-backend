@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .views import (FetchSubscribe, ListCreateUpdateAPIDiscount, ListCreateUpdateAPISubscribe,
+from .views import (FetchSubscribe, FlutterWaveWebhookHandler, ListCreateUpdateAPIDiscount, ListCreateUpdateAPISubscribe,
                     ListCreateUpdateAPIPlan, ListCreateUpdateAPIBillingProduct, VerifyPurchase,
                     AppStoreNotificationHandler, PlayStoreNotificationHandler, ListCreateUpdateAPIGradePack)
 from djoser.views import UserViewSet
@@ -21,8 +21,10 @@ urlpatterns = [
     path('plans/<pk>', ListCreateUpdateAPIPlan.as_view(), name='plan-detail'),
     path('products', ListCreateUpdateAPIBillingProduct.as_view(),
          name='products-list'),
-    path('products/<pk>', ListCreateUpdateAPIBillingProduct.as_view(),
+    path('products/<int:pk>/<platform>', ListCreateUpdateAPIBillingProduct.as_view(),
          name='product-detail'),
+    #     path('products/<platform>', ListCreateUpdateAPIBillingProduct.as_view(),
+    #          name='product-platform-detail'),
     path('grade_packs', ListCreateUpdateAPIGradePack.as_view(),
          name='grade-pack-list'),
     path('grade_packs/<pk>', ListCreateUpdateAPIGradePack.as_view(),
@@ -32,6 +34,8 @@ urlpatterns = [
          name='appstorenotify-list'),
     path('playstorenotify', PlayStoreNotificationHandler,
          name='playstorenotify-list'),
+    path('flutterwavenotify', FlutterWaveWebhookHandler,
+         name='flutterwavenotify-list'),
 
 
 ]

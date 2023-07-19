@@ -3,15 +3,18 @@ from django.contrib.postgres.fields import ArrayField
 from django.contrib.auth.models import User
 from course.models import Lesson, Subject, Grade, Topic
 
+
 class Level(models.Model):
     code = models.CharField(max_length=127, null=True, default='')
     name = models.CharField(max_length=127, null=True, default='')
 
     def __str__(self) -> str:
         return self.name
-    
+
+
 class Answer(models.Model):
     answer = models.CharField
+
 
 class Test(models.Model):
     CHOICES = (
@@ -22,7 +25,7 @@ class Test(models.Model):
         ('E', 'E'),
         ('F', 'F'),
     )
-    code = models.CharField(max_length=100, null=True, default='')
+    code = models.CharField(max_length=100, null=True, blank=True, default='')
     question = models.TextField(default='')
     # options = models.JSONField(default=dict)
     # option1 = models.TextField(default='')
@@ -38,18 +41,24 @@ class Test(models.Model):
     valid_answers = models.JSONField(null=True, default=list)
     options = models.JSONField(null=True, default=list)
 
-    subject = models.ForeignKey(Subject, related_name='test_subjects', null=True, on_delete=models.SET_NULL)
-    grade = models.ForeignKey(Grade, related_name='test_grade', null=True, on_delete=models.SET_NULL)
+    subject = models.ForeignKey(
+        Subject, related_name='test_subjects', null=True, on_delete=models.SET_NULL)
+    grade = models.ForeignKey(
+        Grade, related_name='test_grade', null=True, on_delete=models.SET_NULL)
     # topic = models.CharField(max_length=100, null=True, blank=True, default='')
-    topic = models.ForeignKey(Topic, related_name='topic_tests', null=True, on_delete=models.SET_NULL)
-    lesson = models.ForeignKey(Lesson, related_name='lesson_tests', null=True, on_delete=models.SET_NULL)
+    topic = models.ForeignKey(
+        Topic, related_name='topic_tests', null=True, on_delete=models.SET_NULL)
+    lesson = models.ForeignKey(
+        Lesson, related_name='lesson_tests', null=True, on_delete=models.SET_NULL)
     # lesson = models.SmallIntegerField(null=True, blank=True, default=0)
-    level = models.ForeignKey(Level, related_name='difficulty_level', null=True, on_delete=models.SET_NULL, default=1)
+    level = models.ForeignKey(Level, related_name='difficulty_level',
+                              null=True, blank=True, on_delete=models.SET_NULL, default=1)
     created = models.DateTimeField(null=True, auto_now_add=True)
-    updated = models.DateTimeField( null=True, auto_now=True)
+    updated = models.DateTimeField(null=True, auto_now=True)
 
     def __str__(self) -> str:
         return self.question
+
 
 class Assessment(models.Model):
     CHOICES = (
@@ -60,15 +69,16 @@ class Assessment(models.Model):
         ('E', ''),
         ('F', ''),
     )
-    user = models.ForeignKey(User, related_name='assessments', null=True, on_delete=models.CASCADE)
-    test = models.ForeignKey(Test, related_name='tests', default=1, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        User, related_name='assessments', null=True, on_delete=models.CASCADE)
+    test = models.ForeignKey(Test, related_name='tests',
+                             default=1, on_delete=models.CASCADE)
     # answer = models.ManyToManyField(Test, related_name='answers', on_delete=models.CASCADE)
     # answer = models.CharField(max_length=1, choices=CHOICES, default=[])
     answer = models.JSONField(default=list)
     # status = models.SmallIntegerField(default=0)
     created = models.DateTimeField(null=True, auto_now_add=True)
-    updated = models.DateTimeField( null=True, auto_now=True)
+    updated = models.DateTimeField(null=True, auto_now=True)
 
     def __str__(self) -> str:
         return self.test.question
-

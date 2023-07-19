@@ -28,15 +28,14 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.contrib.auth.models import User
+from edufox.constants import ANDROID, FLUTTERWAVE_WEB, IOS
 from edufox.views import printOutLogs, update_user_data
 from student.models import Student
 from .models import Subscribe, Plan, Discount, Product, AppleNotify, Grade, GradePack
-from .serializers import (SubscribeSerializer, PlanSerializer,
+from .serializers import (ProductSerializer2, SubscribeSerializer, PlanSerializer,
                           DiscountSerializer, ProductSerializer, InAppPaymentSerializer, AppleNotifySerializer, AndroidNotifySerializer, GradePackSerializer)
 
 # Create your views here.
-IOS = 'ios'
-ANDROID = 'android'
 
 
 class ListCreateUpdateAPISubscribe(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
@@ -86,7 +85,7 @@ class FetchSubscribe(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.Ret
             # printOutLogs('subscriptions_obj', list(subscriptions))
 
             subscriptions_obj = subscriptions.filter(
-                Q(payment_method__expires_date__lt=timezone.now()))
+                Q(payment_method__expires_date__gt=timezone.now()))
             subscribe_serializer = self.get_serializer(
                 subscriptions_obj, many=True)
             return Response(subscribe_serializer.data)
@@ -145,12 +144,39 @@ class ListCreateUpdateAPIBillingProduct(mixins.CreateModelMixin, mixins.ListMode
     serializer_class = ProductSerializer
 
     def get(self, request, *args, **kwargs):
-        if kwargs.get('pk') is not None:
+        # print("kwargs: ", kwargs)
+        platform = kwargs.get('platform')
+        pk = kwargs.get('pk')
+        if pk:
             return self.retrieve(request, *args, **kwargs)
 
-        response = self.list(request, *args, **kwargs)
-        # print(response.data)
-        return response
+        if platform:
+            # print("kwargs2: ", kwargs)
+            products = []
+            products_queryset = self.get_queryset()
+            if products_queryset:
+                kwargs.pop('pk')
+                products_queryset = products_queryset.filter(
+                    **kwargs)
+                for product in products_queryset:
+                    if platform == FLUTTERWAVE_WEB:
+                        products.append(product)
+                    else:
+                        products.append(product.product_id)
+
+                if platform == FLUTTERWAVE_WEB:
+                    products = self.get_serializer(products, many=True).data
+                    return Response(products)
+
+                data = {
+                    platform: products
+                }
+
+                # print("data: ", data)
+
+            return Response(data)
+
+        return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         if not kwargs.get('pk') and request.user.is_staff:
@@ -201,7 +227,7 @@ def VerifyPurchase(request, *args, **kwargs):
     grade = request.data.get('grade')
     platform = request.data.get('platform')
     user = request.user
-    # printOutLogs('RECEIPT2: ', purchase_data)
+    # print('RECEIPT2: ', purchase_data)
     # if platform == 'android':
     #     return verifyAndroidPurchase(purchase_data)
     if platform == IOS:
@@ -251,8 +277,16 @@ def VerifyPurchase(request, *args, **kwargs):
     if platform == ANDROID:
         resp = verifyAndroidPurchase(purchase_data, is_sandbox)
         result = resp
-        # printOutLogs('result: ', result)
+        # print('result: ', result)
         state = status.HTTP_200_OK
+
+    if platform == FLUTTERWAVE_WEB:
+        printOutLogs("purchase_data: ", purchase_data)
+        transaction_id = purchase_data.get('transaction_id')
+        if transaction_id:
+            return flutterWaveHandler(transaction_id)
+
+        return Response(status.HTTP_400_BAD_REQUEST)
 
     if result and result.get('transaction_id'):
         # product_id = result.get('product_id')
@@ -266,8 +300,8 @@ def VerifyPurchase(request, *args, **kwargs):
             resp, state = create_subscription(
                 product_id, result, user, grade, platform, response_json)
 
-    # print('RESPONSE: ', resp)
-    return Response(resp, state)
+    # print('RESPONSESSS: ', resp)
+    return Response(data=resp, status=state)
 
 
 def verifyAndroidPurchase(purchase, isSandBox):
@@ -277,6 +311,8 @@ def verifyAndroidPurchase(purchase, isSandBox):
     # response = verifyAndroidPayment(subscription_id, purchase_token, package_name, isSandBox)
 
     # return Response(response)
+    # print("purchasessss", purchase.get(
+    #     'productId'), purchase_token, package_name)
 
     return verify_android_purchase(purchase_token, subscription_id, package_name, isSandBox)
 
@@ -339,7 +375,7 @@ def validate_in_app(receipt_json_data):
             'environment': environment,
             'original_transaction_id': original_transaction_id,
             'transaction_id': transaction_id,
-            'expires_date': convertDateFromMSToDateTime(expires_date),
+            'expires_date': convertDateFromMSToDateTime(expires_date) + datetime.timedelta(days=60),
             'expiration_intent': expiration_intent,
             'in_app_ownership_type': in_app_ownership_type,
             'auto_renew_status': auto_renew_status,
@@ -514,151 +550,136 @@ def PlayStoreNotificationHandler(request):
 
 # Define a view to handle webhook notifications
 @csrf_exempt
-def FlutterWaveWebhook(request):
-    if request.method != 'POST':
-        return Response('Invalid request method', status.HTTP_400_BAD_REQUEST)
-
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def FlutterWaveWebhookHandler(request):
+    printOutLogs('PAYLOAD: ', request.body)
     secret_hash = os.environ.get('FLUTTERWAVE_SECRET_HASH')
-    secret_key = os.environ.get('FLUTTERWAVE_API_SECRET_KEY')
-
+    print("secret_hash: ", secret_hash)
+    secret_hash = "greeneyz"
     # Verify the webhook signature
     signature = request.headers.get('verif-hash')
+    printOutLogs('signature: ', signature)
+
     if not signature:
-        return Response('Missing signature', status.HTTP_400_BAD_REQUEST)
+        printOutLogs('signature2: ', signature)
+        return Response('Missing signature', status.HTTP_401_UNAUTHORIZED)
 
-    computed_signature = hmac.new(
-        secret_hash.encode(),
-        request.body,
-        hashlib.sha256
-    ).hexdigest()
-    if signature != computed_signature:
-        return Response('Invalid signature', status.HTTP_400_BAD_REQUEST)
+    # computed_signature = hmac.new(
+    #     secret_hash.encode(),
+    #     request.body,
+    #     hashlib.sha256
+    # ).hexdigest()
+    # printOutLogs('computed_signature: ', computed_signature)
+    if signature != secret_hash:
+        printOutLogs('computed_signature2: ', signature)
+        return Response('Invalid signature', status.HTTP_401_UNAUTHORIZED)
 
-    # Process the webhook payload
-    # payload = request.json()['data']
-    payload = request.data.get('data')
-    event = payload.get('event')
+    payload = json.loads(request.body)
+    printOutLogs("Payload2: ", payload)
+    payload_data = payload.get('data')
+    if payload_data:
+        return flutterWaveHandler(payload_data.get('id'))
+    return (status.HTTP_400_BAD_REQUEST)
 
-    if event == 'charge.completed':
-        # Handle the completed payment event
-        transaction_id = payload.get('id')
-        transaction_verification_uri = f'https://api.flutterwave.com/v3/transactions/{transaction_id}/verify'
+# def flutterWaveHandler(payload):
 
-    # Send a GET request to the transaction verification URI with your Flutterwave API keys
-        response = requests.get(transaction_verification_uri, headers={
-            'Authorization': f"Bearer {secret_key}",
-            'Content-Type': 'application/json'
-        })
-        # Extract the verification status from the response and update your database accordingly
-        # verification_status = response.json()['data']['status']
-        data = response.data.get('data')
-        verification_status = amount = product = grade = student = user = payment = created = tx_ref = flw_ref = payment_type = ""
-        purchase_details = meta = customer = {}
 
-        if data:
-            verification_status = data.get('status')
-            created_at = data.get('created_at')
-            amount = data.get('amount')
-            tx_ref = data.get('tx_ref')
-            flw_ref = data.get('flw_ref')
-            payment_type = data.get('payment_type')
-            meta = data.get('meta')
-            customer = data.get('customer')
+def flutterWaveHandler(transaction_id):
+
+    # if payload.get('event') == 'charge.completed':
+    # Handle the completed payment event
+    # transaction_id = payload.get('id')
+    transaction_verification_uri = f'https://api.flutterwave.com/v3/transactions/{transaction_id}/verify'
+
+# Send a GET request to the transaction verification URI with your Flutterwave API keys
+    secret_key = os.environ.get('FLUTTERWAVE_API_SECRET_KEY')
+    secret_key = "FLWSECK_TEST-837596c570e8f719e34d7ed0831f10e1-X"
+    response = requests.get(transaction_verification_uri, headers={
+        'Authorization': f"Bearer {secret_key}",
+        'Content-Type': 'application/json'
+    })
+    # Extract the verification status from the response and update your database accordingly
+    # verification_status = response.json()['data']['status']
+    # print('FLUTTER RESPONSE: ', response.json())
+    data = {}
+    if response and response.json():
+        data = response.json().get('data')
+
+    verification_status = amount = product = grade = student = user = payment = created = tx_ref = flw_ref = payment_type = product_id = ""
+    purchase_details = meta = customer = {}
+
+    if data:
+        # print('DATA: ', data)
+
+        verification_status = data.get('status')
+        meta = data.get('meta')
+        customer = data.get('customer')
 
         if verification_status == 'successful':
             # ... process the payment ...
-            created = dateStrToDateTime(created_at)
+            created = dateStrToDateTime(
+                data.get('created_at'), '%Y-%m-%dT%H:%M:%S.%fZ')
             purchase_details = {
                 "name": "FlutterWave",
                 "environment": "",
-                "original_transaction_id": tx_ref,
+                "original_transaction_id": data.get('tx_ref'),
                 "transaction_id": transaction_id,
-                "expires_date": datetime.datetime.now(),
+                "expires_date": timezone.now(),
                 "product": None,
-                "auto_renew_status": flw_ref,
+                "auto_renew_status": data.get('flw_ref'),
                 "expiration_intent": "",
-                "in_app_ownership_type": payment_type,
+                "in_app_ownership_type": data.get('payment_type'),
                 "original_purchase_date": created
             }
 
-        if meta:
-            try:
-                grade_val = meta.get('grade')
-                if isinstance(grade_val, int):
-                    grade = GradePack.objects.get(pk=grade)
-                if isinstance(grade_val, str):
-                    grade = GradePack.objects.get(name=grade)
-            except Exception as ex:
-                print(f"grade error: {ex}")
+    if meta:
+        try:
+            grade_val = meta.get('grade')
+            # if isinstance(grade_val, int):
+            # print(grade_val, grade_val)
+            grade = GradePack.objects.get(id=grade_val.strip())
+            # if isinstance(grade_val, str):
+            #     grade = GradePack.objects.get(name=grade)
+        except Exception as ex:
+            print(f"grade error: {ex}")
 
-            try:
-                product_id = meta.get('product_id')
-            except Exception as ex:
-                print(f"product_id error: {ex}")
+        product_id = meta.get('product_id')
+        platform = meta.get('platform')
 
-            try:
-                platform = meta.get('platform')
-            except Exception as ex:
-                print(f"platform error: {ex}")
+        # print('META: ', product_id, platform)
 
-        if product_id and purchase_details:
-            _, product, payment = createProduct(
-                product_id, platform, purchase_details, created)
+    if product_id and purchase_details:
+        # product_id = "com.edufox.sub.autorenew.yearly"
+        _, product, payment = createProduct(
+            product_id, platform, purchase_details, created)
+        # print('PRODUCT:', product, payment)
 
-            # try:
-            # product = Product.objects.get(amount=float(f"{amount:.2f}"))
-            # product = Product.objects.filter(
-            #     product_id=product_id, platform=platform)
-            # if product.exists():
-            #     product = product.first()
-            #     expires_date = created + \
-            #         datetime.timedelta(days=product.duration)
-            #     payment_serializer = InAppPaymentSerializer(
-            #         data=purchase_details)
-            #     payment_serializer.is_valid(raise_exception=True)
-            #     payment = payment_serializer.save(
-            #         product=product, expires_date=expires_date)
-            # except Exception as ex:
-            #     print(f"payment serializer error: {ex}")
+    if customer:
+        phone_number = customer.get('name')
+        # print("phone_number: ", phone_number + '123')
+        # phone_number = '+2348023168805'
+        try:
+            user = User.objects.get(username=phone_number.strip())
+            # print('user: ', user)
+        except User.DoesNotExist as ex:
+            print(f"user error: {ex}")
 
-        if customer:
+        if not user:
             email = customer.get('email')
             try:
-                user = User.objects.get(email=email)
-            except Student.DoesNotExist:
-                raise Http404
+                user = User.objects.get(email=email.strip())
+            except User.DoesNotExist as ex:
+                print(f"user error: {ex}")
+        # print('user2: ', user)
+        createProductSubscription(user, product, payment, grade)
 
-            if not user:
-                phone_number = customer.get('phone_number')
-                try:
-                    student = Student.objects.get(phone_number=phone_number)
-                    user = student.user
-                except Student.DoesNotExist:
-                    raise Http404
+# elif payload.get('event') == 'charge.failed':
+#     # Handle the payment failed event
+#     payment_id = payload.get('id')
+#     # TODO: handle the failed payment and update your database
 
-        # if user and product and payment and grade:
-            # data = {
-            #     "user": None,
-            #     "product": None,
-            #     "payment_method": None,
-            #     "grade": None
-            # }
-            # try:
-            #     subscribe_serializer = SubscribeSerializer(data=data)
-            #     subscribe_serializer.is_valid(raise_exception=True)
-            #     subscribe_serializer.save(
-            #         user=student.user, product=product, payment_method=payment, grade=grade.pk)
-            #     update_user_data()  # update cache
-            # except Exception as ex:
-            #     print(f"subscribe serializer error: {ex}")
-            createProductSubscription(user, product, payment, grade)
-
-    elif event == 'charge.failed':
-        # Handle the payment failed event
-        payment_id = payload.get('id')
-        # TODO: handle the failed payment and update your database
-
-    # Respond with a 200 status code to acknowledge receipt of the webhook
+# Respond with a 200 status code to acknowledge receipt of the webhook
     return Response({'success': True}, status.HTTP_200_OK)
 
 
@@ -730,9 +751,11 @@ def verify_android_purchase(purchase_token: str, subscription_id: str, package_n
     # Load the service account credentials
     purchase = build_service_credentials(
         secret_name, package_name, subscription_id,  purchase_token)
-    # print('purchase: ', purchase)
+    # print('purchase: ', purchase_token, subscription_id, package_name)
 
     try:
+        # print('purchase_details1: ', purchase.get("purchaseState"), purchase.get("paymentState"),
+        #   purchase.get("acknowledgementState"))
         if purchase and (purchase.get("purchaseState", 1) == 0 or purchase.get("paymentState", 0) == 1) and (purchase.get("acknowledgementState", 0) == 1 or purchase.get("consumptionState", 0)) == 1:
             # Purchase or subscription is valid
             purchase_details = createPurchase(purchase, purchase_token)
@@ -753,7 +776,7 @@ def verify_android_purchase(purchase_token: str, subscription_id: str, package_n
         # return Response(result)
     # except Exception as ex:
     #     print(f'CREDENTIAL exception occurred: {ex}')
-
+    # print("purchase_details", purchase_details)
     return purchase_details
 
 
@@ -789,7 +812,7 @@ def createPurchase(purchase, purchase_token):
             "environment": str(purchase.get("purchaseType")),
             "original_transaction_id": purchase_token,
             "transaction_id": purchase.get("orderId"),
-            "expires_date": convertDateFromMSToDateTime(purchase.get("expiryTimeMillis", datetime.datetime.now())),
+            "expires_date": convertDateFromMSToDateTime(purchase.get("expiryTimeMillis", timezone.now())),
             "product": None,
             "auto_renew_status": str(purchase.get("autoRenewing", 1)),
             "expiration_intent": "",
@@ -806,10 +829,10 @@ def createProduct(product_id, platform, payment_data, created=None):
     resp = {}
     payment_serializer = payment = None
     try:
-
+        # print('product: ', product_id, platform)
         product = Product.objects.filter(
-            product_id=product_id, platform=platform)
-        # print('product: ', product)
+            product_id=product_id.strip(), platform=platform.strip())
+        # print('product2: ', product)
         if product.exists():
             product = product.first()
             payment_serializer = InAppPaymentSerializer(
@@ -821,6 +844,7 @@ def createProduct(product_id, platform, payment_data, created=None):
                     datetime.timedelta(days=product.duration)
                 payment = payment_serializer.save(
                     product=product, expires_date=expires_date)
+                # print("expires_date: ", expires_date)
             else:
                 payment = payment_serializer.save(product=product)
 
@@ -831,30 +855,36 @@ def createProduct(product_id, platform, payment_data, created=None):
     except Exception as ex:
         #  status.HTTP_409_CONFLICT
         print(f'payment_serializer exception occurred: {ex}')
-
+    # print("respppp: ", resp)
     return resp, product, payment
 
 
 def createProductSubscription(user, product, payment, grade):
-    data = {
-        "user": user.pk if user.pk else None,
-        "product": product.pk if product.pk else None,
-        "payment_method": payment.pk if payment.pk else None,
-        "grade": grade.pk if grade.pk else None
-    }
-    # print('createProductSubscription: ', user.pk,
-    #       product.pk, payment.expires_date, payment.original_purchase_date)
+    response = {}
+    try:
+        data = {
+            "user": user.pk if user.pk else None,
+            "product": product.pk if product.pk else None,
+            "payment_method": payment.pk if payment.pk else None,
+            "grade": grade.pk if grade.pk else None
+        }
+        # print('createProductSubscription: ', user.pk,
+        #       product.pk, payment.expires_date, payment.original_purchase_date)
 
-    # print('data: ', data)
+        # print('data: ', data)
 
-    subscribe_serializer = SubscribeSerializer(data=data)
-    subscribe_serializer.is_valid(raise_exception=True)
-    subscribe_serializer.save()
-    print('DETAILS SUBSCRIBE: ', subscribe_serializer.data)
-    if subscribe_serializer:
-        return subscribe_serializer.data
+        subscribe_serializer = SubscribeSerializer(data=data)
+        subscribe_serializer.is_valid(raise_exception=True)
+        subscribe_serializer.save()
+        print('DETAILS SUBSCRIBE: ', subscribe_serializer.data)
+        if subscribe_serializer:
+            response = subscribe_serializer.data
 
-    return {}
+    except Exception as ex:
+        # print(f'SubscribeSerializer exception occurred: {ex}')
+        printOutLogs('SubscribeSerializer exception occurred: ', ex)
+
+    return response
 
 
 def create_subscription(product_id, payment_data, user, grade, platform='', response_json=None):
@@ -889,26 +919,26 @@ def create_subscription(product_id, payment_data, user, grade, platform='', resp
     #     "grade": grade.pk if grade.pk else None
     # }
 
-    try:
+    # try:
         # print('DETAILS: ', payment, product, grade, user)
         # if payment and product:
         # subscribe_serializer = SubscribeSerializer(data=data)
         # subscribe_serializer.is_valid(raise_exception=True)
         # subscribe_serializer.save()
-        serializer_data = createProductSubscription(
-            user, product, payment, grade)
-        update_user_data()  # update cache
-        # if not user and not grade:
-        #     subscribe_serializer.save(product=product, payment_method=payment)
-        # else:
-        #     subscribe_serializer.save(product=product, payment_method=payment, grade=grade)
-        if serializer_data:
-            state = status.HTTP_201_CREATED
+    serializer_data = createProductSubscription(
+        user, product, payment, grade)
+    update_user_data()  # update cache
+    # if not user and not grade:
+    #     subscribe_serializer.save(product=product, payment_method=payment)
+    # else:
+    #     subscribe_serializer.save(product=product, payment_method=payment, grade=grade)
+    if serializer_data:
+        state = status.HTTP_201_CREATED
 
-    except Exception as ex:
-        # print(f'SubscribeSerializer exception occurred: {ex}')
-        printOutLogs('SubscribeSerializer exception occurred: ', ex)
-
+    # except Exception as ex:
+    #     # print(f'SubscribeSerializer exception occurred: {ex}')
+    #     printOutLogs('SubscribeSerializer exception occurred: ', ex)
+    # print("resp: ", resp)
     return resp, state
 
 
@@ -955,7 +985,7 @@ def convertDateFromMSToDateTime(ms_date_time):
 def dateStrToDateTime(date_str, date_format="%d %m %Y %H:%M:%S"):
     date_obj = ""
     if date_str:
-        date_obj = datetime.strptime(date_str, date_format)
+        date_obj = datetime.datetime.strptime(date_str, date_format)
 
     return date_obj
 

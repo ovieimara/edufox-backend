@@ -1,9 +1,10 @@
-from django.urls import path, include
-from .views import (ListCreateAPIGrades, UpdateAPIGrades, ListCreateAPISubject, ListCreateAPIComment, UpdateAPIComment,
+from django.urls import path, re_path
+from .views import (ListCreateAPIGrades, ListCreateAPIEvent, ListTopicLessonAPI, UpdateAPIEvent, UpdateAPIGrades, ListCreateAPISubject, ListCreateAPIComment, UpdateAPIComment,
                     UpdateAPISubject, ListCreateAPILecturer, UpdateAPILecturer, ListCreateAPIRate,
                     UpdateAPIRate, ListCreateAPIInteraction, UpdateAPIInteraction,
                     ListCreateAPIVideo, UpdateAPIVideo, ListCreateAPIResolution,
-                    ListDashboardAPI, ListCreateUpdateAPILesson, ListCreateUpdateAPITopic, ListDashboardLessonsAPI)
+                    ListDashboardAPI, ListCreateUpdateAPILesson, ListCreateUpdateAPITopic,
+                    ListDashboardLessonsAPI, VideoSearchListViewAPI, GenerateSignedUrl)
 from djoser.views import UserViewSet
 from django.views.decorators.cache import cache_page
 
@@ -21,8 +22,10 @@ urlpatterns = [
     path('rates/<pk>', UpdateAPIRate.as_view(), name='rate-detail'),
     path('comments', ListCreateAPIComment.as_view(), name='comments-list'),
     path('comments/<pk>', UpdateAPIComment.as_view(), name='comment-detail'),
-    # path('interaction_types', ListCreateAPIInteractionType.as_view(), name='interaction_types-list'),
-    # path('interaction_types/<pk>', UpdateAPIInteractionType.as_view(), name='interaction_type-detail'),
+    path('events', ListCreateAPIEvent.as_view(),
+         name='events-list'),
+    path('events/<pk>', UpdateAPIEvent.as_view(),
+         name='events-detail'),
     path('interactions', ListCreateAPIInteraction.as_view(),
          name='interactions-list'),
     path('interactions/<pk>', UpdateAPIInteraction.as_view(),
@@ -38,19 +41,32 @@ urlpatterns = [
     path('resolutions', ListCreateAPIResolution.as_view(), name='resolutions-list'),
     path('resolutions/<pk>', ListCreateAPIResolution.as_view(),
          name='resolution-detail'),
-    path('dashboard', cache_page(60 * 15)
-         (ListDashboardAPI.as_view()), name='dashboard-list'),
+    #     path('dashboard', cache_page(60 * 15)
+    #          (ListDashboardAPI.as_view()), name='dashboard-list'),
+    path('dashboard',
+         ListDashboardAPI.as_view(), name='dashboard-list'),
+    #     path('dashboard/<int:subject>/<int:grade>',
+    #          cache_page(60 * 15)(ListDashboardAPI.as_view()), name='dashboard-detail'),
     path('dashboard/<int:subject>/<int:grade>',
-         cache_page(60 * 15)(ListDashboardAPI.as_view()), name='dashboard-detail'),
+         ListDashboardAPI.as_view(), name='dashboard-detail'),
+    #     path('dashboard/topics/<int:pk>/<int:grade>',
+    #          cache_page(60 * 15)(ListDashboardLessonsAPI.as_view()), name='dashboard-topics-list'),
     path('dashboard/topics/<int:pk>/<int:grade>',
-         cache_page(60 * 15)(ListDashboardLessonsAPI.as_view()), name='dashboard-topics-list'),
+         ListDashboardLessonsAPI.as_view(), name='dashboard-topics-list'),
     path('dashboard/lessons/<int:lesson>/<int:grade>',
-         (ListDashboardLessonsAPI.as_view()), name='dashboard-lessons-list'),
+         ListDashboardLessonsAPI.as_view(), name='dashboard-lessons-list'),
     path('lessons', ListCreateUpdateAPILesson.as_view(), name='lessons-list'),
     path('lessons/<pk>', ListCreateUpdateAPILesson.as_view(), name='lessons-detail'),
     path('lessons/topics/<int:subject>',
          ListCreateUpdateAPILesson.as_view(), name='lesson-subject-detail'),
+    path('lessons/<int:lesson>/<int:grade>/videos',
+         ListTopicLessonAPI.as_view(), name='lessons-videos-list'),
     path('topics', ListCreateUpdateAPITopic.as_view(), name='topics-list'),
     path('topics/<pk>', ListCreateUpdateAPITopic.as_view(), name='topic-detail'),
+    path('query', VideoSearchListViewAPI.as_view(), name='query-list'),
+    #    path('generate-signed-url/', GenerateSignedUrl.as_view(),
+    #         name='generate-signed-url-list2'),
+    re_path(r'^generate-signed-url/$', GenerateSignedUrl.as_view(),
+            name='generate-signed-url-list'),
 
 ]

@@ -1,15 +1,21 @@
 from datetime import datetime, timedelta
+from venv import create
 from rest_framework import serializers, status
+from rest_framework.fields import empty
 from rest_framework.response import Response
+
+from course.models import Lesson
 from .models import (Test, Assessment, Level)
-from assess.models import  Test, Assessment
+from assess.models import Test, Assessment
 from subscribe.models import Subscribe
 from djoser.serializers import UserSerializer
 from collections import Counter
+from django.utils.html import escape
 
 
 class TestSerializer(serializers.ModelSerializer):
-    options = serializers.JSONField(read_only=True, default=list)
+    # options = serializers.JSONField(default=list)
+    options = serializers.SerializerMethodField()
     valid_answers = serializers.JSONField(read_only=True, default=list)
     answers = serializers.CharField(max_length=15, write_only=True)
     option1 = serializers.CharField(default='', write_only=True)
@@ -21,41 +27,72 @@ class TestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Test
-        fields = ['pk', 'question', 'valid_answers', 'options', 'answers', 'topic', "lesson", "subject", "grade", "level", "option1", "option2", "option3", "option4", "option5", "option6"]
+        fields = ['pk', 'question', 'valid_answers', 'options', 'answers', 'topic', "lesson",
+                  "subject", "grade", "level", "option1", "option2", "option3", "option4", "option5", "option6"]
         # depth = 2
 
+    def get_options(self, obj):
+        return [option for option in obj.options if option]
+        # option1 = obj.option1
+        # option2 = obj.option2
+        # option3 = obj.option3
+        # option4 = obj.option4
+        # option5 = obj.option5
+        # option6 = obj.option6
 
-    # def get_options(self, obj):
-    #     option1 = obj.option1
-    #     option2 = obj.option2
-    #     option3 = obj.option3
-    #     option4 = obj.option4
-    #     option5 = obj.option5
-    #     option6 = obj.option6
-        
-    #     options = {
-    #         "A" : option1,
-    #         "B" : option2,
-    #         "C" : option3,
-    #         "D" : option4,
-    #         "E" : option5,
-    #         "F" : option6,
-    #     }
-    #     return options
-    
+        # options = {
+        #     "A" : option1,
+        #     "B" : option2,
+        #     "C" : option3,
+        #     "D" : option4,
+        #     "E" : option5,
+        #     "F" : option6,
+        # }
+        # return options
+
     def capitalise(self, value):
-        return value.capitalize() if value else value
-    
+        return escape(value).capitalize() if value else value
+
+    def strip_value(self, value):
+        return int(escape(value.strip(
+        ))) if value else value
+
+    # def __init__(self, instance=None, data=..., **kwargs):
+    #     super().__init__(instance, data, **kwargs)
+    def create_options(self, validated_data: dict) -> list:
+        options = []
+        for i in range(1, 10):
+            val = validated_data.pop(f'option{i}', '')
+            if val:
+                options.append(self.capitalise(val))
+        return options
+
+        # return [self.capitalise(validated_data.pop(
+        #     f'option{i}')) for i in range(1, 7) if validated_data.get(f'option{i}')]
+
     def create(self, validated_data):
-        
         request = self.context.get('request')
         question = validated_data.get('question') if validated_data else ''
         valid_answers = validated_data.pop('answers') if validated_data else ''
+        topic = validated_data.get('topic')
+        lesson = validated_data.get('lesson')
 
-        options = [self.capitalise(validated_data.pop(f'option{i}')) for i in range(1, 7) if validated_data]    
+        if question:
+            question = escape(question)
+
+        if not topic and lesson:
+            lesson_queryset = Lesson.objects.filter(lesson)
+            if lesson_queryset.exists():
+                validated_data['topic'] = lesson_queryset.first().topic
+
+        # iterate thru option1 - 6
+        options = self.create_options(validated_data)
+        # options = [self.capitalise(validated_data.pop(
+        #     f'option{i}')) for i in range(1, 7) if validated_data.get(f'option{i}')]
 
         valid_answers_arr = valid_answers.split(',') if valid_answers else None
-        valid_answers = [int(option.strip()) - 1 for option in valid_answers_arr if option and option.strip().isdigit()]  
+        valid_answers = [self.strip_value(
+            option) - 1 for option in valid_answers_arr if option and option.strip().isdigit()]
 
         validated_data['options'] = options
         validated_data['valid_answers'] = valid_answers
@@ -65,18 +102,23 @@ class TestSerializer(serializers.ModelSerializer):
             instance = Test.objects.filter(question=question)
             if instance:
                 return super().update(instance.first(), validated_data)
-            
+
             return super().create(validated_data)
         return Response(status=status.HTTP_401_UNAUTHORIZED)
-    
+
     def update(self, instance, validated_data):
         request = self.context.get('request')
         valid_answers = validated_data.pop('answers') if validated_data else ''
 
-        options = [self.capitalise(validated_data.pop(f'option{i}')) for i in range(1, 7) if validated_data]           
+        options = self.create_options(validated_data)
+
+        # options = [self.capitalise(validated_data.pop(
+        #     f'option{i}')) for i in range(1, 7) if validated_data.get(
+        #     f'option{i}')]
 
         valid_answers_arr = valid_answers.split(',') if valid_answers else None
-        valid_answers = [int(option.strip()) - 1 for option in valid_answers_arr if option and option.strip().isdigit()]  
+        valid_answers = [self.strip_value(
+            option) - 1 for option in valid_answers_arr if option and option.strip().isdigit()]
 
         validated_data['options'] = options
         validated_data['valid_answers'] = valid_answers
@@ -85,7 +127,7 @@ class TestSerializer(serializers.ModelSerializer):
             return super().update(instance, validated_data)
 
         return Response(status=status.HTTP_401_UNAUTHORIZED)
-    
+
 
 class AssessmentSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField(read_only=True)
@@ -120,7 +162,7 @@ class AssessmentSerializer(serializers.ModelSerializer):
                 result[index] = True
 
         return result
-    
+
     # def __init__(self, *args, **kwargs):
     #     super().__init__(*args, **kwargs)
     #     print(kwargs)
@@ -141,11 +183,11 @@ class AssessmentSerializer(serializers.ModelSerializer):
     #             valid = list(valid_options.keys())[j]
     #             if ans != valid:
     #                 return False
-                
+
     #             result[i] = 1
 
     #     return all(result)
-    
+
     def create(self, validated_data):
         request = self.context.get('request')
         # print('validated_data: ', request.user)
@@ -154,17 +196,15 @@ class AssessmentSerializer(serializers.ModelSerializer):
         if user:
             tests = user.assessments.filter(test=test)
             validated_data['user'] = user
-    
+
             if tests.exists():
                 return super().update(tests.first(), validated_data)
-        
+
             return super().create(validated_data)
         return Response(status=status.HTTP_401_UNAUTHORIZED)
-                
+
 
 class LevelSerializer(serializers.ModelSerializer):
-    class Meta: 
+    class Meta:
         model = Level
         fields = "__all__"
-
-

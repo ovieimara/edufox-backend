@@ -15,7 +15,7 @@ class DiscountSerializer(serializers.ModelSerializer):
 
 class PlanSerializer(serializers.ModelSerializer):
     # amount = serializers.SerializerMethodField()
-    platform = serializers.CharField(default="")
+    # platform = serializers.CharField(default="")
 
     class Meta:
         model = Plan
@@ -93,9 +93,21 @@ class InAppPaymentSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
+class ProductSerializer2(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['product_id']
+
+
 class ProductSerializer(serializers.ModelSerializer):
     # name = serializers.CharField(write_only=True)
     # platform = serializers.CharField(write_only=True)
+    PLAN_CHOICES = [
+        ('35107', '35107'),
+        ('35108', '35108'),
+        ('35109', '35109'),
+
+    ]
     NAME_CHOICES = [
         ('Monthly', 'Monthly'),
         ('Quarterly', 'Quarterly'),
@@ -131,8 +143,8 @@ class ProductSerializer(serializers.ModelSerializer):
         ('android', 'android'),
         ('in-app', 'in-app'),
         ('ios', 'ios'),
-        ('flutterwave web', 'flutterwave web'),
-        ('flutterwave app', 'flutterwave app'),
+        ('flutterwaveweb', 'flutterwave web'),
+        ('flutterwaveapp', 'flutterwave app'),
     ]
 
     name = serializers.ChoiceField(
@@ -150,14 +162,17 @@ class ProductSerializer(serializers.ModelSerializer):
     platform = serializers.ChoiceField(
         choices=PLATFORM_CHOICES, allow_blank=True, allow_null=True, default=dict)
 
+    plan = serializers.ChoiceField(
+        choices=PLAN_CHOICES, allow_blank=True, allow_null=True, default=dict)
+
     class Meta:
         model = Product
         fields = '__all__'
         validators = [
             UniqueTogetherValidator(
                 queryset=Product.objects.all(),
-                fields=('name', 'platform'),
-                message='Combination of name and platform already exists.'
+                fields=('name', 'platform', 'product_id'),
+                message='Combination of name, platform and product_id already exists.'
             )
         ]
 

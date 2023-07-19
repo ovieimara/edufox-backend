@@ -16,9 +16,12 @@ import environ
 import os
 import io
 import google.auth
+from environ import Env
 from google.cloud import secretmanager
 from urllib.parse import urlparse
 from google.oauth2 import service_account
+
+from client.library import GoogleCloudSecretRepo, LocalCredentialsRepo
 
 
 env = environ.Env(DEBUG=(bool, True), USE_CLOUD_BUILD=(bool, True))
@@ -26,11 +29,10 @@ env = environ.Env(DEBUG=(bool, True), USE_CLOUD_BUILD=(bool, True))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-# environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
-# SECRET_KEY = os.environ.get('SECRET_KEY')
+
 arr = os.listdir('.')
 # os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
-FILE = ''
+FILE = CREDS_PATH = ''
 for i in range(len(arr)):
     # if 'gha-creds' in arr[i] or 'creds.json' == arr[i]: #cloudbuild.yml
     if 'gha-creds' in arr[i]:  # ci.yml
@@ -40,84 +42,38 @@ if FILE:
     env_file = os.path.join(BASE_DIR, FILE)
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = env_file
     os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'True'
+    CREDS_PATH = env_file
 
-
-# env = environ.Env(
-#     GOOGLE_APPLICATION_CREDENTIALS=(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")),
-#     # DATABASE_URL=(os.environ.get("DATABASE_URL")),
-#     # GS_BUCKET_NAME=(str, os.environ.get("GS_BUCKET_NAME")),
-# )
-# print('GOOGLE_APPLICATION_CREDENTIALS', env('GOOGLE_APPLICATION_CREDENTIALS'))
-# placeholder = (
-#         f"SECRET_KEY=django-insecure-5xh$hw9%n$huk$mql=%r7p@dxefh9+hleb7yb$eo_6p)r*$dn^\n"
-#         "GS_BUCKET_NAME=edufox-bucket\n"
-#         f"DATABASE_URL={os.getenv('DATABASE_URL')}"
-#     )
-# env.read_env(io.StringIO(placeholder))
-
-# print(env_file)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
-# Attempt to load the Project ID into the environment, safely failing on error.
-# os.environ['DATABASE_URL'] = ''
-# # os.environ['GS_BUCKET_NAME'] = ''
-# # os.environ['EMAIL_BACKEND'] = ''
-# # os.environ['EMAIL_HOST'] = ''
-# # os.environ['EMAIL_PORT'] = ''
-# # os.environ['EMAIL_HOST_USER'] = ''
-# # os.environ['EMAIL_HOST_PASSWORD'] = ''
-# # os.environ['DB_ENGINE'] = ''
 
-
-# if os.path.isfile(env_file):
-#     # Use a local secret file, if provided
-#     # print('ovie')
-#     env.read_env(env_file)
-# # ...
-# # [START_EXCLUDE]
-# elif os.environ.get("GITHUB_ACTIONS", None):
-#     # Create local settings if running with CI, for unit testing
-
-#     placeholder = (
-#         f"SECRET_KEY=django-insecure-5xh$hw9%n$huk$mql=%r7p@dxefh9+hleb7yb$eo_6p)r*$dn^\n"
-#         "GS_BUCKET_NAME=edufox-bucket\n"
-#         f"DATABASE_URL=postgres://admin:_edufox@123A@//cloudsql/edufox-services:us-central1:edufox-db-instance/edufox_db"
-#     )
-#     env.read_env(io.StringIO(placeholder))
-# # [END_EXCLUDE]
-# elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
-    # Pull secrets from Secret Manager
-
-# PROJECT_ID = os.env("GOOGLE_CLOUD_PROJECT")
-# print('PROJECT_ID', PROJECT_ID)
+# env cloud secret setup
 PROJECT_ID = "edufox-services"
-client = secretmanager.SecretManagerServiceClient()
+# client = secretmanager.SecretManagerServiceClient()
 
-settings_name = os.environ.get("SETTINGS_NAME", "django_settings")
-name = f"projects/{PROJECT_ID}/secrets/{settings_name}/versions/latest"
-payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
-env.read_env(io.StringIO(payload))
+# settings_name = os.environ.get("SETTINGS_NAME", "django_settings")
+# name = f"projects/{PROJECT_ID}/secrets/{settings_name}/versions/latest"
+# payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
+# env.read_env(io.StringIO(payload))
 
-# service_account_name = f"projects/{PROJECT_ID}/secrets/SERVICE_ACCOUNT/versions/latest"
-# service_account_payload = client.access_secret_version(name=service_account_name).payload.data.decode("UTF-8")
-# env.read_env(io.StringIO(service_account_payload))
+# use google cloud secrets for environment variable
+googleCloudSecretRepo = GoogleCloudSecretRepo("django_settings", PROJECT_ID)
+env, read_env, secrets_uri = googleCloudSecretRepo.getEnvironmentVariables()
+read_env(secrets_uri)
 
-# env.read_env(os.environ.get('GOOGLE_APPLICATION_CREDENTIALS'))
-# else:
-#     raise Exception("No local .env or GOOGLE_CLOUD_PROJECT detected. No secrets found.")
+# use local env for environment variable
+# localCredentialsRepo = LocalCredentialsRepo()
+# env, read_env = localCredentialsRepo.getEnvironmentVariables()
+# read_env()
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
 DEBUG = True
-# print('ENV_STATUS:', env.ENVIRON)
 
 SECRET_KEY = env("SECRET_KEY")
-# GOOGLE_APPLICATION_CREDENTIALS = env('GOOGLE_APPLICATION_CREDENTIALS')
 
-# print('SECRET_KEY', GOOGLE_APPLICATION_CREDENTIALS)
-# print('USE_CLOUD_SQL_AUTH_PROXY', os.environ.get("USE_CLOUD_SQL_AUTH_PROXY"))
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
@@ -147,7 +103,7 @@ else:
     # ALLOWED_HOSTS = ["*"]
     PROTOCOL = "http"
     DOMAIN = "127.0.0.1:8000"
-    ALLOWED_HOSTS = ['10.0.2.2', 'localhost', '*', ".localhost",
+    ALLOWED_HOSTS = ['*', '10.0.2.2', 'localhost', '*', ".localhost",
                      "127.0.0.1", ".local", "CTOs-MacBook-Pro.local"]
     CORS_ALLOWED_ORIGINS = [
         'http://localhost:8000',
@@ -230,15 +186,16 @@ INSTALLED_APPS = [
     'notify',
     'api',
     'subscribe',
+    'contact',
     'assess',
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
     'rest_framework_swagger',
     'django_filters',
-
-
-
+    'client',
+    'banner',
+    'bleach',
 ]
 
 MIDDLEWARE = [
@@ -313,7 +270,7 @@ WSGI_APPLICATION = 'edufox.wsgi.application'
 # }
 # DATABASES = {"default": env.db()}
 if os.environ.get('USE_LOCAL_POSTGRESQL'):
-    print('USE_LOCAL_POSTGRESQL: ', os.environ.get('USE_LOCAL_POSTGRESQL'))
+    # print('USE_LOCAL_POSTGRESQL: ', os.environ.get('USE_LOCAL_POSTGRESQL'))
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -341,19 +298,25 @@ if CLOUDRUN_SERVICE_URL or env('USE_CLOUD_BUILD') and not os.environ.get('USE_LO
 
 # # If the flag as been set, configure to use proxy
 if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
-    DATABASES["default"]["HOST"] = "cloudsql-proxy"  # CI.yml
-    # DATABASES["default"]["HOST"] = "127.0.0.1"  # local
+    # CI.yml always enable, else github action will fail
+    # DATABASES["default"]["HOST"] = "cloudsql-proxy"
+    DATABASES["default"]["HOST"] = "127.0.0.1"  # local
     DATABASES["default"]["PORT"] = 5432
 
 # print('DATABASES3 : ', DATABASES["default"])
 # print('USE_LOCAL_POSTGRESQL : ', os.environ.get('DB_PASSWORD'))
 
 # Define static storage via django-storages[google]
-GS_BUCKET_NAME = env("GS_BUCKET_NAME")
+# GS_BUCKET_NAME = env("GS_BUCKET_NAME")
+GS_BUCKET_NAME = 'edufox-bucket-2'
+GS_PROJECT_ID = env("GOOGLE_CLOUD_PROJECT")
 STATIC_URL = "/static/"
 DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
 STATICFILES_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
 # GS_DEFAULT_ACL = "publicRead"
+GS_AUTO_CREATE_BUCKET = True
+GS_QUERYSTRING_AUTH = True
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
