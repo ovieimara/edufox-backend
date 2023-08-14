@@ -77,12 +77,12 @@ class LecturerSerializer(serializers.ModelSerializer):
 
 
 class VideoSerializer(serializers.ModelSerializer, Cleanup):
-    is_subscribed = serializers.SerializerMethodField(read_only=True)
+    # is_subscribed = serializers.SerializerMethodField(read_only=True)
     topics = serializers.ChoiceField(choices=[], write_only=True)
     lessons = serializers.ChoiceField(choices=[], write_only=True)
     title = serializers.CharField(max_length=255, allow_blank=True)
     video_id = serializers.CharField(max_length=255, allow_blank=True, validators=[
-                                     UniqueValidator(queryset=Video.objects.all())])
+        UniqueValidator(queryset=Video.objects.all())])
 
     # lesson = serializers.SerializerMethodField(read_only=True)
 
@@ -162,7 +162,7 @@ class VideoSerializer(serializers.ModelSerializer, Cleanup):
     def get_is_subscribed(self, obj):
         subscribed = ''
         request = self.context.get('request')
-        user = request.user
+        user = request.user if request is not None else ''
         # print('request: ', request)
         if user and user.is_authenticated:
             # subscriptions = request.user.subscriptions_user.all().order_by(
@@ -267,8 +267,10 @@ class VideoSerializer(serializers.ModelSerializer, Cleanup):
         description = attrs.get('description')
         start_end_credits = attrs.get('start_end_credits')
 
+        print('subject: ', subject, type(subject))
         if subject:
-            subject = Subject.objects.filter(pk=subject.pk)
+            subject = Subject.objects.filter(
+                pk=subject.pk if type(subject) != str else subject)
             if subject.exists():
                 subject = subject.first()
 
@@ -484,8 +486,10 @@ class LessonSerializer(serializers.ModelSerializer, Cleanup):
         if topic_obj.exists():
             attrs['topic'] = topic_obj.first()
         # attrs['title'] = editor.get_lesson_title(title).strip()
-
-        grades = [gr.pk for gr in grade]
+        # for grad in grade:
+        #     print('GRADE:', type(grad))
+        grades = [gr.pk for gr in grade if isinstance(grade,
+                                                      Grade)]
         # print('GRADE: ', grades)
         queryset = Lesson.objects.filter(
             Q(title=title) & Q(grade__pk__in=grades))

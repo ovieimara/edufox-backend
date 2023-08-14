@@ -28,8 +28,8 @@ class RateAdmin(admin.ModelAdmin):
 
 
 class VideoAdmin(admin.ModelAdmin):
-    list_display = ['title', 'description', 'duration', 'resolution',
-                    'thumbnail', 'subject', 'get_grades', 'get_lesson', 'topic']
+    list_display = ['pk', 'video_id', 'title', 'description', 'duration', 'resolution',
+                    'thumbnail', 'subject', 'get_grades', 'get_lesson', 'topic', 'url', 'url2', 'tags']
 
     def get_grades(self, obj):
         return "\n".join([str(s) for s in obj.grade.all()])
@@ -51,7 +51,7 @@ class InteractionAdmin(admin.ModelAdmin):
 
 
 class LessonAdmin(admin.ModelAdmin):
-    list_display = ['num', 'title', 'topic', 'subject', 'get_grades']
+    list_display = ['pk', 'num', 'title', 'topic', 'subject', 'get_grades']
 
     def get_grades(self, obj):
         return "\n".join([str(s) for s in obj.grade.all()])

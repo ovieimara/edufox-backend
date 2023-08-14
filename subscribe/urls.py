@@ -10,7 +10,7 @@ urlpatterns = [
     # path('', include('djoser.urls')),
     # path('', include('djoser.urls.authtoken')),
     path('subscribe', ListCreateUpdateAPISubscribe.as_view(), name='subscribe-list'),
-    path('subscribe/<pk>', ListCreateUpdateAPISubscribe.as_view(),
+    path('subscribe/<int:pk>', ListCreateUpdateAPISubscribe.as_view(),
          name='subscribe-detail'),
     path('fetch_subscribe', FetchSubscribe.as_view(),
          name='fetch-subscribe-detail'),

@@ -18,7 +18,7 @@ from django.urls import path, include, re_path
 # from rest_framework.documentation import include_docs_urls
 from student.views import CreateAPIUser, apiViewManager
 from rest_framework_swagger.views import get_swagger_view
-from .views import PrivacyPolicy
+from .views import PrivacyPolicy, StandardEula
 
 schema_view = get_swagger_view(title='EduFox API')
 
@@ -29,5 +29,6 @@ urlpatterns = [
     path('api/', include('version.urls')),
     re_path(r'^$', schema_view),
     path('privacy/', PrivacyPolicy),
+    path('seula/', StandardEula),
 
 ]

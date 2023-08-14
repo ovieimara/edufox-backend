@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from requests import get
 from rest_framework import generics, mixins, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -80,6 +81,31 @@ class ListCreateAPITest(generics.ListCreateAPIView):
 
         return tests
 
+    def get(self, request, *args, **kwargs):
+        lesson_pk = kwargs.get('pk')
+        serializer = []
+        tests = []
+
+        user = self.request.user
+        if user.is_authenticated and lesson_pk:
+            try:
+                lesson_obj = Lesson.objects.get(pk=lesson_pk)
+                if lesson_obj:
+                    tests = lesson_obj.lesson_tests.all().order_by('subject__name', 'topic')
+
+                page = self.paginate_queryset(tests)
+                if page is not None:
+                    serializer = self.get_serializer(page, many=True)
+                    return self.get_paginated_response(serializer.data)
+
+                serializer = self.get_serializer(tests, many=True).data
+            except Lesson.DoesNotExist as ex:
+                print('lesson test object error: ', ex)
+            except Exception as ex:
+                print('test serializer error: ', ex)
+
+        return Response(serializer)
+
     def perform_create(self, serializer):
         user = self.request.user
         if user.is_staff:
@@ -103,6 +129,20 @@ class ListCreateAPITest(generics.ListCreateAPIView):
     #     if kwargs.get('pk') and request.user.is_staff:
     #         return self.update(request, *args, **kwargs)
     #     return Response(status=status.HTTP_403_FORBIDDEN)
+
+
+class APITestSize(generics.ListAPIView):
+    queryset = Test.objects.all()
+    serializer_class = TestSerializer
+
+    def get(self, request, *args, **kwargs):
+        count = 0
+        lesson_pk = kwargs.get('pk')
+        lesson_obj = Lesson.objects.get(pk=lesson_pk)
+        if lesson_obj:
+            count = lesson_obj.lesson_tests.all().count()
+
+        return Response(data={"size": count})
 
 
 class UpdateAPITest(generics.RetrieveUpdateDestroyAPIView):

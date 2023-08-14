@@ -5,7 +5,7 @@ from .models import Subscribe, AndroidNotify, InAppPayment, Product
 
 
 class SubscribeAdmin(admin.ModelAdmin):
-    list_display = ['user', 'product', 'payment_method',
+    list_display = ['pk', 'user', 'product', 'payment_method',
                     'grade', 'created', 'updated']
 
     # def get_grades(self, obj):
@@ -18,7 +18,7 @@ class AndroidNotifyAdmin(admin.ModelAdmin):
 
 
 class InAppPaymentAdmin(admin.ModelAdmin):
-    list_display = ['name', 'product_id', 'original_transaction_id', 'transaction_id',
+    list_display = ['pk', 'name', 'product_id', 'original_transaction_id', 'transaction_id',
                     'expires_date', 'original_purchase_date', 'created', 'updated']
 
 

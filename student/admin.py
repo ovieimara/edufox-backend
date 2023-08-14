@@ -23,14 +23,19 @@ from .models import Student, TempStudent
 #         model = Student
 #         fields = ['student_id', 'username', 'email', 'first_name', 'last_name', 'phone_number', 'grade',  'age', 'gender', 'image_url', 'name_institution']
 
+
 class TempStudentAdmin(admin.ModelAdmin):
-    list_display = ['id', 'username', 'first_name', 'last_name', 'email', 'phone_number', 'grade', 'age', 'gender', 'image_url']
+    list_display = ['id', 'username', 'first_name', 'last_name',
+                    'email', 'phone_number', 'grade', 'age', 'gender', 'image_url']
+
 
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ['phone_number', 'grade', 'age', 'gender', 'image_url']
+    list_display = ['phone_number', 'my_referral_code',
+                    'grade', 'age', 'gender', 'image_url']
 
-class StudentAdmin(admin.ModelAdmin):
-    list_display = ['phone_number', 'grade', 'age', 'gender', 'image_url']
+
+# class StudentAdmin(admin.ModelAdmin):
+#     list_display = ['phone_number', 'grade', 'age', 'gender', 'image_url']
 
 
 # admin.site.unregister(User)

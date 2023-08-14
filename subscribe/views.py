@@ -42,9 +42,11 @@ class ListCreateUpdateAPISubscribe(mixins.CreateModelMixin, mixins.ListModelMixi
     queryset = Subscribe.objects.all().order_by('user')
     serializer_class = SubscribeSerializer
     lookup_field = 'pk'
-    # permission_classes = [IsStaffEditorPermission]
+    permission_classes = []
 
     def get(self, request, *args, **kwargs):
+        subscriptions = []
+        state = status.HTTP_401_UNAUTHORIZED
         user = request.user
         if user and kwargs.get('pk') and user.is_staff:
             return self.retrieve(request, *args, **kwargs)
@@ -52,11 +54,17 @@ class ListCreateUpdateAPISubscribe(mixins.CreateModelMixin, mixins.ListModelMixi
         if user and user.is_staff:
             return self.list(request, *args, **kwargs)
 
-        if user and not user.is_anonymous:
-            subscriptions = user.subscriptions_user.all()
-            subscribe_serializer = self.get_serializer(
-                subscriptions, many=True)
-            return Response(subscribe_serializer.data)
+        if user and user.is_authenticated:
+            state = status.HTTP_200_OK
+            subscriptions = user.subscriptions_user.all().order_by("-created")
+            pk = kwargs.get('pk')
+            if pk:
+                subscriptions = subscriptions[:pk]
+
+        subscribe_serializer = self.get_serializer(
+            subscriptions, many=True)
+
+        return Response(subscribe_serializer.data, status=state)
 
     def post(self, request, *args, **kwargs):
         if not kwargs.get('pk') and request.user.is_staff:
@@ -375,7 +383,7 @@ def validate_in_app(receipt_json_data):
             'environment': environment,
             'original_transaction_id': original_transaction_id,
             'transaction_id': transaction_id,
-            'expires_date': convertDateFromMSToDateTime(expires_date) + datetime.timedelta(days=60),
+            'expires_date': convertDateFromMSToDateTime(expires_date),
             'expiration_intent': expiration_intent,
             'in_app_ownership_type': in_app_ownership_type,
             'auto_renew_status': auto_renew_status,
@@ -979,7 +987,7 @@ def convertDateFromMSToDateTime(ms_date_time):
     if ms_date_time:
         transactionDate = datetime.datetime.fromtimestamp(
             float(ms_date_time)/1000.0)
-    return transactionDate
+    return transactionDate + datetime.timedelta(days=60)
 
 
 def dateStrToDateTime(date_str, date_format="%d %m %Y %H:%M:%S"):

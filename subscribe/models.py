@@ -97,7 +97,7 @@ class InAppPayment(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
-        return self.name
+        return f"{self.name}"
 
 
 class Subscribe(models.Model):
@@ -130,7 +130,7 @@ class Subscribe(models.Model):
     #     return False
 
     def __str__(self) -> str:
-        return self.product.name
+        return f"{self.product.name}"
 
 
 class AppleNotify(models.Model):

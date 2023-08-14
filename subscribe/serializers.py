@@ -32,12 +32,24 @@ class PlanSerializer(serializers.ModelSerializer):
 
 
 class SubscribeSerializer(serializers.ModelSerializer):
-    # expiry_date = serializers.SerializerMethodField()
-    # expiry_date = serializers.Ser
+    created = serializers.SerializerMethodField(read_only=True)
+    expires_date = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = Subscribe
-        fields = ['user', 'grade', 'product', 'payment_method']
-        # depth = 1
+        fields = ['pk', 'user', 'grade',
+                  'product', 'payment_method', 'expires_date', 'created']
+        depth = 1
+
+    def get_created(self, obj):
+        if obj and obj.created:
+            return obj.created.date()
+        return ''
+
+    def get_expires_date(self, obj):
+        if obj and obj.payment_method:
+            return obj.payment_method.expires_date.date()
+        return ''
 
     def create(self, validated_data):
         payment_method = validated_data.get('payment_method')
@@ -67,9 +79,29 @@ class InAppPaymentSerializer(serializers.ModelSerializer):
     #     (payment.id, payment.name) for payment in InAppPayment.objects.all()
     # ]
     # payment = serializers.ChoiceField(InAppPayment, '')
+    expires_date = serializers.SerializerMethodField(read_only=True)
+    original_purchase_date = serializers.SerializerMethodField(read_only=True)
+    created = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = InAppPayment
         fields = '__all__'
+
+    def get_expires_date(self, obj):
+        if obj and obj.expires_date:
+            return obj.expires_date.date()
+        return ''
+
+    def get_original_purchase_date(self, obj):
+        if obj and obj.original_purchase_date:
+            return obj.original_purchase_date.date()
+        return ''
+
+    def get_created(self, obj):
+        print("obj: ", obj)
+        if obj and obj.created:
+            return obj.created.date()
+        return ''
 
     def validate_amount(self, value):
         if InAppPayment.objects.filter(amount=value).exists():

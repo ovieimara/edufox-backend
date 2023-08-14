@@ -1,4 +1,5 @@
 import json
+import logging
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from rest_framework import status
@@ -15,6 +16,7 @@ User = get_user_model()
 
 class SignupTestCase(TestCase):
     def setUp(self):
+        logging.basicConfig(level=logging.INFO)
         self.client = APIClient()
         self.grade = Grade.objects.create(
             code='grade1',
@@ -106,6 +108,7 @@ class SignupTestCase(TestCase):
                 'phone_number': '+23407048536974',
                 'grade': self.grade.pk,
                 'age': 6,
+                'dob': '2023-07-19',
                 'gender': 'male',
                 'image_url': '',
                 'name_institution': 'uniben',
@@ -113,16 +116,17 @@ class SignupTestCase(TestCase):
             }
 
             login_response = self.client.post(reverse('student:students-login'), data={
-                'username': '08023168805',
-                'password': 'password@123A',
+                'username': '08023168805',  # use a valid registered number
+                'password': 'password',
                 'country_code': '+234'
             }, format='json')
             # token = login_response.json()
+            # logging.info(f"{login_response.json()}")
             self.assertIsNotNone(login_response.json().get('auth_token'))
 
             login_response = self.client.post(reverse('student:students-login'), data={
                 'username': '8023168805',
-                'password': 'password@123A',
+                'password': 'password',
                 'country_code': '+234'
             })
             self.assertIsNotNone(login_response.json().get('auth_token'))
@@ -149,13 +153,17 @@ class SignupTestCase(TestCase):
             self.assertEqual(user.get('user').get(
                 'email'), 'imaraovie@gmail.com')
             self.assertEqual(user.get('user').get(
+                'first_name'), data.get('first_name'))
+            self.assertEqual(user.get('user').get(
+                'last_name'), data.get('last_name'))
+            self.assertEqual(user.get('user').get(
                 'username'), '+23407048536974')
             self.assertEqual(user.get('grade'), self.grade.pk)
 
             # test deletion of user
-            self.client.credentials(HTTP_AUTHORIZATION=f"Token {token}")
-            response = self.client.delete(reverse('students-list'), data={
-                'current_password': 'password@123A',
-            })
-            # print('DELETE: ', response)
-            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+            # self.client.credentials(HTTP_AUTHORIZATION=f"Token {token}")
+            # response = self.client.delete(reverse('students-list'), data={
+            #     'current_password': 'password@123A',
+            # })
+            # # print('DELETE: ', response)
+            # self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

@@ -17,6 +17,12 @@ def PrivacyPolicy(request, *args, **kwargs):
     return render(request, 'privacy.html')
 
 
+@api_view(['GET'])
+# @permission_classes([AllowAny])
+def StandardEula(request, *args, **kwargs):
+    return render(request, 'eula.html')
+
+
 def update_user_data():
     # Update user-specific data in the database
 

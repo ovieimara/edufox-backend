@@ -68,11 +68,13 @@ read_env(secrets_uri)
 # env, read_env = localCredentialsRepo.getEnvironmentVariables()
 # read_env()
 
-
 # SECURITY WARNING: keep the secret key used in production secret!
 DEBUG = True
 
 SECRET_KEY = env("SECRET_KEY")
+AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY")
+AWS_DEFAULT_REGION = env("AWS_DEFAULT_REGION")
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -279,7 +281,14 @@ if os.environ.get('USE_LOCAL_POSTGRESQL'):
             'PASSWORD': env('DB_PASSWORD2'),
             'HOST': 'localhost',
             'PORT': 5432,
-        }
+        },
+        'dynamodb': {
+            'ENGINE': 'django_dynamodb_backend',
+            'AWS_ACCESS_KEY_ID': 'AKIA3HZKQ6Y2BEGJNXOE',
+            'AWS_SECRET_ACCESS_KEY': 'IC0SC++221rak7JZy7IXocfbytKXzhMDpERUhGqH',
+            'AWS_REGION_NAME': 'us-east-1',
+            # 'AWS_DYNAMODB_ENDPOINT_URL': 'your-dynamodb-endpoint-url',
+        },
     }
 
 else:

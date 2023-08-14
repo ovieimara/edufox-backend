@@ -1,9 +1,12 @@
 import abc
+import datetime
 import json
 from logging import Filter
+import logging
 from multiprocessing import set_forkserver_preload
 from re import sub
 from venv import create
+from django.http import HttpRequest
 from rest_framework import filters
 import copy
 import os
@@ -11,10 +14,12 @@ from django.shortcuts import render
 from rest_framework import generics, status, mixins
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly, AllowAny
-from course.abc import CreateMultipleLessons
+from yaml import serialize
+from course.abc import BatchVideos, CreateMultipleLessons
 from edufox.constants import ANDROID, IOS, WEB
-
+from django.core.paginator import Paginator, EmptyPage
 from edufox.views import printOutLogs, update_user_data
+from subscribe.abc import MySubscription
 from subscribe.models import Subscribe
 from .models import (Grade, Event, Lesson, Subject, Lecturer, Video,
                      Rate, Comment, Interaction, Resolution, Topic)
@@ -27,12 +32,15 @@ from django.contrib.auth.models import User
 from student.models import Student
 from django.db.models import Q
 from django.utils import timezone
+from django.db import transaction
+from django.core.exceptions import ValidationError
 from rest_framework.decorators import api_view, permission_classes
 from django.views import View
-from client.library import StorageRepoABC, GoogleCloudStorageRepo, DashStream, HLSStream, PlatformStream
+from client.library import AWSSignedURLGenerator, AmazonDynamoDBHLSStream, AmazonDynamoDBRepo, HLSWebStream, StorageRepoABC, GoogleCloudStorageRepo, DashStream, HLSStream, PlatformStream
 from django.conf import settings as django_settings
 from edufox.constants import platforms
 from abc import ABC, abstractmethod
+import concurrent.futures
 
 # Create your views here.
 
@@ -55,7 +63,7 @@ class UpdateAPIGrades(generics.RetrieveUpdateDestroyAPIView):
 
 
 class ListCreateAPISubject(generics.ListCreateAPIView):
-    queryset = Subject.objects.all()
+    queryset = Subject.objects.all().order_by('name')
     serializer_class = SubjectSerializer
     permission_classes = [IsAdminUser, IsStaffEditorPermission]
 
@@ -130,6 +138,18 @@ class ListCreateAPIEvent(generics.ListCreateAPIView):
     queryset = Event.objects.all().order_by('pk')
     serializer_class = EventSerializer
 
+    def get(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
 
 class UpdateAPIEvent(generics.RetrieveUpdateDestroyAPIView):
     queryset = Event.objects.all().order_by('pk')
@@ -201,16 +221,101 @@ class ListCreateUpdateAPILesson(mixins.CreateModelMixin, mixins.ListModelMixin, 
 
         return self.list(request, *args, **kwargs)
 
+    # def create_video(self, video_data):
+    #     # Perform the bulk create operation for a batch of video data
+    #     with transaction.atomic():
+    #         Video.objects.bulk_create([Video(**data) for data in video_data])
+
+    def create_video(self, video_data):
+        logging.error(f"creating video: ", video)
+        # Create the video
+        video = Video.objects.create(**video_data)
+
+        # Get the list of grade IDs for the video
+        grades = video_data.get('grade', [])
+
+        # Set the grades for the video using the grade IDs
+        video.grade.set(grades)
+
+        logging.error(f"created video: ", video)
+
+        # Any other post-processing for the video creation can be done here
+
+    def createVideos(self, lessons: list, request: HttpRequest) -> None:
+        batch_videos = BatchVideos()
+        videos = batch_videos.generate_videos(lessons)
+        try:
+            videos_serializer = VideoSerializer(
+                data=videos, many=True)
+            # print('videos_serializer: ', videos_serializer.initial_data)
+
+            videos_serializer.is_valid(raise_exception=True)
+            # videos_data = videos_serializer.validated_data
+            # print("videos_data: ", videos_data, type(videos_data))
+
+            videos_serializer.save()
+            # self.create_video(videos_data)
+
+            # Save videos to the database within the same transaction
+            # Wrap the video creation in a database transaction
+            # Split the videos_data into chunks for concurrent processing
+            # num_workers = min(len(videos_data), concurrent.futures.cpu_count())
+            # if len(videos_data):
+            #     num_workers = 3
+            #     chunk_size = len(videos_data) // num_workers
+            # video_chunks = [videos_data[i:i+chunk_size]
+            #                 for i in range(0, len(videos_data), chunk_size)]
+            # with concurrent.futures.ThreadPoolExecutor() as executor:
+            #     executor.map(self.create_video, videos_data)
+
+            # videos_serializer.save()
+        except ValidationError as ex:
+            # Log the validation error
+            logging.error(f"createVideos: Validation error: {ex.message}")
+
+            # Raise an exception to propagate the error to the outer method
+            raise ex
+
+        except Exception as ex:
+            logging.error(f"createVideos: {ex}")
+            # Raise an exception to propagate the error to the outer method
+            raise ex
+
+    def createLessons(self, lessons: list, request: HttpRequest) -> list:
+
+        try:
+            serializer = self.get_serializer(
+                data=lessons, many=True, context={'request': request})
+            serializer.is_valid(raise_exception=True)
+            # Wrap the lesson creation in a database transaction
+            # with transaction.atomic():
+            self.perform_create(serializer)
+
+            return serializer.data
+
+        except ValidationError as ex:
+            # Log the validation error
+            logging.error(f"createLessons: Validation error: {ex}")
+            # Return a 400 Bad Request response with the validation error details
+            return Response(data=ex.detail, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as ex:
+            logging.error(f"createLessons: {ex}")
+
+            # Return a 500 Internal Server Error response or raise an exception
+            return Response(data={'error': 'Internal Server Error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     def create(self, request, *args, **kwargs):
         multiple_lessons = CreateMultipleLessons()
-        # print('data: ', json.dumps(request.POST))
+        # print('data: ', multiple_lessons)
         lessons = multiple_lessons.split_titles_ids(request.data)
-        serializer = self.get_serializer(
-            data=lessons, many=True, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        print("lessons: ", lessons)
+        # with transaction.atomic():
+        serialized_lessons = self.createLessons(lessons, request)
+        self.createVideos(serialized_lessons, request)
+
+        headers = self.get_success_headers(serialized_lessons)
+        return Response(serialized_lessons, status=status.HTTP_201_CREATED, headers=headers)
 
     def post(self, request, *args, **kwargs):
 
@@ -290,6 +395,36 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
     # search_fields = ['title', 'descriptions', 'topic', 'lesson', 'tags', 'subject__name', 'subject__description', 'grade__name', 'grade__description']
     permission_classes = [AllowAny]
 
+    def process_topic(self, topic, grade=None):
+        lessons_queryset = topic.topic_lessons
+        if grade:
+            lessons_queryset = lessons_queryset.filter(
+                grade__pk=grade).distinct('pk')
+        serialized_lessons = self.get_serializer(
+            lessons_queryset, many=True).data
+        serialized_topic = TopicSerializer(topic).data
+        return {"title": serialized_topic, "data": serialized_lessons}
+
+    def process_topics(self, topics_queryset, grade=None):
+        topics_set = set()
+        topics_lessons = []
+
+        # Function to process each topic concurrently
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future_to_topic = {executor.submit(
+                self.process_topic, topic, grade): topic for topic in topics_queryset.all()}
+            for future in concurrent.futures.as_completed(future_to_topic):
+                topic = future_to_topic[future]
+                try:
+                    obj = future.result()
+                    if topic.id not in topics_set:
+                        topics_set.add(topic.id)
+                        topics_lessons.append(obj)
+                except Exception as exc:
+                    print(f"Exception occurred while processing topic: {exc}")
+
+        return topics_lessons
+
     def get(self, request, *args, **kwargs):
         student = None
         serialized_recent = []
@@ -298,7 +433,7 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
         topics_lessons = []
         result = []
         subscriptions = []
-
+        page = 0
         subject = kwargs.get('subject')
         grade = kwargs.get('grade')
         if grade is not None:
@@ -306,14 +441,15 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
         user = request.user if request.user else None
 
         try:
-
+            print(user, user.is_authenticated, user.username)
             if user and user.is_authenticated:
-                subscriptions = user.subscriptions_user.filter(
-                    Q(payment_method__expires_date__gt=timezone.now())
-                ).order_by("-created")
-                # print("subscriptions1: ", subscriptions)
+                subscriptions = getValidSubscriptions(user)
+                # subscriptions = user.subscriptions_user.filter(
+                #     Q(payment_method__expires_date__gt=timezone.now())
+                # ).order_by("-created")
 
                 student = Student.objects.get(phone_number=user.username)
+                # print("student: ", subscriptions)
 
             # if student and not grade:
             #     try:
@@ -329,7 +465,7 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
                 try:
                     subject_instance = Subject.objects.get(pk=subject)
                 except Subject.DoesNotExist as ex:
-                    print('subject object error: ', ex)
+                    logging.error('subject object error: ', ex)
                 # print("subject_instance: ", subject_instance)
                 if subject_instance:
                     topics_queryset = subject_instance.subject_topics.all()
@@ -340,19 +476,42 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
 
                 if topics_queryset:
                     # lessons_queryset = None
-                    for topic in topics_queryset.all():
-                        lessons_queryset = topic.topic_lessons.all()
-                        if grade:
-                            lessons_queryset = lessons_queryset.filter(
-                                grade__pk=grade)
-                        serialized_lessons = self.get_serializer(
-                            lessons_queryset, many=True).data
-                        serialized_topic = TopicSerializer(topic).data
-                        obj = {"title": serialized_topic,
-                               "data": serialized_lessons}
-                        topics_lessons.append(obj)
-                result = topics_lessons
-                # print("result: ", result)
+                    result = self.process_topics(
+                        topics_queryset, grade)
+                    # topics_set = set()
+                    # # lessons_set = set()
+                    # for topic in topics_queryset.all():
+                    #     if topic.id not in topics_set:
+                    #         topics_set.add(topic.id)
+                    #         lessons_queryset = topic.topic_lessons
+                    #         if grade:
+                    #             lessons_queryset = lessons_queryset.filter(
+                    #                 grade__pk=grade).distinct('pk')
+                    #         serialized_lessons = self.get_serializer(
+                    #             lessons_queryset, many=True).data
+                    #         serialized_topic = TopicSerializer(topic).data
+                    #         obj = {"title": serialized_topic,
+                    #                "data": serialized_lessons}
+                    #         topics_lessons.append(obj)
+                # result = topics_lessons
+
+                # per_page = 5
+                # if not page:
+                #     page = 1
+                # paginator = Paginator(result, per_page=per_page)
+                # try:
+                #     result = paginator.page(number=1)
+                # except EmptyPage:
+                #     result = None
+
+                # page = self.paginate_queryset(result)
+                # print("page: ", page, result)
+                # if page:
+                #     serializer = TopicSerializer(page, many=True)
+                #     print("lessons_array: ",
+                #           self.get_paginated_response(json.dumps(page)))
+                # return self.get_paginated_response(json.dumps(page))
+                print('RESULT: ', result)
                 return Response(result)
 
         except Student.DoesNotExist as ex:
@@ -369,23 +528,23 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
             if user and user.is_authenticated:
                 # user_interactions = Interaction.objects.filter(
                 #     user=user).order_by('-created')
+                top_3_queryset = self.process_user_interactions(user)
+                # user_interactions = user.interactions.all()
 
-                user_interactions = user.interactions.all()
+                # recent_queryset = user_interactions.select_related(
+                #     'video').exclude(video__isnull=True).order_by('-created')
+                # # recent_queryset = recent_queryset.filter(
+                # #     user=user).distinct('id')
+                # query_array = []
+                # existing_set = set()
 
-                recent_queryset = user_interactions.select_related(
-                    'video').exclude(video__isnull=True).order_by('-created')
-                # recent_queryset = recent_queryset.filter(
-                #     user=user).distinct('id')
-                query_array = []
-                existing_set = set()
+                # for recent in recent_queryset:
+                #     video_pk = recent.video.pk
+                #     if video_pk not in existing_set:
+                #         existing_set.add(video_pk)
+                #         query_array.append(recent.video.lesson)
 
-                for recent in recent_queryset:
-                    video_pk = recent.video.pk
-                    if video_pk not in existing_set:
-                        existing_set.add(video_pk)
-                        query_array.append(recent.video.lesson)
-
-                top_3_queryset = query_array[:3]
+                # top_3_queryset = query_array[:3]
 
                 # print('interaction: ', top_3_queryset)
                 serialized_recent = self.get_serializer(
@@ -421,13 +580,13 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
                 if queryset.exists():
                     recommend_queryset = queryset
             # print((recommend_queryset))
-            lesson_array = []
-            existing_set = set()
-            for video in recommend_queryset:
-                if video.pk not in existing_set and video.lesson:
-                    existing_set.add(video.pk)
-                    lesson_array.append(video.lesson)
-
+            # lesson_array = []
+            # existing_set = set()
+            # for video in recommend_queryset:
+            #     if video.pk not in existing_set and video.lesson:
+            #         existing_set.add(video.pk)
+            #         lesson_array.append(video.lesson)
+            lesson_array = self.process_recommend(recommend_queryset)
             # print("lesson_array: ", lesson_array)
             serialized_recommend = self.get_serializer(
                 lesson_array[:10], many=True, context={'request': request}).data
@@ -461,15 +620,65 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
         # print('RESPONSE: ', result)
         return Response(result)
 
-    # def post(self, request, *args, **kwargs):
-    #     if not kwargs.get('pk'):
-    #         return self.create(request, *args, **kwargs)
-    #     return Response(status.HTTP_400_BAD_REQUEST)
+    def process_user_interactions(self, user):
 
-    # def put(self, request, *args, **kwargs):
-    #     if kwargs.get('pk'):
-    #         return self.update(request, *args, **kwargs)
-    #     return Response(status.HTTP_400_BAD_REQUEST)
+        user_interactions = user.interactions.all()
+        recent_queryset = user_interactions.select_related(
+            'video').exclude(video__isnull=True).order_by('-created')
+
+        # ... (rest of the code)
+
+        # Set the number of threads you want to use for concurrent processing
+        num_threads = 4  # You can adjust this number based on your requirements
+
+        # Use ThreadPoolExecutor to parallelize the operation
+        with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+            # Define a function that retrieves the lesson from a single user interaction
+            def get_lesson_from_interaction(user_interaction, existing_set):
+                video_pk = user_interaction.video.pk
+                if video_pk not in existing_set:
+                    existing_set.add(video_pk)
+                    return user_interaction.video.lesson
+                return None
+
+            # Create a set to keep track of existing video primary keys
+            existing_set = set()
+
+            # Use submit to asynchronously submit the tasks to the thread pool
+            futures = [executor.submit(
+                get_lesson_from_interaction, interaction, existing_set) for interaction in recent_queryset]
+
+            # Use as_completed to retrieve the results as they complete
+            top_3_lessons = [future.result() for future in concurrent.futures.as_completed(
+                futures) if future.result() is not None]
+
+            # Get the top 3 lessons from the processed list
+            return top_3_lessons[:3]
+
+    def process_recommend(self, recommend_queryset):
+        num_threads = 4  # You can adjust this number based on your requirements
+
+        # Use ThreadPoolExecutor to parallelize the operation
+        with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+            # Define a function that retrieves the lesson from a single video
+            def get_lesson_from_video(video, existing_set):
+                try:
+                    if video.pk not in existing_set and video.lesson:
+                        existing_set.add(video.pk)
+                        return video.lesson
+                except Exception as ex:
+                    print(f"Error while processing video {video.pk}: {ex}")
+                return None
+
+            # Create a set to keep track of existing video primary keys
+            existing_set = set()
+
+            # Use submit to asynchronously submit the tasks to the thread pool
+            futures = [executor.submit(
+                get_lesson_from_video, video, existing_set) for video in recommend_queryset]
+
+            # Use as_completed to retrieve the results as they complete
+            return [future.result() for future in concurrent.futures.as_completed(futures) if future.result() is not None]
 
 
 def updateIsSubscribed(serialized_item, subscriptions):
@@ -504,7 +713,7 @@ class ListDashboardLessonsAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  m
             grade = int(grade)
 
         user = request.user if request.user else None
-        # print("user: ", user.username)
+        print("user: ", user.username, lesson)
         try:
             if user and user.is_authenticated:
                 try:
@@ -560,22 +769,24 @@ class ListDashboardLessonsAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  m
             if lesson:
                 videos_queryset = []
                 try:
-                    lesson_obj = Lesson.objects.get(pk=lesson)
+                    lesson_obj = self.get_queryset().get(pk=lesson)
                     if lesson_obj:
                         videos_queryset = lesson_obj.lesson_videos.all()
                 except Lesson.DoesNotExist as ex:
                     print('lesson object error: ', ex)
-                print('videos_queryset1: ', videos_queryset, grade_packs)
-                if grade_packs and videos_queryset:
-                    queryset = videos_queryset.filter(
-                        grade__in=grade_packs.grades)
 
-                print("queryset: ", len(queryset))
+                # print('videos_queryset1: ', videos_queryset, grade_packs)
 
-                if grade and not queryset:
-                    queryset = videos_queryset.filter(grade__pk=grade)
+                # if grade_packs and videos_queryset:
+                #     queryset = videos_queryset.filter(
+                #         grade__in=grade_packs.grades)
 
-                videos_queryset = queryset
+                # print("queryset: ", len(queryset))
+
+                # if grade and not queryset:
+                #     queryset = videos_queryset.filter(grade__pk=grade)
+
+                # videos_queryset = queryset
                 # if grade and videos_queryset:
                 #     videos_queryset = videos_queryset.filter(
                 #         grade__pk=grade)
@@ -588,7 +799,10 @@ class ListDashboardLessonsAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  m
                 #         "title": 'Lesson',
                 #         "data" : serialized_videos,
                 #     }
-                # print('videos_queryset3: ', (serialized_videos))
+                # for video in serialized_videos:
+                # print('videos_queryset3: ',
+                #       serialized_videos.get('is_subscribed'))
+
                 result = serialized_videos
 
         except Exception as ex:
@@ -648,7 +862,7 @@ class ListTopicLessonAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins
                     if lesson_obj.exists():
                         lesson_obj = lesson_obj.first()
                         lessons_queryset = lesson_obj.topic.topic_lessons.all()
-                    print("lesson_obj: ", lessons_queryset)
+                    # print("lesson_obj: ", lessons_queryset)
                     if grade_packs and lessons_queryset:
                         lessons_queryset_grades = lessons_queryset.filter(
                             grade__in=grade_packs.grades).distinct('num').exclude(pk=lesson_obj.pk)
@@ -674,15 +888,42 @@ class ListTopicLessonAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins
 class VideoSearchListViewAPI(generics.ListAPIView):
     queryset = Video.objects.select_related(
         'subject', 'topic', 'lesson').all().order_by('pk')
-    serializer_class = VideoSerializer
+    serializer_class = VideoSerializer()
     # filter_backends = [filters.SearchFilter]
     search_fields = ['tags', 'title', 'description', 'lesson__title',
                      'topic__title', 'subject__name', 'subject__description', 'grade__name', 'grade__code', 'grade__description']
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
 
+        lessons_array = []
+        lessons_set = set()
+        for query in queryset:
+            if query.pk not in lessons_set and query.lesson:
+                lessons_set.add(query.pk)
+                lessons_array.append(query.lesson)
+
+        page = self.paginate_queryset(lessons_array)
+
+        if page is not None:
+            serializer = LessonSerializer(page, many=True)
+            # print("lessons_array: ", self.get_paginated_response(serializer.data))
+            return self.get_paginated_response(serializer.data)
+
+        serializer = LessonSerializer(lessons_array, many=True)
+
+        return Response(serializer.data)
+
+    def get(self, request, *args, **kwargs):
+        if kwargs.get('pk') is not None:
+            return self.retrieve(request, *args, **kwargs)
+
+        return self.list(request, *args, **kwargs)
 # @api_view(['GET'])
 # @permission_classes([AllowAny])
 # def GenerateSignedUrl(request, *args, **kwargs) -> Response:
+
+
 class GenerateSignedUrl(generics.GenericAPIView):
     '''
     Get the signed URL for the requested resource
@@ -693,11 +934,17 @@ class GenerateSignedUrl(generics.GenericAPIView):
 
         signed_url = ''
         # print(self.request.user)
+        # amazondb = AmazonDynamoDBRepo('7a935736-bd4c-4f9d-8ba5-4803f789970b')
+        # amazondb.getSignedUrl()
+
         factory_stream = readRequest(request)
         if factory_stream:
             stream = factory_stream.getPlatformStream()
             signed_url = stream.getSignedUrl()
-            print(signed_url)
+            # signed_url = "https://d3sf15wolo885z.cloudfront.net/out/v1/6f13342624a54b1e97d42d2ac1fcafef/4e1206dd7b4541959ba155f0a8c1f13a/f5e513f27e684e90b22ab100ad5de3b7/index.m3u8"
+            # signed_url = "https://d3sf15wolo885z.cloudfront.net/out/v1/612676e447b241dc895a9c9fb6ebc4be/4e1206dd7b4541959ba155f0a8c1f13a/f5e513f27e684e90b22ab100ad5de3b7/index.m3u8"
+            # signed_url = "https://d3sf15wolo885z.cloudfront.net/out/v1/451342fc17124367aa8d4bf2b770248e/4e1206dd7b4541959ba155f0a8c1f13a/f5e513f27e684e90b22ab100ad5de3b7/index.m3u8"
+        print(signed_url)
 
         return Response({
             'signed_url': signed_url,
@@ -710,20 +957,28 @@ def readRequest(request) -> PlatformStream:
     subject = data.get('subject')
     video_id = data.get('video_id')
     platform = data.get('platform')
-
     subject_code = get_first_obj(pk=subject)
+    hls_url = getVideoUrl(Video, 'url', video_id=video_id)
+
+    url = AmazonDynamoDBRepo().getHlsUrl(video_id)
 
     subscription = MySubscription(request.user, video_id)
-    print(subscription.isValidSubForVideo())
+
+    # print(subscription.isValidSubForVideo())
     # if subscription and not subscription.isValidSubForVideo():
     #     return ''
 
-    path = f"lessons-videos/{subject_code}/{video_id}"
-    # print('PATH: ', path)
-    factory = {IOS: HLSStream(path), ANDROID: HLSStream(
-        path), WEB: HLSStream(path)}
+    if url and hls_url:
+        return AmazonDynamoDBHLSStream(hls_url, datetime.datetime.now() + datetime.timedelta(hours=3))
 
-    return factory.get(platform) if platform and platform in factory else factory.get(IOS)
+    path = f"lessons-videos/{subject_code}/{video_id}"
+    print('PATH: ', path)
+    # factory = {IOS: HLSStream(path), ANDROID: HLSStream(
+    #     path), WEB: HLSStream(path)}
+    factory = {IOS: HLSWebStream(path, "edufox-bucket-2"), ANDROID: HLSWebStream(
+        path, "edufox-bucket-2"), WEB: HLSWebStream(path, "edufox-bucket-2")}
+
+    return factory.get(platform) if platform and platform in factory else factory.get(WEB)
 
 
 def get_first_obj(**kwargs):
@@ -734,9 +989,25 @@ def get_first_obj(**kwargs):
     return subject_code
 
 
+def getVideoUrl(obj: object, prop, **kwargs) -> str:
+    try:
+        obj_instance = obj.objects.filter(**kwargs)
+        if obj_instance.exists():
+            if prop == 'url':
+                hls_url = obj_instance.first().url
+                hls_url2 = obj_instance.first().url2
+                return hls_url if hls_url else hls_url2
+    except obj.DoesNotExist as ex:
+        logging.error(f"getVideoUrl: video does not exist, {ex}")
+    except Exception as ex:
+        logging.error(f"getVideoUrl: {ex}")
+    return ''
+
+
 def getValidSubscriptions(user):
     subscription = MySubscription(user)
     return subscription.get_all_user_subscriptions()
+    # return subscription.get_user_subscriptions()
     # subscriptions = user.subscriptions_user.filter(Q(payment_method__expires_date__gt=timezone.now())
     #    ).order_by("-created")
     # return subscriptions
@@ -757,73 +1028,3 @@ def getValidSubscriptions(user):
 #     )
 #     if subscription_obj.exists():
 #         return True
-
-
-class UserSubscriptionABC(ABC):
-    def __init__(self, user: str, video_id: str = '') -> None:
-        self.user = user
-        self.video_id = video_id
-
-    @abstractmethod
-    def get_user_subscriptions(self):
-        """ fetch subscriptions that are valid after timezone.now"""
-
-    @abstractmethod
-    def isValidSubForVideo(self) -> bool:
-        """check if subscription is valid for a video"""
-
-    @abstractmethod
-    def get_all_user_subscriptions(self):
-        """return all subscriptions for this user"""
-
-
-class MySubscription(UserSubscriptionABC):
-
-    def get_user_subscriptions(self):
-        return self.user.subscriptions_user.filter(Q(payment_method__expires_date__gt=timezone.now())).order_by("-created")
-
-    def get_all_user_subscriptions(self):
-        # print('subscriptions: ', self.user.subscriptions_user)
-        queryset = Subscribe.objects.all()
-        return queryset.filter(payment_method__expires_date__gt=timezone.now(), user=self.user).order_by("-created") if self.user.is_authenticated else []
-
-    def get_video_grades(self) -> list:
-        video_grades = {}
-        try:
-            video_queryset = Video.objects.filter(video_id=self.video_id)
-            if video_queryset.exists():
-                video_obj = video_queryset.first()
-                grades = video_obj.grade.all()
-                video_grades = {grade.pk for grade in grades}
-        except Exception as ex:
-            print('video object error: ', ex)
-
-        return video_grades
-
-    def isValidSubForVideo(self) -> bool:
-        subscriptions = self.get_all_user_subscriptions()
-        if subscriptions:
-            video_grades = self.get_video_grades()
-            for sub in subscriptions.all():
-                subscription_grades = set(sub.grade.grades)
-                grades_intersection = subscription_grades & video_grades
-                print(grades_intersection, subscription_grades, video_grades)
-
-                if grades_intersection:
-                    return True
-        return False
-
-        # subscriptions = subscriptions.objects.filter(
-        #     grade__grades__contains=values)
-        # print("subscriptions: ", subscriptions.all(),
-        #       self.get_video_grades(), type(self.get_video_grades()))
-
-        # if subscriptions.exists():
-        # subscription_obj = subscriptions.filter(
-        #     # Q(grade__grades__contains=self.get_video_grades()) &
-        #     Q(
-        #         payment_method__expires_date__gt=timezone.now())
-        # )
-        # print("subscriptions2: ", subscription_obj)
-        # if subscription_obj.exists():
-        # return True

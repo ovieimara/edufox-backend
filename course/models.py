@@ -128,28 +128,30 @@ class Video(models.Model):
     video_id = models.CharField(
         max_length=255, default='000')
     lesson = models.ForeignKey(
-        Lesson, related_name='lesson_videos', null=True, on_delete=models.SET_NULL)
+        Lesson, related_name='lesson_videos', null=True, on_delete=models.CASCADE)
     lessons = models.CharField(
-        max_length=255, choices=(), null=True, default=[])
+        max_length=255, choices=(), null=True, blank=True, default=list)
     title = models.CharField(db_index=True, max_length=255)
     description = models.TextField(null=True, blank=True, default='')
     duration = models.CharField(
         db_index=True, max_length=50, null=True, blank=True, default='')
     resolution = models.ForeignKey(
-        Resolution, related_name='resolutions', null=True, on_delete=models.SET_NULL)
-    thumbnail = models.URLField(null=True)
+        Resolution, related_name='resolutions', null=True, blank=True, on_delete=models.SET_NULL)
+    thumbnail = models.URLField(null=True, blank=True)
     # topic = models.CharField(db_index = True, max_length=255, null=True, blank=True, default='')
     topic = models.ForeignKey(
         Topic, related_name='topics', null=True, on_delete=models.SET_NULL)
     topics = models.CharField(
-        max_length=255, choices=(), null=True, default=[])
+        max_length=255, choices=(), null=True, blank=True, default=list)
 
     url = models.URLField(null=True, blank=True, default='')
+    url2 = models.TextField(null=True, blank=True, default='')
+
     tags = models.TextField(null=True, blank=True, default=dict)
     subject = models.ForeignKey(
         Subject, related_name='subject_videos', null=True, on_delete=models.SET_NULL)
     grade = models.ManyToManyField(
-        Grade, default=[], related_name='grade_videos')
+        Grade, default=list, related_name='grade_videos')
     end_start_credits = models.CharField(
         max_length=50, null=True, blank=True, default='')
     start_end_credits = models.CharField(

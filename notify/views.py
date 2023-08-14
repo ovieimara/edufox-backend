@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from twilio.rest import Client as twiClient
 import os
 
+from edufox.views import printOutLogs
+
 
 # Set environment variables for your credentials
 # Read more at http://twil.io/secure
@@ -24,52 +26,54 @@ client = twiClient(account_sid, auth_token)
 def sms_messaging():
     otp_code = input("Please enter the OTP:")
 
+
 def createOTP(phone_number):
     verification = None
     try:
         verification = client.verify.v2.services(verify_sid) \
-        .verifications \
-        .create(to=phone_number, channel="sms")
-        # print(verification.status)
+            .verifications \
+            .create(to=phone_number, channel="sms")
+        printOutLogs('createOTP: ', verification.status)
     except Exception as ex:
         print('SMS OTP creation error: ', ex)
 
     return verification
 
-    
 
 def verifyOTP(otp, phone_number):
     verification_check = None
     try:
         verification_check = client.verify.v2.services(verify_sid) \
-        .verification_checks \
-        .create(to=phone_number, code=otp)
-        
+            .verification_checks \
+            .create(to=phone_number, code=otp)
+
     except Exception as ex:
         print('SMS OTP verify error: ', ex)
 
     return verification_check
 
+
 def emailOTP(email):
     verification = None
     try:
         verification = client.verify.v2.services(verify_sid) \
-                        .verifications \
-                        .create(to=email, channel='email')
+            .verifications \
+            .create(to=email, channel='email')
 
     except Exception as ex:
         print('Email OTP creation error: ', ex)
 
     return verification
 
+
 def verifyEmail(otp, email):
     verification_check = None
     try:
         verification_check = client.verify \
-                            .v2 \
-                            .services(verify_sid) \
-                            .verification_checks \
-                            .create(to=email, code=otp)
+            .v2 \
+            .services(verify_sid) \
+            .verification_checks \
+            .create(to=email, code=otp)
 
     except Exception as ex:
         print('Email OTP verify error: ', ex)

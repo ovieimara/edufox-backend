@@ -5,13 +5,15 @@ import requests
 from rest_framework import status
 from django.urls import reverse
 from rest_framework.test import APIClient
+
+from course.abc import TitleEditor
 from .models import Event, Grade, Lesson, Subject, Lecturer, Topic, Video, Resolution
 import json
 
 User = get_user_model()
 
 
-class SignupTestCase(TestCase):
+class SignupTestCase(TestCase, TitleEditor):
     def setUp(self):
         self.client = APIClient()
 
@@ -586,46 +588,103 @@ class SignupTestCase(TestCase):
             reverse('course:query-list'), params={'search': 'Tears'})
         # print('QUERY', response.json())
 
+    def test_Rate(self):
+        response = self.client.post(reverse('api:login'), data={
+            'username': '+23407048536974',
+            'password': 'password@123A',
+        })
+        token = response.json()['auth_token']
+        # print(token)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token}")
 
-def test_Rate(self):
-    response = self.client.post(reverse('api:login'), data={
-        'username': '+23407048536974',
-        'password': 'password@123A',
-    })
-    token = response.json()['auth_token']
-    # print(token)
-    self.client.credentials(HTTP_AUTHORIZATION=f"Token {token}")
+        data = {
+            "rating": 5,
+            "video": self.video.pk,
+        }
+        response = self.client.post(
+            reverse('course:rates-list'), data=data, format='json')
+        response = response.json()
+        self.assertEqual(self.video.pk, response.get('video'))
+        self.assertEqual(self.user2.username, response.get('user'))
+        self.assertEqual(data.get('rate'), response.get('rate'))
 
-    data = {
-        "rating": 5,
-        "video": self.video.pk,
-    }
-    response = self.client.post(
-        reverse('course:rates-list'), data=data, format='json')
-    response = response.json()
-    self.assertEqual(self.video.pk, response.get('video'))
-    self.assertEqual(self.user2.username, response.get('user'))
-    self.assertEqual(data.get('rate'), response.get('rate'))
+        data = {
+            "rating": 3,
+            "video": self.video.pk,
+        }
 
-    data = {
-        "rating": 3,
-        "video": self.video.pk,
-    }
+        response = self.client.post(
+            reverse('course:rates-list'), data=data, format='json')
+        response = response.json()
+        self.assertEqual(self.video.pk, response.get('video'))
+        self.assertEqual(self.user2.username, response.get('user'))
+        self.assertEqual(data.get('rate'), response.get('rate'))
 
-    response = self.client.post(
-        reverse('course:rates-list'), data=data, format='json')
-    response = response.json()
-    self.assertEqual(self.video.pk, response.get('video'))
-    self.assertEqual(self.user2.username, response.get('user'))
-    self.assertEqual(data.get('rate'), response.get('rate'))
+        data = {
+            "rating": '',
+            "video": self.video.pk,
+        }
+        response = self.client.post(
+            reverse('course:rates-list'), data=data, format='json')
+        response = response.json()
+        self.assertEqual(self.video.pk, response.get('video'))
+        self.assertEqual(self.user2.username, response.get('user'))
+        self.assertEqual(-1, response.get('rate'))
 
-    data = {
-        "rating": '',
-        "video": self.video.pk,
-    }
-    response = self.client.post(
-        reverse('course:rates-list'), data=data, format='json')
-    response = response.json()
-    self.assertEqual(self.video.pk, response.get('video'))
-    self.assertEqual(self.user2.username, response.get('user'))
-    self.assertEqual(-1, response.get('rate'))
+    def test_get_lesson_title(self):
+        # title_editor = TitleEditor()
+
+        # Test cases for get_lesson_title
+        test_cases = [
+            # Test case 1: Standard case with video ID
+            {
+                'input_title': 'lesson_1_converted.mp4',
+                'expected_output': 'Lesson 1'
+            },
+            # Test case 2: Video ID with hyphen and converted.mp4
+            {
+                'input_title': 'lesson_2_converted.mp4-ID12345',
+                'expected_output': 'Lesson 2-ID12345'
+            },
+            # Test case 3: Multiple underscores
+            {
+                'input_title': 'lesson_3_some_extra_info_converted.mp4',
+                'expected_output': 'Lesson 3 Some Extra Info'
+            },
+            # Test case 4: No converted.mp4 and no video_id
+            {
+                'input_title': 'lesson_4_some_extra_info.mp4',
+                'expected_output': 'Lesson 4 Some Extra Info'
+            },
+            # Test case 5: No converted.mp4
+            {
+                'input_title': 'lesson_5_some_extra_info.mp4-ID12345',
+                'expected_output': 'Lesson 5 Some Extra Info-ID12345'
+            },
+
+            # Test case 3: No converted.mp4, no _
+            {
+                'input_title': 'lesson 3 some extra info.mp4-ID12345',
+                'expected_output': 'Lesson 3 Some Extra Info-ID12345'
+            },
+
+            # Test case 3: No converted.mp4, no _, no id, no -
+            {
+                'input_title': 'lesson 3 some extra info.mp4',
+                'expected_output': 'Lesson 3 Some Extra Info'
+            },
+
+            # Test case 3: &
+            {
+                'input_title': 'lesson 3 & some extra info.mp4',
+                'expected_output': 'Lesson 3 Some Extra Info'
+            },
+        ]
+
+        for test_case in test_cases:
+            input_title = test_case['input_title']
+            expected_output = test_case['expected_output']
+
+            with self.subTest(input_title=input_title):
+                output = self.get_lesson_title(input_title)
+                self.assertEqual(output, expected_output)
