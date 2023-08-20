@@ -6,6 +6,8 @@ from .validators import validate_username
 from djoser.serializers import UserSerializer
 from .models import (Earn, Referral, Student, TempStudent, Country)
 from course.models import Grade
+from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
+
 
 # User = get_user_model()
 
@@ -19,7 +21,7 @@ class StudentSerializer(serializers.ModelSerializer):
     class_grade = serializers.SerializerMethodField()
     age = serializers.IntegerField(default=0)
     user = UserSerializer(default={})
-    my_referral = serializers.SerializerMethodField()
+    # my_referral = serializers.SerializerMethodField()
     gender = serializers.ChoiceField(
         choices=['male', 'female'], allow_null=True, allow_blank=True, default='')
     # image_url = serializers.CharField(default="")
@@ -34,7 +36,7 @@ class StudentSerializer(serializers.ModelSerializer):
         # fields = "__all__"
 
         fields = ['dob', 'phone_number', 'grade', 'age',
-                  'gender', 'image_url', 'name_institution', 'user', 'class_grade', 'my_referral', 'earning']
+                  'gender', 'image_url', 'name_institution', 'user', 'class_grade', "referral", 'my_referral', 'earning']
         extra_kwargs = {'password': {'write_only': True},
                         'user': {'read_only': True}
                         }
@@ -121,6 +123,8 @@ class CountrySerializer(serializers.ModelSerializer):
 class ReferralSerializer(serializers.ModelSerializer):
     status = serializers.ChoiceField(
         choices=['active', 'inactive'], allow_null=True, allow_blank=True, default='')
+    code = serializers.CharField(max_length=255, allow_blank=True, validators=[
+        UniqueValidator(queryset=Referral.objects.all())])
 
     class Meta:
         model = Referral

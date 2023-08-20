@@ -511,7 +511,7 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
                 #     print("lessons_array: ",
                 #           self.get_paginated_response(json.dumps(page)))
                 # return self.get_paginated_response(json.dumps(page))
-                print('RESULT: ', result)
+                # print('RESULT: ', result)
                 return Response(result)
 
         except Student.DoesNotExist as ex:
@@ -524,7 +524,7 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
         # main dashboard
         try:
             # recent interactions section
-
+            cols = 2
             if user and user.is_authenticated:
                 # user_interactions = Interaction.objects.filter(
                 #     user=user).order_by('-created')
@@ -565,7 +565,13 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
                 # print('subjects_queryset', subjects_queryset.all())
             serialized_subjects = SubjectSerializer(
                 subjects_queryset, many=True).data
-            # print("serialized_subjects: ", serialized_subjects)
+
+            subjects_arr = []
+            for i in range(0, len(serialized_subjects), cols):
+                subjects_arr.append(serialized_subjects[i: i+cols])
+
+            # print("serialized_subjects: ", result)
+
         except Exception as ex:
             print("Subjects Error: ", ex)
 
@@ -591,22 +597,26 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
             serialized_recommend = self.get_serializer(
                 lesson_array[:10], many=True, context={'request': request}).data
 
+            recommend_arr = []
+            for i in range(0, len(serialized_recommend), cols):
+                recommend_arr.append(serialized_recommend[i: i+cols])
+
             # if subscriptions.exists():
             # updateIsSubscribed(serialized_recommend, subscriptions)
-            # print('serialized_recommend: ', serialized_recommend)
+            print('serialized_recommend: ', recommend_arr)
 
         except Exception as ex:
             print("Recommend Objects Error: ", ex)
 
         result = [
-            {
-                "title": 'Recent',
-                "data": serialized_recent if serialized_recent else serialized_recommend,
-                "is_subscribed": len(subscriptions) > 0
-            },
+            # {
+            #     "title": 'Recent',
+            #     "data": serialized_recent if serialized_recent else serialized_recommend,
+            #     "is_subscribed": len(subscriptions) > 0
+            # },
             {
                 "title": 'Subjects',
-                "data": serialized_subjects,
+                "data": subjects_arr,
                 "columns": 2,
                 "grade": grade,
 
@@ -614,10 +624,14 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
 
             {
                 "title": 'Recommended',
-                "data": serialized_recommend
+                "data": recommend_arr
             },
+            {
+                "is_subscribed": len(subscriptions) > 0
+
+            }
         ]
-        # print('RESPONSE: ', result)
+        print('RESPONSE: ', result)
         return Response(result)
 
     def process_user_interactions(self, user):

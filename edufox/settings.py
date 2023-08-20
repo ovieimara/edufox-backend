@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
+import logging
 from pathlib import Path
 # from decouple import config
 import environ
@@ -23,6 +24,7 @@ from google.oauth2 import service_account
 
 from client.library import GoogleCloudSecretRepo, LocalCredentialsRepo
 
+logging.basicConfig(level=logging.DEBUG)
 
 env = environ.Env(DEBUG=(bool, True), USE_CLOUD_BUILD=(bool, True))
 # environ.Env.read_env()
@@ -198,6 +200,7 @@ INSTALLED_APPS = [
     'client',
     'banner',
     'bleach',
+    'autocomplete',
 ]
 
 MIDDLEWARE = [
@@ -382,7 +385,17 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         "TIMEOUT": 300,
         "OPTIONS": {"MAX_ENTRIES": 100, "CULL_FREQUENCY": 3},
-    }
+    },
+
+    'autocomplete_redis_cache': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        # Replace with your Redis server information
+        'LOCATION': 'redis://10.208.64.195:6379',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
+        'TIMEOUT': None,  # Set the desired timeout e.g 3600
+    },
 }
 
 

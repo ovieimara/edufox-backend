@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django import forms
 from django.contrib.auth.models import User
-from .models import Student, TempStudent
+from .models import Referral, Student, TempStudent
 
 # Register your models here.
 
@@ -30,15 +30,16 @@ class TempStudentAdmin(admin.ModelAdmin):
 
 
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ['phone_number', 'my_referral_code',
+    list_display = ['phone_number', 'my_referral',
                     'grade', 'age', 'gender', 'image_url']
 
 
-# class StudentAdmin(admin.ModelAdmin):
-#     list_display = ['phone_number', 'grade', 'age', 'gender', 'image_url']
+class ReferralAdmin(admin.ModelAdmin):
+    list_display = ['user', 'code',
+                    'status', 'earn', 'discount', 'created']
 
 
 # admin.site.unregister(User)
 # admin.site.register(Student)
 admin.site.register(Student, StudentAdmin)
-# admin.site.register(TempStudent, TempStudentAdmin)
+admin.site.register(Referral, ReferralAdmin)

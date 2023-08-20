@@ -31,6 +31,9 @@ class Subject(models.Model):
                             unique=True, max_length=255)
     grade = models.ManyToManyField(Grade, related_name="grade_subjects")
     description = models.TextField(null=True, blank=True, default='')
+    color = models.CharField(null=False, blank=True,
+                             max_length=255, default='')
+    thumbnail = models.URLField(null=True, blank=True, default='')
     credits = models.SmallIntegerField(default=0)
     created = models.DateTimeField(null=True, auto_now_add=True)
     updated = models.DateTimeField(null=True, auto_now=True)

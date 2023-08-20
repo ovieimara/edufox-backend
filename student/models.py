@@ -1,5 +1,6 @@
 import decimal
 from enum import Enum
+from functools import lru_cache
 import logging
 from django.db import models
 from django.contrib.auth.models import User, Group, Permission
@@ -10,7 +11,7 @@ from subscribe.models import Discount
 
 
 class Earn(models.Model):
-    user = models.OneToOneField(
+    user = models.ForeignKey(
         User, related_name='user_earn', null=True, blank=True, on_delete=models.CASCADE)
     amount = models.DecimalField(
         max_digits=20, decimal_places=2, default=0.00)
@@ -18,7 +19,7 @@ class Earn(models.Model):
 
 class Referral(models.Model):
     # the owner of referral code(my_referral_code)
-    user = models.OneToOneField(
+    user = models.ForeignKey(
         User, related_name='user_referral', null=True, blank=True, on_delete=models.CASCADE)
     code = models.CharField(
         db_index=True, max_length=15, null=True, blank=True, default="")
@@ -74,7 +75,13 @@ class Student(models.Model):
     def __str__(self) -> str:
         return f"{self.user.username}"
 
+    def save(self, *args, **kwargs):
+        # Update the referral_code field before saving the model instance
+        self.my_referral = self.my_referral_code
+        super(Student, self).save(*args, **kwargs)
+
     @property
+    @lru_cache
     def my_referral_code(self) -> str:
         arr = self.user.email.split('@')
         email = arr[0] if len(arr) >= 0 else ''

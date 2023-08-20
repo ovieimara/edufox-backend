@@ -1,3 +1,4 @@
+from genericpath import exists
 import logging
 from django.shortcuts import render
 from django.urls import reverse
@@ -12,6 +13,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import ValidationError
 
 from edufox.views import printOutLogs
+from subscribe.models import Discount
 from .permissions import IsStaffEditorPermission
 from django.contrib.auth.models import User
 from .serializers import EarnSerializer, ReferralSerializer, StudentSerializer, UserSerializer, CountrySerializer
@@ -27,6 +29,8 @@ from rest_framework.test import APIClient
 from notify.views import createOTP, verifyOTP, emailOTP, verifyEmail
 from notify.constants import OTP_APPROVED
 from .constants import country_codes
+from django.db.models import Q
+
 
 # import socket
 address = ["127.0.0.1:8000", "0.0.0.1:8000"]
@@ -236,14 +240,18 @@ class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.RetrieveModelM
         params = {}
         partial = kwargs.pop('partial', True)
         instance = self.get_object()
+
         user = request.user
+        print(f"instance: {instance.my_referral}")
 
         if instance:
             data = request.data
             grade = data.pop('grade', None)
             first_name = data.pop('first_name', '')
             last_name = data.pop('last_name', '')
+            referral = data.pop('referral', '')
 
+            referral_data = createReferral(referral)
             if grade and type(grade) == str:
                 params = {"name": grade}
             elif grade and type(grade) == int:
@@ -258,7 +266,12 @@ class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.RetrieveModelM
             serializer = self.get_serializer(
                 instance, data=data, partial=partial)
             serializer.is_valid(raise_exception=True)
-            serializer.save(grade=grade)
+
+            if referral_data and isinstance(referral_data, Referral):
+                serializer.save(grade=grade, referral=referral_data)
+            else:
+                serializer.save(grade=grade)
+
             if user.is_authenticated:
                 user.first_name = first_name
                 user.last_name = last_name
@@ -269,6 +282,59 @@ class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.RetrieveModelM
         return Response({"message": 'anonymous user'}, status.HTTP_403_FORBIDDEN)
 
         # return Response({"message": "NoneType object - user likely anonymous"}, status.HTTP_404_NOT_FOUND)
+
+
+def createReferral(referral):
+    # print(referral)
+    data = {}
+    if referral:
+        student_instance = earn_queryset = discount_queryset = ''
+        try:
+            student_instance = Student.objects.get(
+                my_referral__iexact=referral)
+        except Student.DoesNotExist as ex:
+            logging.error(f"Student error: {ex}")
+            student_instance = Student.objects.none()
+
+        if student_instance:
+            try:
+                earn_queryset = Earn.objects.filter(user=student_instance.user)
+
+            except Earn.DoesNotExist as ex:
+                logging.error(f"Earn error: {ex}")
+                earn_queryset = Earn.objects.none()
+            except Exception as ex:
+                logging.error(f"Earn error2: {ex}")
+
+        if student_instance:
+            try:
+                # Check if a Discount exists with the username or referral_code
+                discount_queryset = Discount.objects.filter(
+                    Q(name=student_instance.user.username) |
+                    Q(name=student_instance.my_referral)
+                )
+            except Discount.DoesNotExist as ex:
+                logging.error(f"Discount: {ex}")
+                discount_queryset = Discount.objects.none()
+            except Exception as ex:
+                logging.error(f"Discount error: {ex}")
+
+        if student_instance:
+            data = {
+                "user": student_instance.user.pk if student_instance else 1,
+                "code": referral,
+                "status": "active",
+                "earn": earn_queryset.first() if earn_queryset and earn_queryset.exists() else 1,
+                "discount": discount_queryset.first() if discount_queryset and discount_queryset.exists() else 1
+            }
+        try:
+            serializer = ReferralSerializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            data = serializer.save()
+        except Exception as ex:
+            logging.info(f"ReferralSerializer error {ex}")
+
+    return data
 
 
 class CleanUpAPIViewStudent(generics.DestroyAPIView):
@@ -721,7 +787,7 @@ class StudentViewSet(UserViewSet):
             if phone_number:
                 user = User.objects.get(username=phone_number)
             if email and not phone_number:
-                user = User.objects.get(email=email)
+                user = User.objects.get(email__iexact=email)
 
         except User.DoesNotExist as ex:
             user = ''
@@ -730,6 +796,7 @@ class StudentViewSet(UserViewSet):
             user = ''
             logging.error(f"reset_password: {ex}")
 
+        # if True:
         if user:
             if phone_number:
                 verify = createOTP(user.username)
@@ -767,11 +834,13 @@ class StudentViewSet(UserViewSet):
             response = verifyEmail(otp, email)
 
         if response and response.status == OTP_APPROVED:
+            # if True:
+            # print(email, phone_number)
             try:
                 if phone_number:
                     user = User.objects.get(username=phone_number)
                 if email and not phone_number:
-                    user = User.objects.get(email=email)
+                    user = User.objects.get(email__iexact=email)
 
             except User.DoesNotExist as ex:
                 logging.error(f"User not found:,{ex}")
