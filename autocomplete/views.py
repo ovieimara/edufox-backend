@@ -76,12 +76,16 @@ class Trie:
 
 
 # Create your views here.
-class AutoComplete(APIView):
+class AutoCompleteAPIView(generics.ListCreateAPIView):
     permission_classes = []
 
     def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
         key = "query_store"
         query = request.data.get('query')
+        print("query: ", query)
         cache = caches['autocomplete_redis_cache']
         query_store = cache.get(key)
 
@@ -98,4 +102,5 @@ class AutoComplete(APIView):
             data: new_words
         }
         trie.insert(query)
+
         return Response(data, status.HTTP_200_OK)

@@ -7,6 +7,7 @@ from student.views import StudentListCreateAPIView
 # app_name = 'version'
 
 urlpatterns = [
+    path('v1/autocomplete/', include('autocomplete.urls')),
     path('v1/courses/', include('course.urls')),
     path('users', CreateAPIUser.as_view(), name="api-user"),
     path('v1/auth/', include('api.urls'), name='students-auth'),
@@ -16,5 +17,4 @@ urlpatterns = [
     path('v1/assess/', include('assess.urls')),
     path('v1/contacts/', include('contact.urls')),
     path('v1/banners/', include('banner.urls')),
-    path('v1/autocomplete/', include('autocomplete.urls')),
 ]

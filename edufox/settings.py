@@ -390,7 +390,7 @@ CACHES = {
     'autocomplete_redis_cache': {
         'BACKEND': 'django_redis.cache.RedisCache',
         # Replace with your Redis server information
-        'LOCATION': 'redis://10.208.64.195:6379',
+        'LOCATION': 'redis://10.76.144.3:6379',
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         },
