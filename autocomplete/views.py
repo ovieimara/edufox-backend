@@ -9,7 +9,7 @@ class Trie:
     # is_end : bool = False
     # children: dict[str, object]
 
-    def __int__(self, store: list[bool, dict]):
+    def __init__(self, store: list[bool, dict]):
         # self.children = {}
         self.children = store
 
@@ -75,7 +75,6 @@ class Trie:
             recurse(node, word, 0)
 
 
-# Create your views here.
 class AutoCompleteAPIView(generics.ListCreateAPIView):
     permission_classes = []
 
