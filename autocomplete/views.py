@@ -53,7 +53,8 @@ class Trie:
                 word.pop()
         words = []
         node = self.search(word)
-        find_word(node, [], words)
+        if node:
+            find_word(node, [], words)
 
         return words
 
