@@ -16,12 +16,16 @@ class Trie:
 
     def insert(self, word):
         node = self.children
+        logging.info("node: ", self)
         for ch in word:
             if ch not in node[1]:
-                node[1][ch] = [False, {}]
+                node[1][ch] = Trie([False, {}])
 
             node = node[1][ch]
+            logging.info("node insert: ", node)
+
         node[0] = True
+        logging.info("node after insert: ", node)
 
     def is_word_available(self, word):
         node = self.children
@@ -39,15 +43,19 @@ class Trie:
             if ch not in node[1]:
                 return None
             node = node[1][ch]
+            logging.info("search node: ", node)
 
         return node if node[0] else None
 
     def get_words(self, word):
         node = self.children
+        logging.info("node get_words: ", self)
 
         def find_word(node, word: list, words: list):
             if node[0]:
                 words.append(''.join(word))
+                logging.info("initial words: ", words)
+
             for child in node[1]:
                 word.append(child)
                 find_word(node[1][child], word, words)
@@ -56,7 +64,7 @@ class Trie:
         node = self.search(word)
         if node:
             find_word(node, [], words)
-
+        logging.info("final words: ", words)
         return words
 
     def delete(self, word):
@@ -98,10 +106,10 @@ class AutoCompleteAPIView(generics.ListCreateAPIView):
         trie = Trie(query_store)
         words = trie.get_words(query)
         new_words = [query+word for word in words]
+        trie.insert(query)
 
         data = {
             "data": new_words
         }
-        trie.insert(query)
 
         return Response(data, status.HTTP_200_OK)
