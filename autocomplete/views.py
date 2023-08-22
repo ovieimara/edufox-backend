@@ -99,7 +99,7 @@ class AutoCompleteAPIView(generics.ListCreateAPIView):
         new_words = [query+word for word in words]
 
         data = {
-            data: new_words
+            "data": new_words
         }
         trie.insert(query)
 
