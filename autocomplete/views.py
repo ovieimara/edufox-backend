@@ -1,3 +1,4 @@
+import logging
 from django.shortcuts import render
 from rest_framework import generics, mixins, status
 from django.core.cache import caches
@@ -85,9 +86,9 @@ class AutoCompleteAPIView(generics.ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         key = "query_store"
         query = request.data.get('query')
-        print("query: ", query)
         cache = caches['autocomplete_redis_cache']
         query_store = cache.get(key)
+        logging.info(query_store)
 
         if not query_store:
             cache.set(key, [False, {}])

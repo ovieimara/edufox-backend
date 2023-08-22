@@ -77,7 +77,7 @@ class Student(models.Model):
 
     def save(self, *args, **kwargs):
         # Update the referral_code field before saving the model instance
-        self.my_referral = self.my_referral_code
+        self.my_referral = self.my_referral if self.my_referral else ''
         super(Student, self).save(*args, **kwargs)
 
     @property
