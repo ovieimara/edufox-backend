@@ -2,13 +2,13 @@ name: Django CI
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
   pull_request:
-    branches: [ "master" ]
-    
+    branches: ["master"]
+
 env:
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
-  USE_CLOUD_BUILD: ''
+  USE_CLOUD_BUILD: ""
   # GOOGLE_APPLICATION_CREDENTIALS : ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
   # GOOGLE_CLOUD_PROJECT: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
   DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -19,7 +19,7 @@ env:
   # EMAIL_HOST_USER : ${{ secrets.EMAIL_HOST_USER }}
   # EMAIL_HOST_PASSWORD : ${{ secrets.EMAIL_HOST_PASSWORD }}
   # DB_ENGINE : ${{ secrets.DB_ENGINE }}
-  USE_CLOUD_SQL_AUTH_PROXY: 'ovie'
+  USE_CLOUD_SQL_AUTH_PROXY: "true"
 
 #   DATABASE_URL: postgres://admin:_edufox@123A@//cloudsql/edufox-services:us-central1:edufox-db-instance/edufox_db
 #   GS_BUCKET_NAME: edufox-bucket
@@ -28,11 +28,9 @@ env:
 #   EMAIL_PORT: 587
 #   EMAIL_HOST_USER: app.edufox@gmail.com
 #   EMAIL_HOST_PASSWORD: sofeipbagutmjhkc
-    
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
@@ -42,70 +40,70 @@ jobs:
         python-version: [3.8]
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
-    - id: 'auth'
-      name: 'Authenticate to Google Cloud'
-      uses: 'google-github-actions/auth@v1'
-      with:
-        credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
-        # export_default_credentials: true
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - id: "auth"
+        name: "Authenticate to Google Cloud"
+        uses: "google-github-actions/auth@v1"
+        with:
+          credentials_json: "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}"
+          # export_default_credentials: true
 
-      # env:
-      #   GOOGLE_APPLICATION_CREDENTIALS : ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+        # env:
+        #   GOOGLE_APPLICATION_CREDENTIALS : ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
 
-    - name: Build containers
-      # env:
-      #   GOOGLE_CREDENTIALS : ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+      - name: Build containers
+        # env:
+        #   GOOGLE_CREDENTIALS : ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
 
-      #   USE_CLOUD_SQL_AUTH_PROXY: ${{ env.USE_CLOUD_SQL_AUTH_PROXY }}
-      #   SECRET_KEY: ${{ env.SECRET_KEY }}
-      #   DATABASE_URL: ${{ env.DATABASE_URL }}
+        #   USE_CLOUD_SQL_AUTH_PROXY: ${{ env.USE_CLOUD_SQL_AUTH_PROXY }}
+        #   SECRET_KEY: ${{ env.SECRET_KEY }}
+        #   DATABASE_URL: ${{ env.DATABASE_URL }}
 
-      run: docker-compose up -d --build
-  
-    - name: Run Tests
-      env:
-        # GOOGLE_APPLICATION_CREDENTIALS: ${{ env.GOOGLE_GHA_CREDS_PATH }}
-        
-        SECRET_KEY: ${{ env.SECRET_KEY }}
-        USE_CLOUD_BUILD: ${{ env.USE_CLOUD_BUILD }}
-        USE_CLOUD_SQL_AUTH_PROXY: ${{ env.USE_CLOUD_SQL_AUTH_PROXY }}
-        # GOOGLE_CLOUD_PROJECT: ${{ env.GOOGLE_CLOUD_PROJECT }}
-        DATABASE_URL: ${{ env.DATABASE_URL }}
-        # GS_BUCKET_NAME: ${{ env.GS_BUCKET_NAME }}
-        # EMAIL_BACKEND: ${{ env.EMAIL_BACKEND }}
-        # EMAIL_HOST : ${{ env.EMAIL_HOST }}
-        # EMAIL_PORT : ${{ env.EMAIL_PORT }}
-        # EMAIL_HOST_USER : ${{ env.EMAIL_HOST_USER }}
-        # EMAIL_HOST_PASSWORD : ${{ env.EMAIL_HOST_PASSWORD }}
-        # DB_ENGINE : ${{ env.DB_ENGINE }}
+        run: docker-compose up -d --build
 
-      run: docker-compose run --rm -e REUSE_DB=1 -e TESTING=True app python manage.py test --keepdb
-      # run: echo "KEY, $GOOGLE_APPLICATION_CREDENTIALS."
+      - name: Run Tests
+        env:
+          # GOOGLE_APPLICATION_CREDENTIALS: ${{ env.GOOGLE_GHA_CREDS_PATH }}
 
-            # BEGIN - Docker auth and build (NOTE: If you already have a container image, these Docker steps can be omitted)
+          SECRET_KEY: ${{ env.SECRET_KEY }}
+          USE_CLOUD_BUILD: ${{ env.USE_CLOUD_BUILD }}
+          USE_CLOUD_SQL_AUTH_PROXY: ${{ env.USE_CLOUD_SQL_AUTH_PROXY }}
+          # GOOGLE_CLOUD_PROJECT: ${{ env.GOOGLE_CLOUD_PROJECT }}
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          # GS_BUCKET_NAME: ${{ env.GS_BUCKET_NAME }}
+          # EMAIL_BACKEND: ${{ env.EMAIL_BACKEND }}
+          # EMAIL_HOST : ${{ env.EMAIL_HOST }}
+          # EMAIL_PORT : ${{ env.EMAIL_PORT }}
+          # EMAIL_HOST_USER : ${{ env.EMAIL_HOST_USER }}
+          # EMAIL_HOST_PASSWORD : ${{ env.EMAIL_HOST_PASSWORD }}
+          # DB_ENGINE : ${{ env.DB_ENGINE }}
 
-    # Setup gcloud CLI
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v1
+        run: docker-compose run --rm -e REUSE_DB=1 -e TESTING=True app python manage.py test --keepdb
+        # run: echo "KEY, $GOOGLE_APPLICATION_CREDENTIALS."
 
-    - name: Authorize Docker push
-      run: gcloud auth configure-docker
+        # BEGIN - Docker auth and build (NOTE: If you already have a container image, these Docker steps can be omitted)
 
-    - name: Build and Push Containers
-      run: |-
-        docker build -t gcr.io/${{ secrets.GOOGLE_CLOUD_PROJECT }}/${{ secrets.CLOUDRUN_SERVICE }}:${{  github.sha }} .
-        docker push gcr.io/${{ secrets.GOOGLE_CLOUD_PROJECT }}/${{ secrets.CLOUDRUN_SERVICE }}:${{  github.sha }}
-    - name: Deploy to Cloud Run
-      run: |-
-        gcloud run deploy ${{ secrets.CLOUDRUN_SERVICE }} \
-          --region us-central1 \
-          --image gcr.io/${{ secrets.GOOGLE_CLOUD_PROJECT }}/${{ secrets.CLOUDRUN_SERVICE }}:${{ github.sha }} \
-          --platform "managed" 
-    # If required, use the Cloud Run url output in later steps
-    - name: Show Output
-      run: echo ${{ steps.deploy.outputs.url }}
+      # Setup gcloud CLI
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+
+      - name: Authorize Docker push
+        run: gcloud auth configure-docker
+
+      - name: Build and Push Containers
+        run: |-
+          docker build -t gcr.io/${{ secrets.GOOGLE_CLOUD_PROJECT }}/${{ secrets.CLOUDRUN_SERVICE }}:${{  github.sha }} .
+          docker push gcr.io/${{ secrets.GOOGLE_CLOUD_PROJECT }}/${{ secrets.CLOUDRUN_SERVICE }}:${{  github.sha }}
+      - name: Deploy to Cloud Run
+        run: |-
+          gcloud run deploy ${{ secrets.CLOUDRUN_SERVICE }} \
+            --region us-central1 \
+            --image gcr.io/${{ secrets.GOOGLE_CLOUD_PROJECT }}/${{ secrets.CLOUDRUN_SERVICE }}:${{ github.sha }} \
+            --platform "managed"
+      # If required, use the Cloud Run url output in later steps
+      - name: Show Output
+        run: echo ${{ steps.deploy.outputs.url }}
