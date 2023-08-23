@@ -61,14 +61,14 @@ PROJECT_ID = "edufox-services"
 # env.read_env(io.StringIO(payload))
 
 # use google cloud secrets for environment variable
-# googleCloudSecretRepo = GoogleCloudSecretRepo("django_settings", PROJECT_ID)
-# env, read_env, secrets_uri = googleCloudSecretRepo.getEnvironmentVariables()
-# read_env(secrets_uri)
+googleCloudSecretRepo = GoogleCloudSecretRepo("django_settings", PROJECT_ID)
+env, read_env, secrets_uri = googleCloudSecretRepo.getEnvironmentVariables()
+read_env(secrets_uri)
 
 # use local env for environment variable
-localCredentialsRepo = LocalCredentialsRepo()
-env, read_env = localCredentialsRepo.getEnvironmentVariables()
-read_env()
+# localCredentialsRepo = LocalCredentialsRepo()
+# env, read_env = localCredentialsRepo.getEnvironmentVariables()
+# read_env()
 
 # SECURITY WARNING: keep the secret key used in production secret!
 DEBUG = True
@@ -311,8 +311,8 @@ if CLOUDRUN_SERVICE_URL or env('USE_CLOUD_BUILD') and not os.environ.get('USE_LO
 # # If the flag as been set, configure to use proxy
 if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
     # CI.yml always enable, else github action will fail
-    # DATABASES["default"]["HOST"] = "cloudsql-proxy"
-    DATABASES["default"]["HOST"] = "127.0.0.1"  # local
+    DATABASES["default"]["HOST"] = "cloudsql-proxy"
+    # DATABASES["default"]["HOST"] = "127.0.0.1"  # local
     DATABASES["default"]["PORT"] = 5432
 
 # print('DATABASES3 : ', DATABASES["default"])
