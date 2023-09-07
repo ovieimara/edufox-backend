@@ -12,19 +12,21 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RenameField(
-            model_name='student',
-            old_name='ref_code',
-            new_name='referral_code',
-        ),
+        # migrations.RenameField(
+        #     model_name='student',
+        #     old_name='ref_code',
+        #     new_name='referral_code',
+        # ),
         migrations.AlterField(
             model_name='referral',
             name='discount',
-            field=models.ForeignKey(blank=True, default=1, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='discount_referral', to='subscribe.discount'),
+            field=models.ForeignKey(blank=True, default=1, null=True, on_delete=django.db.models.deletion.SET_NULL,
+                                    related_name='discount_referral', to='subscribe.discount'),
         ),
-        migrations.AlterField(
-            model_name='referral',
-            name='earn',
-            field=models.ForeignKey(blank=True, default=1, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='referral_earning', to='student.earn'),
-        ),
+        # migrations.AlterField(
+        #     model_name='referral',
+        #     name='earn',
+        #     field=models.ForeignKey(blank=True, default=1, null=True, on_delete=django.db.models.deletion.SET_NULL,
+        #                             related_name='referral_earning', to='student.earn'),
+        # ),
     ]

@@ -180,7 +180,7 @@ class ListCreateUpdateAPIBillingProduct(mixins.CreateModelMixin, mixins.ListMode
                     platform: products
                 }
 
-                # print("data: ", data)
+                print("SUBSCRIBE: ", data)
 
             return Response(data)
 
@@ -206,8 +206,9 @@ class ListCreateUpdateAPIGradePack(mixins.CreateModelMixin, mixins.ListModelMixi
     def get(self, request, *args, **kwargs):
         if kwargs.get('pk') is not None:
             return self.retrieve(request, *args, **kwargs)
-
-        return self.list(request, *args, **kwargs)
+        result = self.list(request, *args, **kwargs)
+        print('GRADES: ', result.data)
+        return result
 
     def post(self, request, *args, **kwargs):
         if not kwargs.get('pk') and request.user.is_staff:
@@ -657,12 +658,6 @@ def flutterWaveHandler(transaction_id):
 
         # print('META: ', product_id, platform)
 
-    if product_id and purchase_details:
-        # product_id = "com.edufox.sub.autorenew.yearly"
-        _, product, payment = createProduct(
-            product_id, platform, purchase_details, created)
-        # print('PRODUCT:', product, payment)
-
     if customer:
         phone_number = customer.get('name')
         # print("phone_number: ", phone_number + '123')
@@ -680,6 +675,11 @@ def flutterWaveHandler(transaction_id):
             except User.DoesNotExist as ex:
                 print(f"user error: {ex}")
         # print('user2: ', user)
+
+    if product_id and purchase_details:
+        _, product, payment = createProduct(
+            product_id, platform, purchase_details, user, created)
+        
         createProductSubscription(user, product, payment, grade)
 
 # elif payload.get('event') == 'charge.failed':
@@ -832,34 +832,36 @@ def createPurchase(purchase, purchase_token):
     return {}
 
 
-def createProduct(product_id, platform, payment_data, created=None):
+def createProduct(product_id, platform, payment_data, user=None, created=None):
 
     resp = {}
     payment_serializer = payment = None
     try:
-        # print('product: ', product_id, platform)
+        # print('product: ', payment_data)
         product = Product.objects.filter(
             product_id=product_id.strip(), platform=platform.strip())
-        # print('product2: ', product)
+
         if product.exists():
             product = product.first()
             payment_serializer = InAppPaymentSerializer(
                 data=payment_data)
             payment_serializer.is_valid(raise_exception=True)
+            print("expires_date: ", payment_serializer.validated_data)
+            print("product: ", product)
 
             if created:
                 expires_date = created + \
                     datetime.timedelta(days=product.duration)
                 payment = payment_serializer.save(
-                    product=product, expires_date=expires_date)
-                # print("expires_date: ", expires_date)
+                    product=product, expires_date=expires_date, user=user)
+                print("EXPIRY_DATES: ", expires_date, created, product.duration)
             else:
-                payment = payment_serializer.save(product=product)
+                payment = payment_serializer.save(product=product, user=user)
 
         if payment_serializer:
             resp = payment_serializer.data
 
-        # print('createProduct: ', resp)
+        print('createdProduct: ', resp)
     except Exception as ex:
         #  status.HTTP_409_CONFLICT
         print(f'payment_serializer exception occurred: {ex}')
@@ -867,14 +869,14 @@ def createProduct(product_id, platform, payment_data, created=None):
     return resp, product, payment
 
 
-def createProductSubscription(user, product, payment, grade):
+def createProductSubscription(user, product, payment_method, grade):
     response = {}
     try:
         data = {
-            "user": user.pk if user.pk else None,
-            "product": product.pk if product.pk else None,
-            "payment_method": payment.pk if payment.pk else None,
-            "grade": grade.pk if grade.pk else None
+            "user": None,
+            "product": None,
+            "payment_method": None,
+            "grade": None
         }
         # print('createProductSubscription: ', user.pk,
         #       product.pk, payment.expires_date, payment.original_purchase_date)
@@ -883,7 +885,7 @@ def createProductSubscription(user, product, payment, grade):
 
         subscribe_serializer = SubscribeSerializer(data=data)
         subscribe_serializer.is_valid(raise_exception=True)
-        subscribe_serializer.save()
+        subscribe_serializer.save(user=user, product=product, payment_method=payment_method, grade=grade)
         print('DETAILS SUBSCRIBE: ', subscribe_serializer.data)
         if subscribe_serializer:
             response = subscribe_serializer.data
@@ -899,7 +901,7 @@ def create_subscription(product_id, payment_data, user, grade, platform='', resp
     state = status.HTTP_400_BAD_REQUEST
     resp = {}
     payment = product = None
-    resp, product, payment = createProduct(product_id, platform, payment_data)
+    resp, product, payment = createProduct(product_id, platform, payment_data, user)
 
     if platform == IOS:
         resp['status'] = response_json.get('status')
@@ -987,7 +989,11 @@ def convertDateFromMSToDateTime(ms_date_time):
     if ms_date_time:
         transactionDate = datetime.datetime.fromtimestamp(
             float(ms_date_time)/1000.0)
-    return transactionDate + datetime.timedelta(days=60)
+        
+    return transactionDate
+
+    # print('EXPIRY DATE: ', transactionDate + datetime.timedelta(days=60))
+    # return transactionDate + datetime.timedelta(days=60)
 
 
 def dateStrToDateTime(date_str, date_format="%d %m %Y %H:%M:%S"):

@@ -73,6 +73,8 @@ class Product(models.Model):
 
 
 class InAppPayment(models.Model):
+    user = models.ForeignKey(
+        User, related_name='user_in_apps_payment', null=True, blank=True, on_delete=models.SET_NULL)
     name = models.CharField(max_length=255, null=True, blank=True, default='')
     environment = models.CharField(
         max_length=255, null=True, blank=True, default='')

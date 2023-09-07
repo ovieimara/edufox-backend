@@ -61,14 +61,14 @@ PROJECT_ID = "edufox-services"
 # env.read_env(io.StringIO(payload))
 
 # use google cloud secrets for environment variable
-googleCloudSecretRepo = GoogleCloudSecretRepo("django_settings", PROJECT_ID)
-env, read_env, secrets_uri = googleCloudSecretRepo.getEnvironmentVariables()
-read_env(secrets_uri)
+# googleCloudSecretRepo = GoogleCloudSecretRepo("django_settings", PROJECT_ID)
+# env, read_env, secrets_uri = googleCloudSecretRepo.getEnvironmentVariables()
+# read_env(secrets_uri)
 
 # use local env for environment variable
-# localCredentialsRepo = LocalCredentialsRepo()
-# env, read_env = localCredentialsRepo.getEnvironmentVariables()
-# read_env()
+localCredentialsRepo = LocalCredentialsRepo()
+env, read_env = localCredentialsRepo.getEnvironmentVariables()
+read_env()
 
 # SECURITY WARNING: keep the secret key used in production secret!
 DEBUG = True
@@ -94,7 +94,7 @@ if CLOUDRUN_SERVICE_URL:
     # print('CLOUDRUN_SERVICE_URL: ', CLOUDRUN_SERVICE_URL)
     service_url = urlparse(CLOUDRUN_SERVICE_URL).netloc
     ALLOWED_HOSTS = [service_url, 'api-service-5wasy3cpxq-uc.a.run.app', 'localhost:3000',
-                     'localhost', '127.0.0.1:3000', '127.0.0.1', '10.0.2.2', 'http://localhost:3000']
+                     'localhost', '127.0.0.1:3000', '127.0.0.1', '10.0.2.2', 'http://localhost:3000', "192.168.0.101"]
     CSRF_TRUSTED_ORIGINS = [CLOUDRUN_SERVICE_URL,
                             'https://api-service-5wasy3cpxq-uc.a.run.app', 'http://localhost:3000', 'http://localhost', 'http://127.0.0.1:3000', 'http://127.0.0.1', 'http://10.0.2.2']
     # SECURE_SSL_REDIRECT = True
@@ -108,26 +108,32 @@ else:
     PROTOCOL = "http"
     DOMAIN = "127.0.0.1:8000"
     ALLOWED_HOSTS = ['*', '10.0.2.2', 'localhost', '*', ".localhost",
-                     "127.0.0.1", ".local", "CTOs-MacBook-Pro.local"]
+                     "127.0.0.1", ".local", "CTOs-MacBook-Pro.local", "192.168.0.101", "192.168.0.102"]
     CORS_ALLOWED_ORIGINS = [
         'http://localhost:8000',
         'http://192.168.0.100',
         'http://192.168.0.100:8000',
         'http://*:8000',
         'http://10.0.2.2',
+        'http://192.168.0.101',
+        'http://192.168.0.101:8000',
+        'http://192.168.0.102:8000',
         "http://CTOs-MacBook-Pro.local",
     ]
     CORS_ORIGIN_ALLOW_ALL = True
     CORS_ALLOW_CREDENTIALS = True
-
-CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
-]
+    CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOW_ORIGIN_WHITELIST = [
+        'http://192.168.0.102:8000',  # Replace with your React Native app's URL
+    ]
+# CORS_ALLOW_METHODS = [
+#     'DELETE',
+#     'GET',
+#     'OPTIONS',
+#     'PATCH',
+#     'POST',
+#     'PUT',
+# ]
 # ALLOWED_HOSTS = ["*"]
 # PROTOCOL = "http"
 # DOMAIN = "127.0.0.1:8000"
@@ -201,6 +207,7 @@ INSTALLED_APPS = [
     'banner',
     'bleach',
     'autocomplete',
+    'fileUpload',
 ]
 
 MIDDLEWARE = [
@@ -279,17 +286,17 @@ if os.environ.get('USE_LOCAL_POSTGRESQL'):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME':  env("DB_NAME2"),
-            'USER': env('DB_USER2'),
-            'PASSWORD': env('DB_PASSWORD2'),
+            'NAME':  env("DB_NAME3"),
+            'USER': env('DB_USER3'),
+            'PASSWORD': env('DB_PASSWORD3'),
             'HOST': 'localhost',
             'PORT': 5432,
         },
         'dynamodb': {
             'ENGINE': 'django_dynamodb_backend',
-            'AWS_ACCESS_KEY_ID': 'AKIA3HZKQ6Y2BEGJNXOE',
-            'AWS_SECRET_ACCESS_KEY': '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',
-            'AWS_REGION_NAME': 'us-east-1',
+            'AWS_ACCESS_KEY_ID': env('AWS_ACCESS_KEY_ID2'),
+            'AWS_SECRET_ACCESS_KEY': env('AWS_SECRET_ACCESS_KEY2'),
+            'AWS_REGION_NAME': env('AWS_DEFAULT_REGION'),
             # 'AWS_DYNAMODB_ENDPOINT_URL': 'your-dynamodb-endpoint-url',
         },
     }
@@ -311,8 +318,8 @@ if CLOUDRUN_SERVICE_URL or env('USE_CLOUD_BUILD') and not os.environ.get('USE_LO
 # # If the flag as been set, configure to use proxy
 if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
     # CI.yml always enable, else github action will fail
-    DATABASES["default"]["HOST"] = "cloudsql-proxy"
-    # DATABASES["default"]["HOST"] = "127.0.0.1"  # local
+    # DATABASES["default"]["HOST"] = "cloudsql-proxy"
+    DATABASES["default"]["HOST"] = "127.0.0.1"  # local
     DATABASES["default"]["PORT"] = 5432
 
 # print('DATABASES3 : ', DATABASES["default"])

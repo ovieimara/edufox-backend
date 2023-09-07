@@ -20,8 +20,10 @@ class StudentSerializer(serializers.ModelSerializer):
 
     class_grade = serializers.SerializerMethodField()
     age = serializers.IntegerField(default=0)
+    first_name = serializers.SerializerMethodField()
+    last_name = serializers.SerializerMethodField()
     user = UserSerializer(default={})
-    # my_referral = serializers.SerializerMethodField()
+    my_referral = serializers.SerializerMethodField()
     gender = serializers.ChoiceField(
         choices=['male', 'female'], allow_null=True, allow_blank=True, default='')
     # image_url = serializers.CharField(default="")
@@ -35,8 +37,8 @@ class StudentSerializer(serializers.ModelSerializer):
         model = Student
         # fields = "__all__"
 
-        fields = ['dob', 'phone_number', 'grade', 'age',
-                  'gender', 'image_url', 'name_institution', 'user', 'class_grade', "referral", 'my_referral', 'earning']
+        fields = ['pk', 'dob', 'phone_number', 'grade', 'age',
+                  'gender', 'image_url', 'name_institution', 'user', 'class_grade', "referral", 'my_referral', 'earning', 'first_name', 'last_name']
         extra_kwargs = {'password': {'write_only': True},
                         'user': {'read_only': True}
                         }
@@ -49,6 +51,12 @@ class StudentSerializer(serializers.ModelSerializer):
             return obj.grade.name
 
         return ''
+
+    def get_first_name(self, obj):
+        return obj.user.first_name
+
+    def get_last_name(self, obj):
+        return obj.user.last_name
 
     def create(self, validated_data):
         phone_number = validated_data.get('phone_number')
@@ -110,7 +118,8 @@ class TempStudentSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', 'email', 'password']
+        fields = ['pk', 'username', 'email',
+                  'password', 'first_name', 'last_name']
         extra_kwargs = {'password': {'write_only': True}}
 
 

@@ -17,27 +17,39 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Earn',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('amount', models.DecimalField(decimal_places=2, default=0.0, max_digits=20)),
-                ('user', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='user_earn', to=settings.AUTH_USER_MODEL)),
+                ('id', models.BigAutoField(auto_created=True,
+                 primary_key=True, serialize=False, verbose_name='ID')),
+                ('amount', models.DecimalField(
+                    decimal_places=2, default=0.0, max_digits=20)),
+                ('user', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
+                 related_name='user_earn', to=settings.AUTH_USER_MODEL)),
             ],
         ),
         migrations.CreateModel(
             name='Referral',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('code', models.CharField(blank=True, db_index=True, default='', max_length=15, null=True)),
-                ('status', models.CharField(blank=True, choices=[], default=list, max_length=255, null=True)),
-                ('created', models.DateTimeField(auto_now_add=True, db_index=True, null=True)),
-                ('updated', models.DateTimeField(auto_now=True, db_index=True, null=True)),
-                ('discount', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='discount_referral', to='subscribe.discount')),
-                ('earn', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='referral_earning', to='student.earn')),
-                ('user', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='user_referral', to=settings.AUTH_USER_MODEL)),
+                ('id', models.BigAutoField(auto_created=True,
+                 primary_key=True, serialize=False, verbose_name='ID')),
+                ('code', models.CharField(blank=True, db_index=True,
+                 default='', max_length=15, null=True)),
+                ('status', models.CharField(blank=True, choices=[],
+                 default=list, max_length=255, null=True)),
+                ('created', models.DateTimeField(
+                    auto_now_add=True, db_index=True, null=True)),
+                ('updated', models.DateTimeField(
+                    auto_now=True, db_index=True, null=True)),
+                ('discount', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL,
+                 related_name='discount_referral', to='subscribe.discount')),
+                # ('earn', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL,
+                #  related_name='referral_earning', to='student.earn')),
+                ('user', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
+                 related_name='user_referral', to=settings.AUTH_USER_MODEL)),
             ],
         ),
-        migrations.AddField(
-            model_name='student',
-            name='ref_code',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='referral_student', to='student.referral'),
-        ),
+        # migrations.AddField(
+        #     model_name='student',
+        #     name='ref_code',
+        #     field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL,
+        #                             related_name='referral_student', to='student.referral'),
+        # ),
     ]

@@ -77,7 +77,7 @@ class LecturerSerializer(serializers.ModelSerializer):
 
 
 class VideoSerializer(serializers.ModelSerializer, Cleanup):
-    # is_subscribed = serializers.SerializerMethodField(read_only=True)
+    is_subscribed = serializers.SerializerMethodField(read_only=True)
     topics = serializers.ChoiceField(choices=[], write_only=True)
     lessons = serializers.ChoiceField(choices=[], write_only=True)
     title = serializers.CharField(max_length=255, allow_blank=True)
@@ -88,8 +88,9 @@ class VideoSerializer(serializers.ModelSerializer, Cleanup):
 
     class Meta:
         model = Video
-        fields = '__all__'
-        # exclude = ['grade', 'subject', 'topic', 'lesson']
+        # fields = '__all__'
+        # fields = ['is_subscribed', 'topics', 'lessons', 'title', 'video_id']
+        exclude = ['created', 'updated', 'resolution']
         extra_kwargs = {'topics': {'write_only': True},
                         'topic': {'read_only': True},
                         'lesson': {'read_only': True},

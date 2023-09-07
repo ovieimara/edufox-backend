@@ -17,8 +17,9 @@ class ListCreateAPIBanner(mixins.CreateModelMixin, mixins.ListModelMixin,  mixin
     def get(self, request, *args, **kwargs):
         if kwargs.get('pk'):
             return self.retrieve(request, *args, **kwargs)
-
-        return self.list(request, *args, **kwargs)
+        result = self.list(request, *args, **kwargs)
+        print("BANNERS: ", result.data)
+        return result
 
     def post(self, request, *args, **kwargs):
         if not kwargs.get('pk') and request.user.is_staff:

@@ -9,15 +9,15 @@ class Migration(migrations.Migration):
         ('student', '0011_rename_referral_code_student_referral_and_more'),
     ]
 
-    operations = [
-        migrations.AddField(
-            model_name='student',
-            name='first_name',
-            field=models.CharField(blank=True, default='', max_length=255, null=True),
-        ),
-        migrations.AddField(
-            model_name='student',
-            name='last_name',
-            field=models.CharField(blank=True, default='', max_length=255, null=True),
-        ),
-    ]
+    # operations = [
+    #     migrations.AddField(
+    #         model_name='student',
+    #         name='first_name',
+    #         field=models.CharField(blank=True, default='', max_length=255, null=True),
+    #     ),
+    #     migrations.AddField(
+    #         model_name='student',
+    #         name='last_name',
+    #         field=models.CharField(blank=True, default='', max_length=255, null=True),
+    #     ),
+    # ]

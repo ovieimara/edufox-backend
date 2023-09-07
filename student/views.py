@@ -215,7 +215,7 @@ class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.RetrieveModelM
         student = None
         try:
             user = self.request.user
-            print('user: ', user)
+            # print('user: ', user)
             if user and user.is_authenticated:
                 student = user.profile
         except Student.DoesNotExist as ex:
@@ -228,6 +228,7 @@ class StudentListCreateAPIView(generics.ListCreateAPIView, mixins.RetrieveModelM
         if not user.is_staff:
             student = self.get_object()
             serializer = self.get_serializer(student)
+            print('STUDENT: ', serializer.data)
             return Response(serializer.data)
 
         return super().get(request, *args, **kwargs)

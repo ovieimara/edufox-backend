@@ -403,7 +403,8 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
         serialized_lessons = self.get_serializer(
             lessons_queryset, many=True).data
         serialized_topic = TopicSerializer(topic).data
-        return {"title": serialized_topic, "data": serialized_lessons}
+
+        return {"title": serialized_topic, "data": serialized_lessons} if serialized_lessons else {}
 
     def process_topics(self, topics_queryset, grade=None):
         topics_set = set()
@@ -417,7 +418,7 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
                 topic = future_to_topic[future]
                 try:
                     obj = future.result()
-                    if topic.id not in topics_set:
+                    if obj and topic.id not in topics_set:
                         topics_set.add(topic.id)
                         topics_lessons.append(obj)
                 except Exception as exc:
@@ -431,17 +432,21 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
         serialized_subjects = []
         serialized_recommend = []
         topics_lessons = []
+        recommend_arr = []
+        subjects_arr = []
         result = []
         subscriptions = []
         page = 0
         subject = kwargs.get('subject')
         grade = kwargs.get('grade')
+        platform = request.query_params.get('platform', '')
+
         if grade is not None:
             grade = int(grade)
         user = request.user if request.user else None
-
+        print('USER: ', user)
         try:
-            print(user, user.is_authenticated, user.username)
+            # print(user, user.is_authenticated, user.username)
             if user and user.is_authenticated:
                 subscriptions = getValidSubscriptions(user)
                 # subscriptions = user.subscriptions_user.filter(
@@ -566,9 +571,9 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
             serialized_subjects = SubjectSerializer(
                 subjects_queryset, many=True).data
 
-            subjects_arr = []
-            for i in range(0, len(serialized_subjects), cols):
-                subjects_arr.append(serialized_subjects[i: i+cols])
+            if platform:
+                for i in range(0, len(serialized_subjects), cols):
+                    subjects_arr.append(serialized_subjects[i: i+cols])
 
             # print("serialized_subjects: ", result)
 
@@ -582,7 +587,7 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
                 'subject').filter(tags__icontains='recommend')
             if grade:
                 queryset = Video.objects.all().select_related(
-                    'subject', 'video').filter(tags__icontains='recommend', grade__pk=grade)
+                    'subject').filter(tags__icontains='recommend', grade__pk=grade)
                 if queryset.exists():
                     recommend_queryset = queryset
             # print((recommend_queryset))
@@ -595,15 +600,15 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
             lesson_array = self.process_recommend(recommend_queryset)
             # print("lesson_array: ", lesson_array)
             serialized_recommend = self.get_serializer(
-                lesson_array[:10], many=True, context={'request': request}).data
+                lesson_array[:6], many=True, context={'request': request}).data
 
-            recommend_arr = []
-            for i in range(0, len(serialized_recommend), cols):
-                recommend_arr.append(serialized_recommend[i: i+cols])
+            if platform:
+                for i in range(0, len(serialized_recommend), cols):
+                    recommend_arr.append(serialized_recommend[i: i+cols])
 
             # if subscriptions.exists():
             # updateIsSubscribed(serialized_recommend, subscriptions)
-            print('serialized_recommend: ', recommend_arr)
+            # print('serialized_recommend: ', recommend_arr)
 
         except Exception as ex:
             print("Recommend Objects Error: ", ex)
@@ -616,22 +621,19 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
             # },
             {
                 "title": 'Subjects',
-                "data": subjects_arr,
+                "data": subjects_arr if subjects_arr else serialized_subjects,
                 "columns": 2,
                 "grade": grade,
+                "is_subscribed": len(subscriptions) > 0
 
             },
 
             {
                 "title": 'Recommended',
-                "data": recommend_arr
+                "data": recommend_arr if recommend_arr else serialized_recommend
             },
-            {
-                "is_subscribed": len(subscriptions) > 0
-
-            }
         ]
-        print('RESPONSE: ', result)
+        # print('RESPONSE: ', result)
         return Response(result)
 
     def process_user_interactions(self, user):
@@ -889,7 +891,10 @@ class ListTopicLessonAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins
                     print('lesson/topic object error: ', ex)
 
                 serialized_lessons = self.get_serializer(
-                    lessons_queryset_grades, many=True, context={'request': request}).data
+                    lessons_queryset, many=True, context={'request': request}).data
+
+                # serialized_lessons = self.get_serializer(
+                #     lessons_queryset_grades, many=True, context={'request': request}).data
 
         except Exception as ex:
 
@@ -917,16 +922,54 @@ class VideoSearchListViewAPI(generics.ListAPIView):
                 lessons_set.add(query.pk)
                 lessons_array.append(query.lesson)
 
-        page = self.paginate_queryset(lessons_array)
+        # page = self.paginate_queryset(lessons_array)
 
-        if page is not None:
-            serializer = LessonSerializer(page, many=True)
-            # print("lessons_array: ", self.get_paginated_response(serializer.data))
-            return self.get_paginated_response(serializer.data)
+        # if page is not None:
+        #     serializer = LessonSerializer(page, many=True)
+        #     # print("lessons_array: ", self.get_paginated_response(serializer.data))
+        #     return self.get_paginated_response(serializer.data)
 
-        serializer = LessonSerializer(lessons_array, many=True)
+        serialized_lessons = LessonSerializer(lessons_array, many=True).data
+        lessons_arr = []
+        cols = 2
+        for i in range(0, len(serialized_lessons), cols):
+            lessons_arr.append(serialized_lessons[i: i+cols])
 
-        return Response(serializer.data)
+        subjects_arr = self.get_subjects(request, cols)
+
+        result = [
+            {
+                "title": 'Subjects' if len(subjects_arr) else '',
+                "data": subjects_arr,
+
+            },
+            {
+                "title": "Lessons" if len(lessons_arr) else '',
+                "data": lessons_arr
+            }
+        ]
+        print(result)
+        return Response(result)
+
+    def get_subjects(self, request, cols=1):
+        search_query = request.query_params.get('search')
+        serialized_subjects = []
+        subjects_queryset = ''
+
+        if search_query:
+            subjects_queryset = Subject.objects.filter(
+                name__icontains=search_query)
+
+        if subjects_queryset.exists():
+            serialized_subjects = SubjectSerializer(
+                subjects_queryset, many=True).data
+
+        subjects_arr = []
+
+        for i in range(0, len(serialized_subjects), cols):
+            subjects_arr.append(serialized_subjects[i: i+cols])
+
+        return subjects_arr
 
     def get(self, request, *args, **kwargs):
         if kwargs.get('pk') is not None:

@@ -18,7 +18,7 @@ class AndroidNotifyAdmin(admin.ModelAdmin):
 
 
 class InAppPaymentAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'name', 'product_id', 'original_transaction_id', 'transaction_id',
+    list_display = ['pk', 'user', 'name', 'product_id', 'original_transaction_id', 'transaction_id',
                     'expires_date', 'original_purchase_date', 'created', 'updated']
 
 

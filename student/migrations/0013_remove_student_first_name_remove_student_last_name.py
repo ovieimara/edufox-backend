@@ -9,13 +9,13 @@ class Migration(migrations.Migration):
         ('student', '0012_student_first_name_student_last_name'),
     ]
 
-    operations = [
-        migrations.RemoveField(
-            model_name='student',
-            name='first_name',
-        ),
-        migrations.RemoveField(
-            model_name='student',
-            name='last_name',
-        ),
-    ]
+    # operations = [
+    #     migrations.RemoveField(
+    #         model_name='student',
+    #         name='first_name',
+    #     ),
+    #     migrations.RemoveField(
+    #         model_name='student',
+    #         name='last_name',
+    #     ),
+    # ]

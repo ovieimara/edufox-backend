@@ -79,7 +79,7 @@ class InAppPaymentSerializer(serializers.ModelSerializer):
     #     (payment.id, payment.name) for payment in InAppPayment.objects.all()
     # ]
     # payment = serializers.ChoiceField(InAppPayment, '')
-    expires_date = serializers.SerializerMethodField(read_only=True)
+    expiry_date = serializers.SerializerMethodField(read_only=True)
     original_purchase_date = serializers.SerializerMethodField(read_only=True)
     created = serializers.SerializerMethodField(read_only=True)
 
@@ -87,7 +87,7 @@ class InAppPaymentSerializer(serializers.ModelSerializer):
         model = InAppPayment
         fields = '__all__'
 
-    def get_expires_date(self, obj):
+    def get_expiry_date(self, obj):
         if obj and obj.expires_date:
             return obj.expires_date.date()
         return ''
@@ -96,7 +96,7 @@ class InAppPaymentSerializer(serializers.ModelSerializer):
         if obj and obj.original_purchase_date:
             return obj.original_purchase_date.date()
         return ''
-
+    
     def get_created(self, obj):
         print("obj: ", obj)
         if obj and obj.created:

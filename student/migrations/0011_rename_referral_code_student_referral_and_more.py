@@ -10,14 +10,15 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RenameField(
-            model_name='student',
-            old_name='referral_code',
-            new_name='referral',
-        ),
+        # migrations.RenameField(
+        #     model_name='student',
+        #     old_name='referral_code',
+        #     new_name='referral',
+        # ),
         migrations.AlterField(
             model_name='referral',
             name='status',
-            field=models.CharField(blank=True, default='', max_length=255, null=True),
+            field=models.CharField(
+                blank=True, default='', max_length=255, null=True),
         ),
     ]
