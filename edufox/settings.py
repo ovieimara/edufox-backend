@@ -320,8 +320,8 @@ if CLOUDRUN_SERVICE_URL or env('USE_CLOUD_BUILD') and not os.environ.get('USE_LO
 # # If the flag as been set, configure to use proxy
 if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
     # CI.yml always enable, else github action will fail
-    # DATABASES["default"]["HOST"] = "cloudsql-proxy"
-    DATABASES["default"]["HOST"] = "127.0.0.1"  # local
+    DATABASES["default"]["HOST"] = "cloudsql-proxy"
+    # DATABASES["default"]["HOST"] = "127.0.0.1"  # local
     DATABASES["default"]["PORT"] = 5432
 
 # print('DATABASES3 : ', DATABASES["default"])
