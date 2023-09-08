@@ -122,7 +122,7 @@ class BatchVideos():
     def get_video_data(self, title: str, subject: str) -> tuple[str, str]:
         db = AmazonDynamoDBRepo()
         title = self.editTitle(title)
-        return db.getSignedUrlFromScan(title, self.query_object(subject, Subject))
+        return db.getSignedUrlFromQuery(title, self.query_object(subject, Subject))
 
         # return ''
     def editTitle(self, title: str):
@@ -164,4 +164,4 @@ class BatchVideos():
         with self.lock:
             self.videos_list.append(video)
 
-        logging.error(self.videos_list)
+        logging.info(self.videos_list)

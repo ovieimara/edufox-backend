@@ -10,10 +10,10 @@ class Migration(migrations.Migration):
         ('student', '0036_remove_student_my_referralsss_and_more'),
     ]
 
-    operations = [
-        migrations.AddField(
-            model_name='student',
-            name='referral',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='referral_student', to='student.referral'),
-        ),
-    ]
+    # operations = [
+    #     migrations.AddField(
+    #         model_name='student',
+    #         name='referral',
+    #         field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='referral_student', to='student.referral'),
+    #     ),
+    # ]

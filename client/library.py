@@ -160,7 +160,7 @@ class AmazonDynamoDBRepo():
         print('HLSS: ', hls)
         return hls
 
-    def getSignedUrlFromScan(self, srcVideoTitle: str, subject: str) -> tuple[str, str]:
+    def getSignedUrlFromScan2(self, srcVideoTitle: str, subject: str) -> tuple[str, str]:
         print("getSignedUrlFromScan: ", f"{subject}/{srcVideoTitle}.mp4")
         egressEndpoints = hls = item = guid = ''
         try:
@@ -186,6 +186,53 @@ class AmazonDynamoDBRepo():
             logging.error(f"getSignedUrlFromScan: {ex}")
             # return '', ''
         print(guid, hls)
+        return guid, hls
+
+    def getSignedUrlFromQuery(self, srcVideoTitle: str, subject: str) -> tuple[str, str]:
+        print("getSignedUrlFromScan: ", f"{subject}/{srcVideoTitle}.mp4")
+        egressEndpoints = hls = item = guid = ''
+        dynamodb = boto3.client('dynamodb')
+
+        try:
+            # response = self.table.scan(
+            #     FilterExpression=Attr('srcVideo').eq(
+            #         "basic_technology/REPRODUCTION.mp4")
+            # )
+            response = dynamodb.query(
+                TableName="edufox-video-on-demand-stack",
+                IndexName="srcVideo-index",
+                KeyConditionExpression="srcVideo = :srcVideo ",
+                ExpressionAttributeValues={
+                    ':srcVideo': {'S': f"{subject}/{srcVideoTitle}.mp4"},
+                }
+            )
+            items = response.get('Items', [])
+
+            if items:
+                item = items[0]
+
+            if item:
+                guid = item.get('guid')
+                if guid:
+                    guid = guid.get('S', '')
+
+                egressEndpoints = item.get('egressEndpoints')
+
+            if egressEndpoints:
+                endpoints = egressEndpoints.get('M')
+                if endpoints:
+                    HLS = endpoints.get('HLS')
+                    if HLS:
+                        hls = HLS.get('S', '')
+
+                # print("HLSURL: ", hls)
+                # return item.get('guid'), item.get('egressEndpoints').get('HLS')
+            # else:
+        except Exception as ex:
+            logging.error(f"getSignedUrlFromScan: {ex}")
+            # return '', ''
+        print('HLSURL: ', guid, hls)
+
         return guid, hls
 
 

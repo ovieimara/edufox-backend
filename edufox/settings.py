@@ -33,7 +33,7 @@ env = environ.Env(DEBUG=(bool, True), USE_CLOUD_BUILD=(bool, True))
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 arr = os.listdir('.')
-# os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'true'
+# os.environ['USE_CLOUD_SQL_AUTH_PROXY'] = 'True'
 FILE = CREDS_PATH = ''
 for i in range(len(arr)):
     # if 'gha-creds' in arr[i] or 'creds.json' == arr[i]: #cloudbuild.yml
@@ -60,17 +60,20 @@ PROJECT_ID = "edufox-services"
 # payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
 # env.read_env(io.StringIO(payload))
 
-# use google cloud secrets for environment variable
-if os.environ['USE_CLOUD_SQL_AUTH_PROXY']:
-    googleCloudSecretRepo = GoogleCloudSecretRepo(
-        "django_settings", PROJECT_ID)
-    env, read_env, secrets_uri = googleCloudSecretRepo.getEnvironmentVariables()
-    read_env(secrets_uri)
-else:
+
+if os.environ.get('USE_LOCAL_POSTGRESQL'):
     # use local env for environment variable
     localCredentialsRepo = LocalCredentialsRepo()
     env, read_env = localCredentialsRepo.getEnvironmentVariables()
     read_env()
+
+else:
+    # use google cloud secrets for environment variable
+    # if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY', ''):
+    googleCloudSecretRepo = GoogleCloudSecretRepo(
+        "django_settings", PROJECT_ID)
+    env, read_env, secrets_uri = googleCloudSecretRepo.getEnvironmentVariables()
+    read_env(secrets_uri)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 DEBUG = True
@@ -294,13 +297,13 @@ if os.environ.get('USE_LOCAL_POSTGRESQL'):
             'HOST': 'localhost',
             'PORT': 5432,
         },
-        'dynamodb': {
-            'ENGINE': 'django_dynamodb_backend',
-            'AWS_ACCESS_KEY_ID': env('AWS_ACCESS_KEY_ID2'),
-            'AWS_SECRET_ACCESS_KEY': env('AWS_SECRET_ACCESS_KEY2'),
-            'AWS_REGION_NAME': env('AWS_DEFAULT_REGION'),
-            # 'AWS_DYNAMODB_ENDPOINT_URL': 'your-dynamodb-endpoint-url',
-        },
+        # 'dynamodb': {
+        #     'ENGINE': 'django_dynamodb_backend',
+        #     'AWS_ACCESS_KEY_ID': env('AWS_ACCESS_KEY_ID2'),
+        #     'AWS_SECRET_ACCESS_KEY': env('AWS_SECRET_ACCESS_KEY2'),
+        #     'AWS_REGION_NAME': env('AWS_DEFAULT_REGION'),
+        #     # 'AWS_DYNAMODB_ENDPOINT_URL': 'your-dynamodb-endpoint-url',
+        # },
     }
 
 else:
@@ -321,7 +324,8 @@ if CLOUDRUN_SERVICE_URL or env('USE_CLOUD_BUILD') and not os.environ.get('USE_LO
 if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
     # CI.yml always enable, else github action will fail
     DATABASES["default"]["HOST"] = "cloudsql-proxy"
-else:
+
+if os.environ.get('USE_LOCAL_POSTGRESQL'):
     DATABASES["default"]["HOST"] = "127.0.0.1"  # local
 
 DATABASES["default"]["PORT"] = 5432

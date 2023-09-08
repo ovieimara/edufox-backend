@@ -10,10 +10,10 @@ class Migration(migrations.Migration):
         ('student', '0038_student_my_referral'),
     ]
 
-    operations = [
-        migrations.AddField(
-            model_name='referral',
-            name='earn',
-            field=models.ForeignKey(blank=True, default=1, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='referral_earning', to='student.earn'),
-        ),
-    ]
+    # operations = [
+    #     migrations.AddField(
+    #         model_name='referral',
+    #         name='earn',
+    #         field=models.ForeignKey(blank=True, default=1, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='referral_earning', to='student.earn'),
+    #     ),
+    # ]
