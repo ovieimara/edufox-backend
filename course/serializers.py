@@ -442,6 +442,7 @@ class TopicSerializer(serializers.ModelSerializer, Cleanup):
 
 class LessonSerializer(serializers.ModelSerializer, Cleanup):
     # subject = serializers.StringRelatedField()
+    duration = serializers.SerializerMethodField(read_only=True)
     topics = serializers.ChoiceField(
         choices=[], write_only=True, allow_blank=True)
     topic = serializers.StringRelatedField()
@@ -451,7 +452,7 @@ class LessonSerializer(serializers.ModelSerializer, Cleanup):
     class Meta:
         model = Lesson
         fields = ['pk', 'num', 'title', 'topic',
-                  'subject', 'grade', 'topics']
+                  'subject', 'grade', 'topics', 'duration']
         # exclude = ('created', 'updated')
         extra_kwargs = {'topics': {'write_only': True},
                         'topic': {'read_only': True}
@@ -459,6 +460,11 @@ class LessonSerializer(serializers.ModelSerializer, Cleanup):
 
     # def create(self, validated_data):
     #     return super().create(validated_data)
+
+    def get_duration(self, obj):
+        video = obj.lesson_videos.all()
+        # print("video: ", video.first().duration)
+        return video.first().duration if video.exists() else ''
 
     def validate(self, attrs):
         attrs = self.sanitize_attr(attrs, BleachSanitizer())

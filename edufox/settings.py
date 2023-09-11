@@ -61,18 +61,19 @@ PROJECT_ID = "edufox-services"
 # env.read_env(io.StringIO(payload))
 
 
+repo_credentials = ''
 if os.environ.get('USE_LOCAL_POSTGRESQL'):
     # use local env for environment variable
-    localCredentialsRepo = LocalCredentialsRepo()
-    env, read_env = localCredentialsRepo.getEnvironmentVariables()
+    repo_credentials = LocalCredentialsRepo()
+    env, read_env = repo_credentials.getEnvironmentVariables()
     read_env()
 
 else:
     # use google cloud secrets for environment variable
     # if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY', ''):
-    googleCloudSecretRepo = GoogleCloudSecretRepo(
+    repo_credentials = GoogleCloudSecretRepo(
         "django_settings", PROJECT_ID)
-    env, read_env, secrets_uri = googleCloudSecretRepo.getEnvironmentVariables()
+    env, read_env, secrets_uri = repo_credentials.getEnvironmentVariables()
     read_env(secrets_uri)
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -335,14 +336,18 @@ DATABASES["default"]["PORT"] = 5432
 
 # Define static storage via django-storages[google]
 # GS_BUCKET_NAME = env("GS_BUCKET_NAME")
-GS_BUCKET_NAME = 'edufox-bucket-2'
-GS_PROJECT_ID = env("GOOGLE_CLOUD_PROJECT")
+
 STATIC_URL = "/static/"
-DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
-STATICFILES_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
-# GS_DEFAULT_ACL = "publicRead"
-GS_AUTO_CREATE_BUCKET = True
-GS_QUERYSTRING_AUTH = True
+
+storage_params = repo_credentials.getParams()
+
+if not os.environ.get('USE_LOCAL_POSTGRESQL'):
+    GS_BUCKET_NAME = storage_params.get('GS_BUCKET_NAME', '')
+    GS_PROJECT_ID = storage_params.get("GS_PROJECT_ID", '')
+    DEFAULT_FILE_STORAGE = storage_params.get('DEFAULT_FILE_STORAGE', '')
+    STATICFILES_STORAGE = storage_params.get('STATICFILES_STORAGE', '')
+    GS_AUTO_CREATE_BUCKET = storage_params.get('GS_AUTO_CREATE_BUCKET', '')
+    GS_QUERYSTRING_AUTH = storage_params.get('GS_QUERYSTRING_AUTH', '')
 
 
 # Password validation

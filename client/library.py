@@ -23,14 +23,17 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from botocore.signers import CloudFrontSigner
 
-env = Env(DEBUG=(bool, True), USE_CLOUD_BUILD=(bool, True))
-
 
 class SecretRepoABC(ABC):
     # env = Env(DEBUG=(bool, True), USE_CLOUD_BUILD=(bool, True))
+    env: environ.Env = Env(DEBUG=(bool, True), USE_CLOUD_BUILD=(bool, True))
 
     @abstractmethod
     def getEnvironmentVariables(self) -> tuple:
+        pass
+
+    @abstractmethod
+    def getParams(self):
         pass
 
 
@@ -42,17 +45,29 @@ class GoogleCloudSecretRepo(SecretRepoABC):
             name=_name).payload.data.decode("UTF-8")
 
     def getEnvironmentVariables(self) -> tuple:
-        return env, environ.Env.read_env, io.StringIO(self.payload)
+        return self.env, environ.Env.read_env, io.StringIO(self.payload)
+
         # return self.env.read_env(io.StringIO(self.payload))
+
+    def getParams(self):
+        return {
+            "GS_BUCKET_NAME": 'edufox-bucket-2',
+            "GS_PROJECT_ID": self.env("GOOGLE_CLOUD_PROJECT"),
+            "DEFAULT_FILE_STORAGE": "storages.backends.gcloud.GoogleCloudStorage",
+            "STATICFILES_STORAGE": "storages.backends.gcloud.GoogleCloudStorage",
+            # GS_DEFAULT_ACL = "publicRead"
+            "GS_AUTO_CREATE_BUCKET": True,
+            "GS_QUERYSTRING_AUTH": True,
+        }
 
 
 class LocalCredentialsRepo(SecretRepoABC):
 
     def getEnvironmentVariables(self) -> tuple:
-        # env = Env()
-        # environ.Env.read_env()
-        # print('env: ', self.env())
-        return env, environ.Env.read_env
+        return self.env, environ.Env.read_env
+
+    def getParams(self):
+        return {}
 
 
 class StorageRepoABC(ABC):

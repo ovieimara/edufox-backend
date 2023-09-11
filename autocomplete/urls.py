@@ -8,7 +8,7 @@ from autocomplete.views import AutoCompleteAPIView
 app_name = 'autocomplete'
 
 urlpatterns = [
-    path('suggest', AutoCompleteAPIView.as_view(), name='autocomplete-list'),
+    # path('suggest', AutoCompleteAPIView.as_view(), name='autocomplete-list'),
     # path('tasks', my_background_task),
     # path('banners/<pk>', ListCreateAPIBanner.as_view(), name='banners-detail'),
 ]
