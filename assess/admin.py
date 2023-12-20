@@ -5,6 +5,7 @@ from .models import Test, Assessment
 
 
 class TestAdmin(admin.ModelAdmin):
+    search_fields = ['subject__name', 'topic__title', 'lesson__title']
     list_display = ['pk', 'code', 'subject', 'question', 'options',
                     'valid_answers', 'grade', 'topic', 'lesson']
 
@@ -13,7 +14,9 @@ class TestAdmin(admin.ModelAdmin):
 
 
 class AssessmentAdmin(admin.ModelAdmin):
-    list_display = ['user', 'get_tests', 'answer']
+    search_fields = ['user']
+    list_display = ['user', 'get_tests',
+                    'answer', 'created', 'updated']
 
     def get_tests(self, obj):
         return "\n".join([str(obj.test.question)])

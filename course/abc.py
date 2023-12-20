@@ -1,9 +1,10 @@
 from abc import abstractmethod, ABC
+from dataclasses import dataclass
 from genericpath import exists
 import json
 import logging
 import threading
-from typing import OrderedDict
+from typing import List, OrderedDict
 from requests import get
 
 from client.library import AmazonDynamoDBRepo
@@ -82,6 +83,7 @@ class CreateMultipleLessons(TitleEditor):
         try:
             grades = lesson.getlist('grade') if hasattr(
                 lesson, 'getlist') else lesson.get('grade')
+            print("grades: ", grades)
             titles_arr = lesson.get('title', '').split(',')
             lessons = [{key: val for key, val in lesson.items()}
                        for _ in range(len(titles_arr))]
@@ -93,9 +95,10 @@ class CreateMultipleLessons(TitleEditor):
 
                 prev_num = lessons[index].get('num')
                 lessons[index]['num'] = index + \
-                    prev_num if prev_num else index + 1
+                    int(prev_num) if prev_num != '' and int(
+                        prev_num) >= 0 else index + 1
                 lessons[index]['grade'] = grades
-
+            print("lessons: ", lessons)
         except Exception as ex:
             print(ex)
 
@@ -165,3 +168,42 @@ class BatchVideos():
             self.videos_list.append(video)
 
         logging.info(self.videos_list)
+
+
+@dataclass
+class Screen(ABC):
+
+    @staticmethod
+    def get_object(self):
+        ''' '''
+
+
+@dataclass
+class LessonScreen(Screen):
+
+    def get_object(self) -> List:
+        # print('processing.......')
+
+        try:
+            lessons_queryset = Lesson.objects.all().order_by('num')
+            videos = []
+            for lesson in lessons_queryset:
+                videos.append(lesson.lesson_videos.all())
+
+            result = []
+            for video in videos:
+                if video is not None:
+                    v = video.first()
+                    if v and v.url:
+                        ''
+                        # if 'cloudfront.net' not in v.url:
+                        #     result.append((v.title, v.url))
+                    else:
+                        result.append(v)
+
+            print("result: ", result)
+        except Exception as ex:
+            logging.error('getSubjectLessons error: ', ex)
+
+        # print("lessons_queryset: ", lessons_queryset)
+        return result

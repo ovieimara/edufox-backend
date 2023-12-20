@@ -16,12 +16,9 @@ class Contact(models.Model):
 
 
 class ContactForm(models.Model):
-    phone_number = models.CharField(max_length=15, null=False,
-                                    default='', unique=True)
-    email = models.EmailField(null=False,
-                              default='', unique=True)
-    message = models.TextField(null=False,
-                               default='', unique=True)
+    phone_number = models.CharField(max_length=15, db_index=True)
+    email = models.EmailField(default='', db_index=True)
+    message = models.TextField(default='', db_index=True)
     created = models.DateTimeField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
 

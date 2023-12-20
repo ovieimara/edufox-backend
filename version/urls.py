@@ -17,6 +17,7 @@ urlpatterns = [
     path('v1/assess/', include('assess.urls')),
     path('v1/contacts/', include('contact.urls')),
     path('v1/banners/', include('banner.urls')),
-    # path('v1/fileUpload/', include('fileUpload.urls')),
+    path('v1/forms/', include('form.urls')),
+    path('v1/file/', include('fileUpload.urls')),
 
 ]

@@ -10,7 +10,7 @@ from rest_framework.permissions import AllowAny
 
 
 class ListCreateAPIContact(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
-    queryset = Contact.objects.all()
+    queryset = Contact.objects.all().order_by('pk')
     serializer_class = ContactSerializer
     lookup_field = 'pk'
     permission_classes = [AllowAny]

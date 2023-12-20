@@ -24,7 +24,7 @@ from google.oauth2 import service_account
 
 from client.library import GoogleCloudSecretRepo, LocalCredentialsRepo
 
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 env = environ.Env(DEBUG=(bool, True), USE_CLOUD_BUILD=(bool, True))
 # environ.Env.read_env()
@@ -214,6 +214,7 @@ INSTALLED_APPS = [
     'bleach',
     'autocomplete',
     'fileUpload',
+    'form'
 ]
 
 MIDDLEWARE = [
@@ -325,6 +326,8 @@ if CLOUDRUN_SERVICE_URL or env('USE_CLOUD_BUILD') and not os.environ.get('USE_LO
 if os.environ.get('USE_CLOUD_SQL_AUTH_PROXY'):
     # CI.yml always enable, else github action will fail
     DATABASES["default"]["HOST"] = "cloudsql-proxy"
+    # DATABASES["default"]["HOST"] = "127.0.0.1"
+    ''
 
 if os.environ.get('USE_LOCAL_POSTGRESQL'):
     DATABASES["default"]["HOST"] = "127.0.0.1"  # local
@@ -409,7 +412,7 @@ CACHES = {
 
     'autocomplete_redis_cache': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        # Replace with your Redis server information
+        # Replace with your Redis server IP Address
         'LOCATION': 'redis://10.76.144.3:6379',
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',

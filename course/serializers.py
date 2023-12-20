@@ -1,12 +1,25 @@
 from datetime import datetime, timedelta
+from functools import lru_cache
+import logging
 from os import read
+import os
+import platform
+import random
+from re import sub
 from traceback import print_tb
+from typing import List
+from urllib import request
+import uuid
+# from turtle import title
+from venv import logger
 from rest_framework import serializers
+from client.library import AmazonDynamoDB, AmazonImageStore, GoogleCloudStorageRepo2, GoogleImageStore
 from course.abc import TitleEditor
 from edufox import sanitize
+from edufox.constants import ANDROID, IOS, WEB
 
 from edufox.sanitize import BleachSanitizer, Cleanup, Sanitizer
-from .models import (Grade, Comment, Rate, Subject, Lecturer,
+from .models import (Grade, Comment, Rate, SearchQuery, Subject, Lecturer, Thumbnail,
                      Video, Interaction, Event, Resolution, Topic, Lesson)
 # from assess.models import  Test, Assessment
 from subscribe.models import GradePack, Subscribe
@@ -16,6 +29,7 @@ from django.utils import timezone
 from django.db.models import Prefetch
 from rest_framework import status
 from rest_framework.response import Response
+from .icons import subjects
 
 
 class GradeSerializer(serializers.ModelSerializer):
@@ -81,8 +95,8 @@ class VideoSerializer(serializers.ModelSerializer, Cleanup):
     topics = serializers.ChoiceField(choices=[], write_only=True)
     lessons = serializers.ChoiceField(choices=[], write_only=True)
     title = serializers.CharField(max_length=255, allow_blank=True)
-    video_id = serializers.CharField(max_length=255, allow_blank=True, validators=[
-        UniqueValidator(queryset=Video.objects.all())])
+    # video_id = serializers.CharField(max_length=255, allow_blank=True, validators=[
+    #     UniqueValidator(queryset=Video.objects.all())])
 
     # lesson = serializers.SerializerMethodField(read_only=True)
 
@@ -103,6 +117,14 @@ class VideoSerializer(serializers.ModelSerializer, Cleanup):
         #     )
         # ]
         # depth = 1
+
+    # def validate_video_id(self, value):
+    #     """
+    #     Validate the 'video' field to ensure it's not empty.
+    #     """
+    #     if not value:
+    #         raise serializers.ValidationError("Video field cannot be empty.")
+    #     return value
 
     def __init__(self, *args, my_choices=None, lesson_choices=None, **kwargs):
         if not my_choices:
@@ -162,14 +184,20 @@ class VideoSerializer(serializers.ModelSerializer, Cleanup):
 
     def get_is_subscribed(self, obj):
         subscribed = ''
+        lesson_grades = []
         request = self.context.get('request')
         user = request.user if request is not None else ''
         # print('request: ', request)
         if user and user.is_authenticated:
             # subscriptions = request.user.subscriptions_user.all().order_by(
             #     "-created")
-            grades = obj.grade.all()
-            lesson_grades = [grade.pk for grade in grades]
+            if isinstance(obj, dict):
+                grades = obj.get('grade')
+                lesson_grades = grades
+            else:
+                grades = obj.grade.all()
+                lesson_grades = [grade.pk for grade in grades]
+
             subscriptions = user.subscriptions_user.filter(
                 Q(payment_method__expires_date__gt=timezone.now())
             ).order_by("-created")
@@ -243,12 +271,83 @@ class VideoSerializer(serializers.ModelSerializer, Cleanup):
             return False
         return False
 
+    def create(self, validated_data):
+
+        request = self.context.get('request')
+        user = request.user if request else ''
+        title = validated_data.get('title')
+        grades = validated_data.get('grade')
+        subject = validated_data.get('subject')
+
+        try:
+            if user and user.is_authenticated:
+                video_queryset = Video.objects.all().filter(
+                    title__iexact=title, grade__in=grades, subject=subject)
+
+                if video_queryset.exists():
+                    video_instance = video_queryset.first()
+                    duration = video_instance.duration
+                    if duration:
+                        validated_data['duration'] = duration
+                    return super().update(video_instance, validated_data)
+
+                return super().create(validated_data)
+            return validated_data
+        except Exception as ex:
+            logging.error(
+                f"createVideos: Validation error: {ex.message} {title}")
+
+    def update(self, instance, validated_data):
+        # instance = self.sanitize_attr(instance, BleachSanitizer())
+        # validated_data = self.sanitize_attr(validated_data, BleachSanitizer())
+
+        old_title = instance.title
+        new_title = validated_data.get('title')
+        video_id = instance.video_id
+        subject = instance.subject
+        lesson = instance.lesson
+        old_description = instance.description
+        new_description = validated_data.get('description')
+        old_duration = instance.duration
+        new_duration = validated_data.get('duration')
+        old_subject = instance.subject
+        new_subject = validated_data.get('subject')
+
+        if old_title != new_title:
+            lesson_obj = Lesson.objects.get(pk=lesson.pk)
+            subject = Subject.objects.get(
+                pk=subject.pk if type(subject) != str else subject)
+
+            if subject and video_id:
+                updated_data = {"partition_key_value": video_id,
+                                "title": new_title, "subject_code": subject.code}
+                amazonDynamoDB = AmazonDynamoDB()
+                result = amazonDynamoDB.update_item_by_guid(updated_data)
+                if result == f"{subject.code}/{new_title}":
+                    lesson_obj.title = new_title
+                    lesson_obj.save()
+                    return super().update(instance, validated_data)
+
+        if old_description != new_description and new_description:
+            instance.description = new_description
+            # instance.save()
+
+        if old_duration != new_duration and new_duration:
+            instance.duration = new_duration
+
+        if old_subject != new_subject and new_subject:
+            instance.subject = new_subject
+
+        instance.save()
+
+        return instance
+
     def get_topics(self, obj):
         view = self.context.get('view')
         subject = None
         if view:
             subject = view.kwargs.get('subject')
-            print(view.kwargs)
+            # print(view.kwargs)
         if subject:
             topics = Topic.objects.filter(subject__pk=subject).values('title')
             print(topics)
@@ -258,6 +357,8 @@ class VideoSerializer(serializers.ModelSerializer, Cleanup):
 
     def validate(self, attrs):
         attrs = self.sanitize_attr(attrs, BleachSanitizer())
+        lesson = ''
+        # print("attrs: ", attrs)
         editor = TitleEditor()
         topic = attrs.get('topics')
         lessons = attrs.get('lessons')
@@ -268,53 +369,67 @@ class VideoSerializer(serializers.ModelSerializer, Cleanup):
         description = attrs.get('description')
         start_end_credits = attrs.get('start_end_credits')
 
-        print('subject: ', subject, type(subject))
-        if subject:
-            subject = Subject.objects.filter(
-                pk=subject.pk if type(subject) != str else subject)
-            if subject.exists():
-                subject = subject.first()
+        # if not video_id or not video_title:
+        #     error_msg = f"{video_title} {video_id} field cannot be empty."
 
-        if topic:
-            topic = Topic.objects.filter(title=topic)
-            if topic.exists():
-                topic = topic.first()
+        #     raise serializers.ValidationError(error_msg)
 
-        if lessons:
-            videoId = words = ''
-            lesson = Lesson.objects.filter(title=lessons)
-            if lesson.exists():
-                lesson = lesson.first()
-                # words = lesson.title
-                words, videoId = editor.get_video_title_id(lesson.title)
+        try:
+            if subject:
+                subject = Subject.objects.filter(
+                    pk=subject.pk if type(subject) != str else subject)
+                if subject.exists():
+                    subject = subject.first()
 
-                if not video_title:
-                    attrs['title'] = words
-                    # attrs['title'] = words[:len(
-                    #     words) - length]
-                    # print('title2: ', attrs.get('title'))
+            if topic:
+                topic = Topic.objects.filter(title=topic)
+                if topic.exists():
+                    topic = topic.first()
 
-                if not description:
-                    attrs['description'] = words
-                    # attrs['description'] = words[:len(
-                    #     words) - length]
+            if lessons:
 
-                if not video_id:
+                videoId = words = ''
+                lesson = Lesson.objects.filter(title=lessons)
+                if lesson.exists():
+                    lesson = lesson.first()
+                    # words = lesson.title
+                    words, videoId = editor.get_video_title_id(lesson.title)
 
-                    attrs['video_id'] = videoId
+                    if not video_title:
+                        attrs['title'] = words
+                        # attrs['title'] = words[:len(
+                        #     words) - length]
+                        # print('title2: ', attrs.get('title'))
+                    # if description:
+                    #     attrs['description'] = description
+                    # print('description: ', description)
 
-                if videoId:
-                    lesson.title = words
-                    lesson.save()
+                    if description:
+                        attrs['description'] = description
 
-                if not tags:
-                    attrs['tags'] = editor.get_video_tag(
-                        subject.name, topic.title)
+                    if not description:
+                        attrs['description'] = words
+                        # attrs['description'] = words[:len(
+                        #     words) - length]
 
-        attrs['topic'] = topic
-        attrs['lesson'] = lesson
-        if not start_end_credits:
-            attrs['start_end_credits'] = '00:07'
+                    if not video_id:
+                        attrs['video_id'] = videoId
+
+                    if videoId:
+                        lesson.title = words
+                        lesson.save()
+
+                    if not tags:
+                        attrs['tags'] = editor.get_video_tag(
+                            subject.name, topic.title)
+
+            attrs['topic'] = topic
+            attrs['lesson'] = lesson
+            if not start_end_credits:
+                attrs['start_end_credits'] = '00:07'
+
+        except Exception as ex:
+            logger.error(f'video validation: {ex}', video_title)
 
         return super().validate(attrs)
 
@@ -439,6 +554,27 @@ class TopicSerializer(serializers.ModelSerializer, Cleanup):
 #     class Meta:
 #         model = Chapter
 #         fields = "__all__"
+random_int_store: List = []
+
+
+@lru_cache
+def getRandomInt(size: int, lesson: int) -> int:
+    # print("random_int_store: ", random_int_store)
+    if size:
+        num: int = 0
+        if len(random_int_store) <= 0:
+            num = random.randint(0, size - 1)
+        else:
+            num = random_int_store[-1]
+            num += 1
+
+        val = num % size
+        random_int_store.append(val)
+
+        return val
+
+    return random.randint(0, 9)
+
 
 class LessonSerializer(serializers.ModelSerializer, Cleanup):
     # subject = serializers.StringRelatedField()
@@ -446,25 +582,124 @@ class LessonSerializer(serializers.ModelSerializer, Cleanup):
     topics = serializers.ChoiceField(
         choices=[], write_only=True, allow_blank=True)
     topic = serializers.StringRelatedField()
+    thumbnail = serializers.SerializerMethodField(read_only=True)
     # grades = serializers.SerializerMethodField()
     # title = serializers.CharField(max_length=255, allow_blank=True)
 
     class Meta:
         model = Lesson
         fields = ['pk', 'num', 'title', 'topic',
-                  'subject', 'grade', 'topics', 'duration']
+                  'subject', 'grade', 'topics', 'duration', 'thumbnail']
         # exclude = ('created', 'updated')
         extra_kwargs = {'topics': {'write_only': True},
                         'topic': {'read_only': True}
                         }
 
-    # def create(self, validated_data):
-    #     return super().create(validated_data)
+    @lru_cache
+    def getSignedUrls(self, subject: str) -> List:
+
+        signed_urls = []
+
+        repo = GoogleCloudStorageRepo2(
+            f"img/subjects/{subject}/png", "edufox-bucket-2", 3600 * 3)
+        image_objects = GoogleImageStore(repo)
+
+        try:
+            image_objects.list_images_in_bucket()
+            signed_urls = image_objects.generate_signed_urls()
+
+        except Exception as ex:
+            logger.error('getSignedUrls error', ex)
+
+        return signed_urls
+
+    @lru_cache
+    def getThumbnails(subject: int, platform: str) -> str:
+        print(subject, '.............')
+        platforms = {IOS: 'png', ANDROID: 'png', WEB: 'svg'}
+        # request = self.context.get('request')
+        # platform = request.query_params.get('platform', 'svg')
+        image_type = platforms.get(platform, 'svg') if platform else 'svg'
+        urls = []
+
+        # print("request: ", request.query_params.get('platform'))
+
+        if subject:
+            try:
+                thumbnails_queryset = Thumbnail.objects.filter(
+                    subject=subject, image_type=image_type)
+                # thumbnails_queryset = subject.subject_thumbnails.filter(
+                #     image_type=image_type)
+                # print("thumbnail.url: ", list(thumbnails_queryset))
+                if thumbnails_queryset.exists():
+                    for thumbnail in thumbnails_queryset:
+                        # print("thumbnail.url: ", thumbnail.url)
+                        urls.append(thumbnail.url)
+            except Exception as ex:
+                logging.error(
+                    f"getThumbnails: Subject error: {ex.message}")
+        # print(urls)
+        return urls
+
+    def get_thumbnail(self, obj: Lesson) -> str:
+        if obj:
+            request = self.context.get('request')
+            platform = request.query_params.get('platform', 'svg')
+            # subject = obj.subject.code
+            # print("obj: ", obj.get(
+            #     'subject'))
+            subject_instance = obj.get(
+                'subject') if isinstance(obj, dict) else obj.subject
+
+            lesson_pk = obj.get(
+                'pk') if isinstance(obj, dict) else obj.pk
+            # print("lesson_instance: ", lesson_instance)
+        # subject_instance = Subject.objects.get(pk=subject.pk)
+
+        thumbnails = ['https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame229.png',
+                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame230.png',
+                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame231.png',
+                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame241.png',
+                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321460.png',
+                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321461.png',
+                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321462.png',
+                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321463.png',
+                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321464.png',
+                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321465.png',
+                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321466.png',
+                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321467.png',
+                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321468.png']
+
+        # if subject in subjects:
+        #     thumbnails = subjects.get(subject)
+
+        # random_integer = random.randint(0, len(thumbnails) - 1)
+        # return thumbnails[random_integer] if random_integer > -1 else thumbnails[0]
+
+        # image_objects = AmazonImageStore(os.environ.get(
+        #     'AWS_THUMBNAIL_BUCKET'), os.environ.get('AWS_DISTRIBUTION_ID'))
+        # print("subject_instance: ", subject_instance.pk)
+        urls = LessonSerializer.getThumbnails(subject_instance.pk, platform)
+        # print("url: ", url)
+        if urls:
+            # thumbnails = urls
+            return urls[getRandomInt(len(urls), lesson_pk)]
+
+        # print(lesson_pk)
+
+        return thumbnails[random.randint(0, 9)]
 
     def get_duration(self, obj):
-        video = obj.lesson_videos.all()
-        # print("video: ", video.first().duration)
-        return video.first().duration if video.exists() else ''
+        # print('obj:', obj)
+        if obj:
+            try:
+                video = obj.lesson_videos.all()
+                # print("video: ", video.first().duration)
+                return video.first().duration if video.exists() else ''
+            except Exception as ex:
+                logger.error('duration error', obj)
+                return ''
+        return ''
 
     def validate(self, attrs):
         attrs = self.sanitize_attr(attrs, BleachSanitizer())
@@ -558,21 +793,54 @@ class LessonSerializer(serializers.ModelSerializer, Cleanup):
             # print(view.kwargs)
         if subject:
             topics = Topic.objects.filter(subject__pk=subject).values('title')
-            print(topics)
+            # print(topics)
             return [topic.get('title') for topic in topics]
 
         return []
 
-    # def create(self, validated_data):
-    #     print('validated_data: ', validated_data)
-    #     return super().create(validated_data)
+    def create(self, validated_data):
 
-    # def validate(self, attrs):
-    #     title = attrs.get('topics')
-    #     topic = Topic.objects.filter(title=title).first()
-    #     attrs['topic'] = topic
+        request = self.context.get('request')
+        user = request.user if request else ''
+        title = validated_data.get('title')
+        grades = validated_data.get('grade')
+        subject = validated_data.get('subject')
 
-    #     return super().validate(attrs)
+        if user and user.is_authenticated:
+            lesson_queryset = Lesson.objects.all().filter(
+                title__iexact=title, grade__in=grades, subject=subject)
+            # print("lesson_queryset: ", lesson_queryset)
+            if lesson_queryset.exists():
+                return super().update(lesson_queryset.first(), validated_data)
+
+            return super().create(validated_data)
+        return validated_data
+
+    def update(self, instance, validated_data):
+        old_title = instance.title
+        new_title = validated_data.get('title')
+        # video_id = validated_data.get('video_id')
+        subject = validated_data.get('subject')
+        if old_title != new_title and subject:
+            # if True:
+            video = instance.lesson_videos.all()
+            print(old_title, new_title, instance.pk, video)
+            if video.exists():
+                video = video.first()
+            subject = Subject.objects.get(
+                pk=subject.pk if type(subject) != str else subject)
+
+            if subject and video:
+                updated_data = {"partition_key_value": video.video_id,
+                                "title": new_title, "subject_code": subject.code}
+                amazonDynamoDB = AmazonDynamoDB()
+                result = amazonDynamoDB.update_item_by_guid(updated_data)
+                if result == f"{subject.code}/{new_title}":
+                    video.title = new_title
+                    video.save()
+                    return super().update(instance, validated_data)
+
+        return instance
 
 
 class TopicSubjectSerializer(serializers.ModelSerializer, Cleanup):
@@ -594,3 +862,49 @@ class TopicSubjectSerializer(serializers.ModelSerializer, Cleanup):
     def validate(self, attrs):
         attrs = self.sanitize_attr(attrs, BleachSanitizer())
         return super().validate(attrs)
+
+
+class ThumbnailSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Thumbnail
+        fields = "__all__"
+
+    def create(self, validated_data):
+
+        request = self.context.get('request')
+        user = request.user if request else ''
+        subject = validated_data.get('subject')
+        url = validated_data.get('url')
+
+        if user and user.is_authenticated:
+            thumbnail_queryset = Thumbnail.objects.filter(url=url)
+            if thumbnail_queryset.exists():
+                return super().update(thumbnail_queryset.first(), validated_data)
+
+            return super().create(validated_data)
+        return validated_data
+
+
+class SearchQuerySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SearchQuery
+        fields = ['pk', 'query']
+
+# class RandomIntSerializer(serializers.ModelSerializer):
+
+#     class Meta:
+#         model = RandomInt
+#         fields = "__all__"
+
+# class ListItemSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = ListItem
+#         fields = "__all__"
+
+
+# class ListSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = List
+#         fields = "__all__"

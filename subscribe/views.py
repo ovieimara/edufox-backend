@@ -148,7 +148,7 @@ class ListCreateUpdateAPIDiscount(mixins.CreateModelMixin, mixins.ListModelMixin
 
 
 class ListCreateUpdateAPIBillingProduct(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
-    queryset = Product.objects.all().order_by('pk')
+    queryset = Product.objects.all().order_by('duration')
     serializer_class = ProductSerializer
 
     def get(self, request, *args, **kwargs):
@@ -160,31 +160,46 @@ class ListCreateUpdateAPIBillingProduct(mixins.CreateModelMixin, mixins.ListMode
 
         if platform:
             # print("kwargs2: ", kwargs)
-            products = []
-            products_queryset = self.get_queryset()
-            if products_queryset:
-                kwargs.pop('pk')
-                products_queryset = products_queryset.filter(
-                    **kwargs)
-                for product in products_queryset:
-                    if platform == FLUTTERWAVE_WEB:
-                        products.append(product)
-                    else:
-                        products.append(product.product_id)
+            products = self.get_products(platform, kwargs)
+            # products = []
+            # products_queryset = self.get_queryset()
+            # if products_queryset:
+            #     kwargs.pop('pk')
+            #     products_queryset = products_queryset.filter(
+            #         **kwargs)
+            #     for product in products_queryset:
+            #         if platform == FLUTTERWAVE_WEB:
+            #             products.append(product)
+            #         else:
+            #             products.append(product.product_id)
 
-                if platform == FLUTTERWAVE_WEB:
-                    products = self.get_serializer(products, many=True).data
-                    return Response(products)
+            if platform == FLUTTERWAVE_WEB:
+                products = self.get_serializer(products, many=True).data
 
-                data = {
-                    platform: products
-                }
+                return Response(products)
 
-                print("SUBSCRIBE: ", data)
+            data = {
+                platform: products
+            }
 
             return Response(data)
 
         return self.list(request, *args, **kwargs)
+
+    def get_products(self, platform: str, kwargs: dict) -> list:
+        products = []
+        products_queryset = self.get_queryset()
+        if products_queryset:
+            kwargs.pop('pk')
+            products_queryset = products_queryset.filter(
+                **kwargs)
+        for product in products_queryset:
+            if platform == FLUTTERWAVE_WEB:
+                products.append(product)
+            else:
+                products.append(product.product_id)
+
+        return products
 
     def post(self, request, *args, **kwargs):
         if not kwargs.get('pk') and request.user.is_staff:
@@ -207,7 +222,7 @@ class ListCreateUpdateAPIGradePack(mixins.CreateModelMixin, mixins.ListModelMixi
         if kwargs.get('pk') is not None:
             return self.retrieve(request, *args, **kwargs)
         result = self.list(request, *args, **kwargs)
-        print('GRADES: ', result.data)
+        # print('GRADES: ', result.data)
         return result
 
     def post(self, request, *args, **kwargs):
@@ -290,7 +305,7 @@ def VerifyPurchase(request, *args, **kwargs):
         state = status.HTTP_200_OK
 
     if platform == FLUTTERWAVE_WEB:
-        printOutLogs("purchase_data: ", purchase_data)
+        print("purchase_data: ", purchase_data)
         transaction_id = purchase_data.get('transaction_id')
         if transaction_id:
             return flutterWaveHandler(transaction_id)
@@ -594,6 +609,22 @@ def FlutterWaveWebhookHandler(request):
 # def flutterWaveHandler(payload):
 
 
+class ListCreateUpdateAPIKeys(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
+    queryset = Product.objects.all().order_by('pk')
+    serializer_class = ProductSerializer
+    # lookup_field = 'pk'
+    # permission_classes = [IsStaffEditorPermission]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        if user.is_authenticated:
+            data = {
+                "flutterwave_public_key": "FLWPUBK_TEST-810fdd275dabda4c1be3107f7d31b51b-X"}
+            return Response(data)
+
+        return Response({})
+
+
 def flutterWaveHandler(transaction_id):
 
     # if payload.get('event') == 'charge.completed':
@@ -610,8 +641,10 @@ def flutterWaveHandler(transaction_id):
     })
     # Extract the verification status from the response and update your database accordingly
     # verification_status = response.json()['data']['status']
-    # print('FLUTTER RESPONSE: ', response.json())
+    print('FLUTTER RESPONSE: ', response.json())
     data = {}
+    phone_number = grade_val = product_id = platform = ''
+
     if response and response.json():
         data = response.json().get('data')
 
@@ -619,11 +652,12 @@ def flutterWaveHandler(transaction_id):
     purchase_details = meta = customer = {}
 
     if data:
-        # print('DATA: ', data)
+        print('DATA: ', data)
 
         verification_status = data.get('status')
         meta = data.get('meta')
         customer = data.get('customer')
+        print('META4: ', customer)
 
         if verification_status == 'successful':
             # ... process the payment ...
@@ -642,44 +676,61 @@ def flutterWaveHandler(transaction_id):
                 "original_purchase_date": created
             }
 
-    if meta:
-        try:
-            grade_val = meta.get('grade')
-            # if isinstance(grade_val, int):
-            # print(grade_val, grade_val)
-            grade = GradePack.objects.get(id=grade_val.strip())
-            # if isinstance(grade_val, str):
-            #     grade = GradePack.objects.get(name=grade)
-        except Exception as ex:
-            print(f"grade error: {ex}")
-
-        product_id = meta.get('product_id')
-        platform = meta.get('platform')
-
-        # print('META: ', product_id, platform)
-
     if customer:
-        phone_number = customer.get('name')
+        name = customer.get('name')
+        # name = "+2348023168809,5,com.edufox.sub.flutterwave.autorenew.monthly,flutterwaveweb"
+        names = name.split(',')
+        print('META2: ', names)
+        print('META3: ', meta)
+
         # print("phone_number: ", phone_number + '123')
         # phone_number = '+2348023168805'
+        if len(names) == 4:
+            phone_number, grade_val, product_id, platform = names
+    # print('META4: ', phone_number)
+    # print('META5: ', grade_val)
+    # print('META6: ', product_id)
+    # print('META7: ', platform)
+
+    # else:
+    #     name = customer.get('name')
+    # print('user2: ', user)
+
+    if meta:
+        grade_val = meta.get('grade', '')
+        product_id = meta.get('product_id', '')
+        platform = meta.get('platform', '')
+        phone_number = meta.get('phone_number', '')
+
+        # print('META1: ', meta)
+
+    try:
+        grade = GradePack.objects.get(
+            id=str(grade_val).strip() if grade_val else 1)
+    except Exception as ex:
+        printOutLogs(f"grade error: {ex}")
+
+    try:
+        user = User.objects.get(
+            username=phone_number.strip() if phone_number else '')
+        # print('user: ', user)
+    except User.DoesNotExist as ex:
+        printOutLogs(f"user phone error: {ex}")
+
+    if not user:
+        email = customer.get('email')
         try:
-            user = User.objects.get(username=phone_number.strip())
-            # print('user: ', user)
+            user = User.objects.get(email=email.strip() if email else '')
         except User.DoesNotExist as ex:
-            print(f"user error: {ex}")
+            printOutLogs(f"user email error: {ex}")
 
-        if not user:
-            email = customer.get('email')
-            try:
-                user = User.objects.get(email=email.strip())
-            except User.DoesNotExist as ex:
-                print(f"user error: {ex}")
-        # print('user2: ', user)
-
+    # print("user: ", user)
+    # print("product_id: ", product_id)
+    # print("purchase_details: ", purchase_details)
     if product_id and purchase_details:
         _, product, payment = createProduct(
             product_id, platform, purchase_details, user, created)
-        
+
         createProductSubscription(user, product, payment, grade)
 
 # elif payload.get('event') == 'charge.failed':
@@ -854,7 +905,8 @@ def createProduct(product_id, platform, payment_data, user=None, created=None):
                     datetime.timedelta(days=product.duration)
                 payment = payment_serializer.save(
                     product=product, expires_date=expires_date, user=user)
-                print("EXPIRY_DATES: ", expires_date, created, product.duration)
+                print("EXPIRY_DATES: ", expires_date,
+                      created, product.duration)
             else:
                 payment = payment_serializer.save(product=product, user=user)
 
@@ -885,7 +937,8 @@ def createProductSubscription(user, product, payment_method, grade):
 
         subscribe_serializer = SubscribeSerializer(data=data)
         subscribe_serializer.is_valid(raise_exception=True)
-        subscribe_serializer.save(user=user, product=product, payment_method=payment_method, grade=grade)
+        subscribe_serializer.save(
+            user=user, product=product, payment_method=payment_method, grade=grade)
         print('DETAILS SUBSCRIBE: ', subscribe_serializer.data)
         if subscribe_serializer:
             response = subscribe_serializer.data
@@ -901,7 +954,8 @@ def create_subscription(product_id, payment_data, user, grade, platform='', resp
     state = status.HTTP_400_BAD_REQUEST
     resp = {}
     payment = product = None
-    resp, product, payment = createProduct(product_id, platform, payment_data, user)
+    resp, product, payment = createProduct(
+        product_id, platform, payment_data, user)
 
     if platform == IOS:
         resp['status'] = response_json.get('status')
@@ -989,7 +1043,7 @@ def convertDateFromMSToDateTime(ms_date_time):
     if ms_date_time:
         transactionDate = datetime.datetime.fromtimestamp(
             float(ms_date_time)/1000.0)
-        
+
     return transactionDate
 
     # print('EXPIRY DATE: ', transactionDate + datetime.timedelta(days=60))

@@ -32,7 +32,12 @@ class MySubscription(UserSubscriptionABC):
     def get_all_user_subscriptions(self):
         # print('subscriptions: ', self.user.subscriptions_user)
         queryset = Subscribe.objects.all()
-        return queryset.filter(payment_method__expires_date__gt=timezone.now(), user=self.user).order_by("-created") if self.user.is_authenticated else []
+
+        query = queryset.filter(payment_method__expires_date__gt=timezone.now(
+        ), user=self.user).order_by("-created") if self.user.is_authenticated else []
+        print("queryset: ", query)
+
+        return query
 
     def get_video_grades(self) -> list:
         video_grades = {}

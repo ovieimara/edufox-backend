@@ -1,3 +1,4 @@
+import logging
 from django.shortcuts import render
 from requests import get
 from rest_framework import generics, mixins, status
@@ -138,9 +139,12 @@ class APITestSize(generics.ListAPIView):
     def get(self, request, *args, **kwargs):
         count = 0
         lesson_pk = kwargs.get('pk')
-        lesson_obj = Lesson.objects.get(pk=lesson_pk)
-        if lesson_obj:
-            count = lesson_obj.lesson_tests.all().count()
+        try:
+            lesson_obj = Lesson.objects.get(pk=lesson_pk)
+            if lesson_obj:
+                count = lesson_obj.lesson_tests.all().count()
+        except Lesson.DoesNotExist as ex:
+            logging.error('APITestSize error: ', ex)
 
         return Response(data={"size": count})
 

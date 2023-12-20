@@ -1,5 +1,5 @@
 from django.urls import path, re_path
-from .views import (ListCreateAPIGrades, ListCreateAPIEvent, ListTopicLessonAPI, UpdateAPIEvent, UpdateAPIGrades, ListCreateAPISubject, ListCreateAPIComment, UpdateAPIComment,
+from .views import (ListCreateAPIGrades, ListCreateAPIEvent, ListCreateAPISearchQuery, ListCreateThumbnailAPI, ListTopicLessonAPI, UpdateAPIEvent, UpdateAPIGrades, ListCreateAPISubject, ListCreateAPIComment, UpdateAPIComment,
                     UpdateAPISubject, ListCreateAPILecturer, UpdateAPILecturer, ListCreateAPIRate,
                     UpdateAPIRate, ListCreateAPIInteraction, UpdateAPIInteraction,
                     ListCreateAPIVideo, UpdateAPIVideo, ListCreateAPIResolution,
@@ -8,10 +8,12 @@ from .views import (ListCreateAPIGrades, ListCreateAPIEvent, ListTopicLessonAPI,
 from djoser.views import UserViewSet
 from django.views.decorators.cache import cache_page
 
-
 app_name = 'course'
 
 urlpatterns = [
+    path('thumbnails/<subject_pk>',
+         ListCreateThumbnailAPI.as_view(), name='thumbnails-list'),
+
     path('grades', ListCreateAPIGrades.as_view(), name='grades-list'),
     path('grades/<pk>', UpdateAPIGrades.as_view(), name='grade-detail'),
     path('subjects', ListCreateAPISubject.as_view(), name='subjects-list'),
@@ -45,12 +47,18 @@ urlpatterns = [
     #          (ListDashboardAPI.as_view()), name='dashboard-list'),
     path('dashboard',
          ListDashboardAPI.as_view(), name='dashboard-list'),
+    #     path('dashboard/<int:grade>',
+    #          ListDashboardAPI.as_view(), name='dashboard-list'),
     #     path('dashboard/<int:subject>/<int:grade>',
     #          cache_page(60 * 15)(ListDashboardAPI.as_view()), name='dashboard-detail'),
     path('dashboard/<int:subject>/<int:grade>',
          ListDashboardAPI.as_view(), name='dashboard-detail'),
-    #     path('dashboard/topics/<int:pk>/<int:grade>',
-    #          cache_page(60 * 15)(ListDashboardLessonsAPI.as_view()), name='dashboard-topics-list'),
+    #     path('dashboard/<int:subject>/<int:grade>',
+    #          cache_page(60 * 15)(ListDashboardAPI.as_view()), name='dashboard-detail'),
+    #     path('dashboard/<int:subject>/<int:grade>/<platform>',
+    #          ListDashboardAPI.as_view(), name='dashboard-detail'),
+    # path('dashboard/topics/<int:pk>/<int:grade>',
+    #         cache_page(60 * 15)(ListDashboardLessonsAPI.as_view()), name='dashboard-topics-list'),
     path('dashboard/topics/<int:pk>/<int:grade>',
          ListDashboardLessonsAPI.as_view(), name='dashboard-topics-list'),
     path('dashboard/lessons/<int:lesson>/<int:grade>',
@@ -64,6 +72,8 @@ urlpatterns = [
     path('topics', ListCreateUpdateAPITopic.as_view(), name='topics-list'),
     path('topics/<pk>', ListCreateUpdateAPITopic.as_view(), name='topic-detail'),
     path('query', VideoSearchListViewAPI.as_view(), name='query-list'),
+    path('query/data', ListCreateAPISearchQuery.as_view(), name='query-data-list'),
+
     #    path('generate-signed-url/', GenerateSignedUrl.as_view(),
     #         name='generate-signed-url-list2'),
     re_path(r'^generate-signed-url/$', GenerateSignedUrl.as_view(),

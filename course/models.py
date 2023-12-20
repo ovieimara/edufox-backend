@@ -1,12 +1,14 @@
+from venv import create
 from django.db import models
 from django.contrib.auth.models import User
+from django.http import QueryDict
 
 
 class Grade(models.Model):
     code = models.CharField(max_length=100, null=False,
-                            default='', unique=True)
+                            default='', unique=True, db_index=True)
     name = models.CharField(max_length=255, null=False,
-                            default='', unique=True)
+                            default='', unique=True, db_index=True)
     description = models.TextField(null=True, default=True)
     created = models.DateTimeField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
@@ -26,15 +28,19 @@ class View(models.Model):
 
 
 class Subject(models.Model):
-    code = models.CharField(db_index=True, max_length=127)
+    num = models.SmallIntegerField(
+        null=True, blank=True, default=0, db_index=True)
+    code = models.CharField(db_index=True, max_length=127, default='')
     name = models.CharField(db_index=True, null=False,
-                            unique=True, max_length=255)
-    grade = models.ManyToManyField(Grade, related_name="grade_subjects")
+                            unique=True, max_length=255, default='')
+    grade = models.ManyToManyField(
+        Grade, related_name="grade_subjects", default=list)
     description = models.TextField(null=True, blank=True, default='')
     color = models.CharField(null=False, blank=True,
                              max_length=255, default='')
     thumbnail = models.URLField(null=True, blank=True, default='')
     credits = models.SmallIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
     created = models.DateTimeField(null=True, auto_now_add=True)
     updated = models.DateTimeField(null=True, auto_now=True)
 
@@ -64,7 +70,8 @@ class Resolution(models.Model):
 
 
 class Topic(models.Model):
-    chapter = models.SmallIntegerField(null=True, blank=True, default=0)
+    chapter = models.SmallIntegerField(
+        null=True, blank=True, default=0, db_index=True)
     subject = models.ForeignKey(
         Subject, related_name='subject_topics', null=True, on_delete=models.SET_NULL)
 
@@ -78,28 +85,46 @@ class Topic(models.Model):
         return self.title
         # return f"{self.chapter}. {self.title}"
 
+    def __gt__(self, other):
+        if isinstance(other, Topic):
+            return self.chapter > other.chapter
+        raise ValueError("Comparison with non-Topic object not supported")
+
+    def __lt__(self, other):
+        if isinstance(other, Topic):
+            return self.chapter < other.chapter
+        raise ValueError("Comparison with non-Topic object not supported")
+
+
 # class Chapter(models.Model):
 #     num = models.SmallIntegerField(null=True, blank=True, default=0)
-#     topic = models.ForeignKey(Topic, related_name='topic_chapters', null=True, on_delete=models.SET_NULL)
-#     subject = models.ForeignKey(Subject, related_name='subject_chapters', null=True, on_delete=models.SET_NULL)
-#     grade = models.ForeignKey(Grade, related_name='grade_chapters', null=True, default=1, on_delete=models.SET_NULL)
+#     topic = models.ForeignKey(
+#         Topic, related_name='topic_chapters', null=True, on_delete=models.SET_NULL)
+#     subject = models.ForeignKey(
+#         Subject, related_name='subject_chapters', null=True, on_delete=models.SET_NULL)
+#     grade = models.ForeignKey(Grade, related_name='grade_chapters',
+#                               null=True, default=1, on_delete=models.SET_NULL)
 #     created = models.DateField(db_index=True, null=True, auto_now_add=True)
 #     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
 
 #     def __str__(self) -> str:
 #         return f"{self.num}. {self.topic}"
+
+
 # class SubTopic(models.Model):
 #     title = models.CharField(max_length=255, null=True, default='')
-#     subject = models.ForeignKey(Subject, related_name='subject_subtopics', null=True, default=None, on_delete=models.SET_NULL)
+#     subject = models.ForeignKey(Subject, related_name='subject_subtopics',
+#                                 null=True, default=None, on_delete=models.SET_NULL)
 #     created = models.DateField(db_index=True, null=True, auto_now_add=True)
 #     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
 
 
 class Lesson(models.Model):
     LEVEL_CHOICES = ()
-    num = models.SmallIntegerField(null=True, blank=True, default=0)
+    num = models.SmallIntegerField(
+        null=True, blank=True, default=0, db_index=True)
     # title = models.CharField(db_index=True, max_length=255, default='')
-    title = models.TextField(null=True, blank=True, default='')
+    title = models.TextField(null=True, blank=True, default='', db_index=True)
     topic = models.ForeignKey(
         Topic, related_name='topic_lessons', on_delete=models.CASCADE)
     topics = models.CharField(
@@ -107,8 +132,20 @@ class Lesson(models.Model):
     subject = models.ForeignKey(
         Subject, related_name='subject_lessons', null=True, on_delete=models.SET_NULL)
     grade = models.ManyToManyField(Grade, related_name='grade_lessons')
+    thumbnail = models.URLField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
     created = models.DateField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
+
+    def __gt__(self, other):
+        if isinstance(other, Lesson):
+            return self.num > other.num
+        raise ValueError("Comparison with non-Lesson object not supported")
+
+    def __lt__(self, other):
+        if isinstance(other, Lesson):
+            return self.num < other.num
+        raise ValueError("Comparison with non-Lesson object not supported")
 
     # @property
     # def topics(self):
@@ -244,6 +281,44 @@ class Interaction(models.Model):
     # seek_fwd = models.CharField(null=True, max_length=50, default='')
     # seek_prev = models.CharField(null=True, max_length=50, default='')
     # type = models.ForeignKey(InteractionType, related_name='types', null=True, on_delete=models.SET_NULL)
+
+
+# class ThumbnailURL(models.Model):
+#     image_url = models.URLField(null=True, blank=True, default='')
+
+
+class Thumbnail(models.Model):
+    subject = models.ForeignKey(
+        Subject, related_name='subject_thumbnails', null=True, on_delete=models.SET_NULL)
+    url = models.URLField(null=True, blank=True, default='', db_index=True)
+    image_type = models.CharField(null=True, max_length=50, default='png')
+    created = models.DateField(db_index=True, null=True, auto_now_add=True)
+    updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
+
+
+class SearchQuery(models.Model):
+    user = models.ForeignKey(
+        User, related_name='user_query', null=True, on_delete=models.SET_NULL)
+    query = models.CharField(null=True, max_length=50,
+                             default='', db_index=True)
+    created = models.DateField(db_index=True, null=True, auto_now_add=True)
+    updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
+
+# class RandomInt(models.Model):
+#     num = models.SmallIntegerField(default=0)
+#     index = models.SmallIntegerField(default=0)
+#     created = models.DateField(db_index=True, null=True, auto_now_add=True)
+#     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
+
+# class ListItem(models.Model):
+#     url = models.URLField(null=True, blank=True, default='')
+
+
+# class List(models.Model):
+#     subject = models.ForeignKey(
+#         Subject, related_name='subject_thumbnails', null=True, on_delete=models.SET_NULL)
+#     items = models.ManyToManyField(ListItem)
+
 
 # class Test(models.Model):
 #     code = models.CharField(max_length=255, null=True, default='')

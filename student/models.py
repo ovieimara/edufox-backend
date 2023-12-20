@@ -61,8 +61,10 @@ class Student(models.Model):
     gender = models.CharField(
         db_index=True, max_length=255, blank=True, null=True, default='')
     image_url = models.URLField(null=True, blank=True, default='')
+    # image_url = models.CharField(
+    #     max_length=255, null=True, blank=True, default='')
     referral = models.ForeignKey(
-        Referral, related_name='referral_student', null=True, on_delete=models.SET_NULL)
+        Referral, related_name='referral_student', null=True, blank=True, default=1, on_delete=models.SET_NULL)
     name_institution = models.CharField(
         max_length=255, null=True, blank=True, default='')
     my_referral = models.CharField(

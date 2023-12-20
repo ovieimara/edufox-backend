@@ -30,8 +30,10 @@ class TempStudentAdmin(admin.ModelAdmin):
 
 
 class StudentAdmin(admin.ModelAdmin):
+    search_fields = ['phone_number', 'grade__name',
+                     'my_referral', 'referral__code', 'registration_date']
     list_display = ['phone_number',
-                    'grade', 'age', 'gender', 'image_url']
+                    'grade', 'age', 'gender', 'image_url', 'my_referral', 'referral', 'registration_date', 'last_updated']
 
 
 class ReferralAdmin(admin.ModelAdmin):

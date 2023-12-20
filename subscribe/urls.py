@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .views import (FetchSubscribe, FlutterWaveWebhookHandler, ListCreateUpdateAPIDiscount, ListCreateUpdateAPISubscribe,
+from .views import (FetchSubscribe, FlutterWaveWebhookHandler, ListCreateUpdateAPIDiscount, ListCreateUpdateAPIKeys, ListCreateUpdateAPISubscribe,
                     ListCreateUpdateAPIPlan, ListCreateUpdateAPIBillingProduct, VerifyPurchase,
                     AppStoreNotificationHandler, PlayStoreNotificationHandler, ListCreateUpdateAPIGradePack)
 from djoser.views import UserViewSet
@@ -36,6 +36,8 @@ urlpatterns = [
          name='playstorenotify-list'),
     path('flutterwavenotify', FlutterWaveWebhookHandler,
          name='flutterwavenotify-list'),
+    path('apikeys', ListCreateUpdateAPIKeys.as_view(),
+         name='api-keys-list'),
 
 
 ]

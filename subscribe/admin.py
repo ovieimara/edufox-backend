@@ -5,6 +5,7 @@ from .models import Subscribe, AndroidNotify, InAppPayment, Product
 
 
 class SubscribeAdmin(admin.ModelAdmin):
+    search_fields = ['user', 'created']
     list_display = ['pk', 'user', 'product', 'payment_method',
                     'grade', 'created', 'updated']
 

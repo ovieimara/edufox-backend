@@ -23,6 +23,5 @@ boto3==1.28.10
 botocore==1.31.10
 django-redis
 apscheduler==3.10.4
-# cloudfront-signer
-# django-dynamodb-backend
-
+Pillow==10.0.1
+sendgrid==6.10.0

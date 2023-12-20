@@ -1,46 +1,55 @@
 from abc import ABC, abstractmethod
-from hashlib import file_digest
+# from hashlib import file_digest
 import os
 from typing import Any
 from venv import logger
 from PIL import Image
-from attr import dataclass
-
+from dataclasses import dataclass
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from google.cloud import storage
+from edufox.views import printOutLogs
 from student.models import Student
 from .serializers import FileUploadSerializer
 from django.contrib.auth.models import User
 
 
 class FileUploadView(APIView):
+    # permission_classes = []
+
     def post(self, request, format=None):
-        serializer = FileUploadSerializer(data=request.data)
+        data = request.data
+        printOutLogs("data: ", data)
+        serializer = FileUploadSerializer(data=data)
         user = request.user
         public_url = ''
+        ext = 'png'
         if user.is_authenticated and serializer.is_valid():
             file = serializer.validated_data['file']
             # Resize the image to a specific width and height
             new_width = 800
             new_height = 600
-
+            pk = user.pk
             resizer = PillowResizer(file, new_width, new_height)
             image = resizer.resize()
             dpi = resizer.reduce_resolution(image)
-            tmp_image_path = resizer.save(image, dpi)
+            tmp_image_path = resizer.save(image, dpi, pk, ext)
             # tmp_image_path = self.resize_image(file, new_width, new_height)
             # Save the file to Google Cloud Storage
-            gcs_path = 'path/in/bucket/processed_image.jpg'
-            cloud_store = GoogleStore(file, tmp_image_path, gcs_path)
-            public_url = cloud_store.save()
-            public_url = self.save_file_to_cloud_storage(tmp_image_path, file)
-
-            self.update_student(self, public_url, user)
+            gcs_path = f'img/profile/{pk}.{ext}'
+            bucket_name = "edufox-bucket-2"
+            cloud_store = GoogleStore(
+                file, tmp_image_path, gcs_path, bucket_name)
+            public_url = cloud_store.save_to_storage(ext)
+            # public_url = self.save_file_to_cloud_storage(tmp_image_path, file)
+            # print('URL', public_url)
+            self.update_student(public_url, user.username)
             self.clean_temp_file(tmp_image_path)
-            return Response({'message': 'File uploaded successfully'}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            return Response({'image_url': public_url, 'message': 'File uploaded successfully'}, status=status.HTTP_201_CREATED)
+
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     # def resize_image(self, file, new_width, new_height):
     #     # Open the image using Pillow
@@ -77,24 +86,28 @@ class FileUploadView(APIView):
         # Clean up the temporary file
         os.remove(tmp_image_path)
 
-    def update_student(self, public_url: str, user: User):
-
+    def update_student(self, public_url: str, user: str):
+        student = ''
+        # print('USER: ', user.username)
         try:
-            student = Student.objects.get(phone_number=user.username)
+            student = Student.objects.get(phone_number=user)
         except student.DoesNotExist as ex:
             logger.error('File upload: ', ex)
 
         if student and public_url:
-            student.save(image_url=public_url)
+            student.image_url = public_url
+            student.save()
+
+        print('STUDENT: ', student.image_url)
 
 
 class Resizer(ABC):
 
-    def save(self, image: Image, dpi: tuple[int, int]) -> str:
+    def save(self, image: Image, dpi: tuple[int, int], pk: int, ext: str) -> str:
         # Save the processed image to a temporary file
         # Adjust the path and format as needed
-        tmp_image_path = '/tmp/processed_image.png'
-        image.save(tmp_image_path, 'PNG', dpi=dpi)
+        tmp_image_path = f'/tmp/pk.{ext}'
+        image.save(tmp_image_path, ext, dpi=dpi)
         return tmp_image_path
 
     @abstractmethod
@@ -121,14 +134,14 @@ class PillowResizer(Resizer):
     def resize(self) -> Image:
         image = Image.open(self.file)
         image = image.resize(
-            (self.new_width, self.new_height), Image.ANTIALIAS)
+            (self.new_width, self.new_height), Image.LANCZOS)
         return image
         # dpi = self.reduce_resolution(image)
         # self.save(image, dpi)
 
 
 class Store(ABC):
-    def save(self):
+    def save_to_storage(self):
         pass
 
 
@@ -137,9 +150,21 @@ class GoogleStore(Store):
     file: Any
     tmp_image_path: str
     gcs_path: str
+    bucket_name: str
 
-    def save(self) -> str:
-        with open(self.tmp_image_path, 'rb') as self.tmp_image:
-            self.file.storage.save(self.gcs_path, self.tmp_image)
+    def save_to_storage(self, ext: str):
+        # Save the file to Google Cloud Storage
+        with open(self.tmp_image_path, 'rb') as image_file:
+            file_content = image_file.read()
 
-        return self.file.storage.url(self.gcs_path)
+        # Upload to Google Cloud Storage
+        client = storage.Client()
+        bucket = client.bucket(self.bucket_name)
+        blob = bucket.blob(self.gcs_path)
+        blob.upload_from_string(file_content, content_type=f'image/{ext}')
+
+        # Construct the URL based on the bucket and path
+        base_url = f'https://storage.googleapis.com/edufox-bucket-2/'
+        image_url = f'{base_url}{self.gcs_path}'  # Full image URL
+        # print(image_file)
+        return image_url

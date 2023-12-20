@@ -337,7 +337,7 @@ class SignupTestCase(TestCase):
 
         Product.objects.create(
             name='Monthly',
-            product_id='com.edufox.sub.autorenew.monthly',
+            product_id='com.edufox.sub.flutterwave.autorenew.monthly',
             amount='5500.00',
             currency="=N=",
             duration=30,
@@ -345,7 +345,7 @@ class SignupTestCase(TestCase):
             platform="flutterwaveweb",
         )
         GradePack.objects.create(
-            id=2,
+            id=1,
             label='KG',
             category="Nursery",
             range="1 - 3",
@@ -377,7 +377,7 @@ class SignupTestCase(TestCase):
 
         self.user = User.objects.create_user(
             is_active=True,
-            username='+2347077777777',
+            username='+2348023168809',
             email='blessed@gmail.com',
             password='password@123A'
         )
@@ -385,11 +385,10 @@ class SignupTestCase(TestCase):
         # data = b'{"event":"charge.completed","data":{"id":4370813,"tx_ref":"1685967553888","flw_ref":"FLW-MOCK-39ae24b5e1db41a505eb592b27d0349c","device_fingerprint":"cc75b48bf89039b5786f5cbc984cde95","amount":35000,"currency":"NGN","charged_amount":35000,"app_fee":1330,"merchant_fee":0,"processor_response":"Approved. Successful","auth_model":"VBVSECURECODE","ip":"52.209.154.143","narration":"CARD Transaction ","status":"successful","payment_type":"card","created_at":"2023-06-05T12:21:33.000Z","account_id":1961994,"customer":{"id":2092428,"name":"john doe","phone_number":null,"email":"oberlo@gmail.com","created_at":"2023-06-05T12:21:33.000Z"},"card":{"first_6digits":"543889","last_4digits":"0229","issuer":"MASTERCARD MASHREQ BANK CREDITSTANDARD","country":"EG","type":"MASTERCARD","expiry":"10/31"}},"event.type":"CARD_TRANSACTION"}'
 
         # data = b'{"event":"charge.completed","data":{"id":4371591,"tx_ref":"flw_tx_ref_0rBXMD4NzI","flw_ref":"FLW-MOCK-2cf4373da3ffd004c61ab7c0ef99a651","device_fingerprint":"cd11005c5a019f0bc948630bb9b25e2e","amount":5500,"currency":"NGN","charged_amount":5500,"app_fee":77,"merchant_fee":0,"processor_response":"successful","auth_model":"PIN","ip":"52.209.154.143","narration":"CARD Transaction ","status":"successful","payment_type":"card","created_at":"2023-06-05T15:59:50.000Z","account_id":1961994,"customer":{"id":2092726,"name":"+2348023168805","phone_number":null,"email":"imaraovie@gmail.com","created_at":"2023-06-05T15:59:50.000Z"},"card":{"first_6digits":"553188","last_4digits":"2950","issuer":"MASTERCARD CREDIT","country":"NG","type":"MASTERCARD","expiry":"09/32"}},"event.type":"CARD_TRANSACTION"}'
-        data = b'{"event":"charge.completed","data":{"id":4466173,"tx_ref":"1689458909495","flw_ref":"FLW-MOCK-0ea8abc8cbccd862661a7d80e289f785","device_fingerprint":"cc75b48bf89039b5786f5cbc984cde95","amount":35000,"currency":"NGN","charged_amount":35000,"app_fee":490,"merchant_fee":0,"processor_response":"successful","auth_model":"PIN","ip":"52.209.154.143","narration":"CARD Transaction ","status":"successful","payment_type":"card","created_at":"2023-07-15T22:10:12.000Z","account_id":1961994,"customer":{"id":2146742,"name":"+2347077777777 ","phone_number":null,"email":"blessed@gmail.com","created_at":"2023-07-15T22:10:12.000Z"},"card":{"first_6digits":"553188","last_4digits":"2950","issuer":"MASTERCARD CREDIT","country":"NG","type":"MASTERCARD","expiry":"09/32"}},"event.type":"CARD_TRANSACTION"}'
+        # data = b'{"event":"charge.completed","data":{"id":4466173,"tx_ref":"1689458909495","flw_ref":"FLW-MOCK-0ea8abc8cbccd862661a7d80e289f785","device_fingerprint":"cc75b48bf89039b5786f5cbc984cde95","amount":35000,"currency":"NGN","charged_amount":35000,"app_fee":490,"merchant_fee":0,"processor_response":"successful","auth_model":"PIN","ip":"52.209.154.143","narration":"CARD Transaction ","status":"successful","payment_type":"card","created_at":"2023-07-15T22:10:12.000Z","account_id":1961994,"customer":{"id":2146742,"name":"+2347077777777 ","phone_number":null,"email":"blessed@gmail.com","created_at":"2023-07-15T22:10:12.000Z"},"card":{"first_6digits":"553188","last_4digits":"2950","issuer":"MASTERCARD CREDIT","country":"NG","type":"MASTERCARD","expiry":"09/32"}},"event.type":"CARD_TRANSACTION"}'
+        data = b'{"event":"charge.completed","data":{"id":4616795,"tx_ref":"1695541165792","flw_ref":"FLW-MOCK-e8a39481bf9800ac08d2f5d2cd6d8874","device_fingerprint":"93d8239850a5bd7a907844b63213993a","amount":5500,"currency":"NGN","charged_amount":5500,"app_fee":77,"merchant_fee":0,"processor_response":"successful","auth_model":"PIN","ip":"52.209.154.143","narration":"CARD Transaction ","status":"successful","payment_type":"card","created_at":"2023-09-24T07:40:03.000Z","account_id":1961994,"customer":{"id":2217632,"name":"+2348023168809,5,com.edufox.sub.flutterwave.autorenew.quarterly,flutterwaveweb","phone_number":null,"email":"oima@yahoo.com","created_at":"2023-09-24T07:40:03.000Z"},"card":{"first_6digits":"553188","last_4digits":"2950","issuer":"MASTERCARD CREDIT","country":"NG","type":"MASTERCARD","expiry":"09/32"}},"event.type":"CARD_TRANSACTION"}'
         transaction_id = json.loads(data).get('data').get('id')
         result = flutterWaveHandler(transaction_id)
         print('FLUTTERWAVE: ', result)
 
         self.assertEqual(result.status_code, status.HTTP_200_OK)
-
-# {'status': 'success', 'message': 'Transaction fetched successfully', 'data': {'id': 4364266, 'tx_ref': '1685635175939', 'flw_ref': 'FLW-MOCK-45e12aba38a60f1ee55e2ca69b766d37', 'device_fingerprint': 'cc75b48bf89039b5786f5cbc984cde95', 'amount': 35000, 'currency': 'NGN', 'charged_amount': 35000, 'app_fee': 490, 'merchant_fee': 0, 'processor_response': 'successful', 'auth_model': 'PIN', 'ip': '54.75.161.64', 'narration': 'CARD Transaction ', 'status': 'successful', 'payment_type': 'card', 'created_at': '2023-06-01T16:01:01.000Z', 'account_id': 1961994, 'card': {'first_6digits': '539983', 'last_4digits': '8381', 'issuer': 'GUARANTY TRUST BANK Mastercard Naira Debit Card', 'country': 'NIGERIA NG', 'type': 'MASTERCARD', 'token': 'flw-t1nf-f34269467e2f334352b44135c3baaf03-m03k', 'expiry': '10/31'}, 'meta': {'__CheckoutInitAddress': 'http://localhost:3000/learningPlan', 'grade': '2', 'platform': 'flutterwaveweb', 'product_id': 'Yearly'}, 'plan': 35108, 'amount_settled': 34510, 'customer': {'id': 2089125, 'name': 'john doe', 'phone_number': 'N/A', 'email': 'user@gmail.com', 'created_at': '2023-06-01T16:01:01.000Z'}}}

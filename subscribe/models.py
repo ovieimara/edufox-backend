@@ -132,7 +132,9 @@ class Subscribe(models.Model):
     #     return False
 
     def __str__(self) -> str:
-        return f"{self.product.name}"
+        if self.product:
+            return f"{self.product.name}"
+        return ''
 
 
 class AppleNotify(models.Model):
