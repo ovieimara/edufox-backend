@@ -13,7 +13,10 @@ class GradeAdmin(admin.ModelAdmin):
 
 class SubjectAdmin(admin.ModelAdmin):
     list_display = ['id', 'num', 'code', 'name',
-                    'description', 'is_active', 'thumbnail', 'credits', 'created', 'updated']
+                    'description', 'is_active', 'thumbnail', 'get_grades', 'credits', 'created', 'updated']
+
+    def get_grades(self, obj):
+        return "\n".join([str(s) for s in obj.grade.all()])
 
 
 class LecturerAdmin(admin.ModelAdmin):
@@ -76,7 +79,7 @@ class LessonAdmin(admin.ModelAdmin):
 
 class TopicAdmin(admin.ModelAdmin):
     search_fields = ['title', 'subject__name', 'grade__name']
-    list_display = ['pk', 'chapter', 'title',
+    list_display = ['pk', 'is_active', 'chapter', 'title',
                     'subject', 'get_grades', 'created']
 
     def get_grades(self, obj):

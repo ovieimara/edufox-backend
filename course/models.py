@@ -78,6 +78,7 @@ class Topic(models.Model):
     title = models.CharField(
         db_index=True, max_length=255, null=True, default='')
     grade = models.ManyToManyField(Grade, related_name='grade_topics')
+    is_active = models.BooleanField(default=True)
     created = models.DateField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
 

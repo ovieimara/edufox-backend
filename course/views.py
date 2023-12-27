@@ -475,13 +475,13 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
             try:
                 if grade:
                     lessons_queryset = Lesson.objects.filter(Q(subject=subject) & Q(
-                        grade__pk=grade) & Q(is_active=True)).prefetch_related('topic', 'subject').order_by('num', 'topic__chapter').distinct()
+                        grade__pk=grade) & Q(is_active=True) & Q(topic__is_active=True)).prefetch_related('topic', 'subject').order_by('num', 'topic__chapter').distinct()
 
                     # lessons_queryset = Lesson.objects.filter(subject=subject,
                     #                                          grade__pk=grade).prefetch_related('topic', 'subject')
                 else:
                     lessons_queryset = Lesson.objects.filter(
-                        subject=subject, is_active=True).prefetch_related('topic', 'subject').order_by('num', 'topic__chapter').distinct()
+                        subject=subject, is_active=True, topic__is_active=True).prefetch_related('topic', 'subject').order_by('num', 'topic__chapter').distinct()
 
             except Exception as ex:
                 logging.error('getSubjectLessons error: ', ex)
