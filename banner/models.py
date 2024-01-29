@@ -19,6 +19,7 @@ class Banner(models.Model):
         max_length=15, null=True, blank=True, default='')
     thirdGradientColor = models.CharField(
         max_length=15, null=True, blank=True, default='')
+    is_active = models.BooleanField(default=True)
     created = models.DateTimeField(db_index=True, null=True, auto_now_add=True)
     updated = models.DateTimeField(db_index=True, null=True, auto_now=True)
 

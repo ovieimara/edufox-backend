@@ -4,7 +4,7 @@ from rest_framework import serializers, status
 from rest_framework.fields import empty
 from rest_framework.response import Response
 
-from course.models import Lesson
+from course.models import Grade, Lesson, Subject, Topic
 from .models import (Test, Assessment, Level)
 from assess.models import Test, Assessment
 from subscribe.models import Subscribe
@@ -30,6 +30,17 @@ class TestSerializer(serializers.ModelSerializer):
         fields = ['pk', 'question', 'valid_answers', 'options', 'answers', 'topic', "lesson",
                   "subject", "grade", "level", "option1", "option2", "option3", "option4", "option5", "option6"]
         # depth = 2
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['topic'].queryset = Topic.objects.order_by(
+            'title')  # Sort topics by title
+        self.fields['lesson'].queryset = Lesson.objects.order_by(
+            'title')  # Sort lesson by title
+        self.fields['subject'].queryset = Subject.objects.order_by(
+            'name')  # Sort subjects by title
+        self.fields['grade'].queryset = Grade.objects.order_by(
+            'pk')  # Sort subjects by title
 
     def get_options(self, obj):
         return [option for option in obj.options if option]
@@ -76,12 +87,13 @@ class TestSerializer(serializers.ModelSerializer):
         valid_answers = validated_data.pop('answers') if validated_data else ''
         topic = validated_data.get('topic')
         lesson = validated_data.get('lesson')
+        print("lesson: ", lesson.title)
 
         if question:
             question = escape(question)
 
         if not topic and lesson:
-            lesson_queryset = Lesson.objects.filter(lesson)
+            lesson_queryset = Lesson.objects.filter(title=lesson)
             if lesson_queryset.exists():
                 validated_data['topic'] = lesson_queryset.first().topic
 

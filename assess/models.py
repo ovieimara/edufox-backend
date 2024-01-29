@@ -59,6 +59,12 @@ class Test(models.Model):
     def __str__(self) -> str:
         return self.question
 
+    # def __lt__(self, other):
+    #     return self.topic.title < other.topic.title
+
+    # def __gt__(self, other):
+    #     return self.topic.title > other.topic.title
+
 
 class Assessment(models.Model):
     CHOICES = (

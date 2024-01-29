@@ -313,7 +313,7 @@ class VideoSerializer(serializers.ModelSerializer, Cleanup):
         old_subject = instance.subject
         new_subject = validated_data.get('subject')
 
-        if old_title != new_title:
+        if old_title != new_title and new_title:
             lesson_obj = Lesson.objects.get(pk=lesson.pk)
             subject = Subject.objects.get(
                 pk=subject.pk if type(subject) != str else subject)
@@ -577,7 +577,7 @@ def getRandomInt(size: int, lesson: int) -> int:
 
 
 class LessonSerializer(serializers.ModelSerializer, Cleanup):
-    # subject = serializers.StringRelatedField()
+    subject_name = serializers.SerializerMethodField(read_only=True)
     duration = serializers.SerializerMethodField(read_only=True)
     topics = serializers.ChoiceField(
         choices=[], write_only=True, allow_blank=True)
@@ -589,11 +589,22 @@ class LessonSerializer(serializers.ModelSerializer, Cleanup):
     class Meta:
         model = Lesson
         fields = ['pk', 'num', 'title', 'topic',
-                  'subject', 'grade', 'topics', 'duration', 'thumbnail']
+                  'subject', 'grade', 'topics', 'duration', 'thumbnail', 'subject_name']
         # exclude = ('created', 'updated')
         extra_kwargs = {'topics': {'write_only': True},
                         'topic': {'read_only': True}
                         }
+
+    def get_subject_name(self, obj):
+        subject = obj.subject
+        if subject:
+            try:
+                subject_obj = Subject.objects.get(pk=subject.pk)
+                return subject_obj.name
+            except Subject.DoesNotExist:
+                return ''
+
+        return ''
 
     @lru_cache
     def getSignedUrls(self, subject: str) -> List:
@@ -615,8 +626,8 @@ class LessonSerializer(serializers.ModelSerializer, Cleanup):
 
     @lru_cache
     def getThumbnails(subject: int, platform: str) -> str:
-        print(subject, '.............')
-        platforms = {IOS: 'png', ANDROID: 'png', WEB: 'svg'}
+        # print(subject, '.............')
+        platforms = {IOS: 'svg', ANDROID: 'svg', WEB: 'svg'}
         # request = self.context.get('request')
         # platform = request.query_params.get('platform', 'svg')
         image_type = platforms.get(platform, 'svg') if platform else 'svg'
@@ -656,19 +667,32 @@ class LessonSerializer(serializers.ModelSerializer, Cleanup):
             # print("lesson_instance: ", lesson_instance)
         # subject_instance = Subject.objects.get(pk=subject.pk)
 
-        thumbnails = ['https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame229.png',
-                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame230.png',
-                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame231.png',
-                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame241.png',
-                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321460.png',
-                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321461.png',
-                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321462.png',
-                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321463.png',
-                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321464.png',
-                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321465.png',
-                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321466.png',
-                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321467.png',
-                      'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321468.png']
+        # thumbnails = ['https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame229.png',
+        #               'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame230.png',
+        #               'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame231.png',
+        #               'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame241.png',
+        #               'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321460.png',
+        #               'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321461.png',
+        #               'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321462.png',
+        #               'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321463.png',
+        #               'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321464.png',
+        #               'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321465.png',
+        #               'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321466.png',
+        #               'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321467.png',
+        #               'https://storage.googleapis.com/edufox-bucket-2/topics_thumbnails/Frame427321468.png']
+        thumbnails = [
+            'https://storage.googleapis.com/edufox-bucket-2/img/subjects/mathematics/svg/num1.svg',
+            'https://storage.googleapis.com/edufox-bucket-2/img/subjects/mathematics/svg/num10.svg',
+            'https://storage.googleapis.com/edufox-bucket-2/img/subjects/mathematics/svg/num13.svg',
+            'https://storage.googleapis.com/edufox-bucket-2/img/subjects/mathematics/svg/num2.svg',
+            'https://storage.googleapis.com/edufox-bucket-2/img/subjects/mathematics/svg/num3.svg',
+            'https://storage.googleapis.com/edufox-bucket-2/img/subjects/mathematics/svg/num4.svg',
+            'https://storage.googleapis.com/edufox-bucket-2/img/subjects/mathematics/svg/num5.svg',
+            'https://storage.googleapis.com/edufox-bucket-2/img/subjects/mathematics/svg/num6.svg',
+            'https://storage.googleapis.com/edufox-bucket-2/img/subjects/mathematics/svg/num7.svg',
+            'https://storage.googleapis.com/edufox-bucket-2/img/subjects/mathematics/svg/num8.svg',
+            'https://storage.googleapis.com/edufox-bucket-2/img/subjects/mathematics/svg/num9.svg'
+        ]
 
         # if subject in subjects:
         #     thumbnails = subjects.get(subject)

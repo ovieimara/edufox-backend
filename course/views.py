@@ -627,7 +627,7 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
         if grade is not None:
             grade = int(grade)
         user = request.user if request.user else None
-        print('USER: ', grade)
+        # print('USER: ', grade)
         try:
             # print(user, user.is_authenticated, user.username)
             if user and user.is_authenticated:
@@ -759,7 +759,7 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
             # subjects section
             subjects_arr = ListDashboardAPI.processDashBoardSubjects(
                 grade, platform, cols)
-            # print('SUBJECTS>>>')
+            # print('SUBJECTS>>>', subjects_arr)
             # subjects_queryset = Subject.objects.filter(
             #     is_active=True).order_by('num')
             # # print('GRADE: ', grade)
@@ -811,7 +811,7 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
 
             # if subscriptions.exists():
             # updateIsSubscribed(serialized_recommend, subscriptions)
-            # print('serialized_recommend: ', recommend_arr)
+            print('serialized_recommend: ', recommend_arr)
 
         except Exception as ex:
             print("Recommend Objects Error: ", ex)
@@ -909,7 +909,7 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
 
     @lru_cache
     def process_recommend(grade: int) -> List:
-        print('process_recommend: ', grade)
+        # print('process_recommend: ', grade)
         num_threads = 4  # You can adjust this number based on your requirements
 
         recommend_queryset = []
@@ -945,7 +945,7 @@ class ListDashboardAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.R
 
     @lru_cache
     def processDashBoardSubjects(grade: int, platform: str, cols: int) -> list:
-        print("processDashBoardSubjects..........", grade)
+        # print("processDashBoardSubjects..........", grade)
         # subjects_arr = []
         subjects_queryset = []
         try:
@@ -1211,7 +1211,7 @@ class ListCreateThumbnailAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mi
             for blob in blobs:
                 if blob.content_type.startswith('image/') and blob.public_url:
                     public_url = blob.public_url
-                    print('public_url: ', public_url[-1: -4: -1][:: -1])
+                    # print('public_url: ', public_url[-1: -4: -1][:: -1])
                     # image_type = 'png' if 'png' in public_url else 'svg'
                     data.append(
                         {"subject": subject.pk, "url": public_url, "image_type": public_url[-1: -4: -1][:: -1]})
@@ -1227,9 +1227,9 @@ class ListCreateThumbnailAPI(mixins.CreateModelMixin, mixins.ListModelMixin,  mi
             subject_instance = Subject.objects.get(pk=subject)
 
         if subject_instance:
-            data: list = self.bucket_images(subject_instance, 'png')
-            data_svg: list = self.bucket_images(subject_instance, 'svg')
-            data.extend(data_svg)
+            # data: list = self.bucket_images(subject_instance, 'png')
+            data: list = self.bucket_images(subject_instance, 'svg')
+            # data.extend(data_svg)
 
             serializer = self.get_serializer(
                 data=data, many=True, context={'request': request})
@@ -1439,7 +1439,7 @@ class GenerateSignedUrl(generics.GenericAPIView):
             # signed_url = "https://d3sf15wolo885z.cloudfront.net/out/v1/6f13342624a54b1e97d42d2ac1fcafef/4e1206dd7b4541959ba155f0a8c1f13a/f5e513f27e684e90b22ab100ad5de3b7/index.m3u8"
             # signed_url = "https://d3sf15wolo885z.cloudfront.net/out/v1/612676e447b241dc895a9c9fb6ebc4be/4e1206dd7b4541959ba155f0a8c1f13a/f5e513f27e684e90b22ab100ad5de3b7/index.m3u8"
             # signed_url = "https://d3sf15wolo885z.cloudfront.net/out/v1/451342fc17124367aa8d4bf2b770248e/4e1206dd7b4541959ba155f0a8c1f13a/f5e513f27e684e90b22ab100ad5de3b7/index.m3u8"
-        print('SIGNED: ', signed_url)
+        # print('SIGNED: ', signed_url)
         # signed_url = 'https://d1xjy7y2cyqkhc.cloudfront.net/3f8e8ff0-9bda-4c70-804a-d9f76b783b81/hls/PERSONAL_HYGIENE.m3u8'
         # signed_url = "https://d3sf15wolo885z.cloudfront.net/1a863c3d-0cb3-4e6f-ba47-48b4b05e1ad4/hls/PERSONAL_HYGIENE.m3u8"
         # signed_url = "https://d3sf15wolo885z.cloudfront.net/14d2cb7f-1a4d-4837-abff-673f45127c80/hls/VERBS.m3u8"
@@ -1450,13 +1450,13 @@ class GenerateSignedUrl(generics.GenericAPIView):
 
 
 def readRequest(request) -> PlatformStream:
-    print("video_id: ", request)
+    # print("video_id: ", request)
     data = request.GET
     subject = data.get('subject')
     video_id = data.get('video_id')
     platform = data.get('platform')
     subject_code = get_first_obj(subject)
-    print("video_id: ", video_id)
+    # print("video_id: ", video_id)
     hls_url = getVideoUrl('url', video_id=video_id)
 
     url = AmazonDynamoDBRepo().getHlsUrl(video_id)

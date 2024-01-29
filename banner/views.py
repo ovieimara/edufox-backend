@@ -9,7 +9,7 @@ from .models import Banner
 
 
 class ListCreateAPIBanner(mixins.CreateModelMixin, mixins.ListModelMixin,  mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
-    queryset = Banner.objects.all().order_by('num')
+    queryset = Banner.objects.filter(is_active=True).order_by('num')
     serializer_class = BannerSerializer
     lookup_field = 'pk'
     # permission_classes = [AllowAny]
